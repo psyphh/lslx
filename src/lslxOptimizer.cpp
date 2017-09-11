@@ -1,6 +1,7 @@
 #include <RcppEigen.h>
 #include <limits>
 #include <cmath>
+#include <algorithm>
 #include <cfloat>
 using namespace Rcpp;
 using namespace Eigen;
@@ -547,7 +548,7 @@ void lslxOptimizer::update_objective_gradient() {
       objective_gradient(i, 0) = loss_gradient(i, 0) + regularizer_gradient(i, 0);
     } else {
       objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
-        std::fmax((std::fabs(loss_gradient(i, 0)) - lambda), 0);
+        std::max((std::fabs(loss_gradient(i, 0)) - lambda), 0.0);
     }
   }
 }
