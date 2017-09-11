@@ -246,8 +246,11 @@ lslx$set("public",
            
            rounded_coe$block <- private$model$specification$block
            rounded_coe$block_type <- rep(NA,nrow(private$model$specification))
+           rounded_coe$type <- format(private$model$specification$type,width = 6, justify = "right")
            rounded_coe$left <- private$model$specification$left
            rounded_coe$right <- private$model$specification$right
+           
+           
            
            rounded_coe$block_type[rounded_coe$block=="y<-1"] <- "Intercept"
            rounded_coe$block_type[rounded_coe$block=="f<-1"] <- "Intercept"
@@ -261,7 +264,8 @@ lslx$set("public",
            rounded_coe$block_type[rounded_coe$block=="f<->f"] <- "Covariance"
            rounded_coe$block_type[rounded_coe$left==rounded_coe$right] <- "Variance"
            
-           rounded_coe <- data.frame(rounded_coe[c(1:6)])
+           rounded_coe <- data.frame(rounded_coe[c(1:7)])
+           
            
            ## print by different groups
            
@@ -286,7 +290,8 @@ lslx$set("public",
                                              "z-value",
                                              "p-value",
                                              "block",
-                                             "block_type")
+                                             "block_type",
+                                             "type")
              
              if (length(private$model$name_group)!=1) {
                cat(paste0(
@@ -307,7 +312,7 @@ lslx$set("public",
                  sum(single_group_dta$block_type == i_block_type)>0L
                ) {
                  cat(" ",i_block_type,"\n")
-                 print(single_group_dta[single_group_dta$block_type == i_block_type,c(1:4)])
+                 print(single_group_dta[single_group_dta$block_type == i_block_type,c(7,1:4)])
                  cat("\n")
                }
              }
