@@ -1,0 +1,1211 @@
+#' Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
+#'
+#' @docType class
+#' @useDynLib lslx
+#' @importFrom Rcpp sourceCpp
+#' @importFrom R6 R6Class
+#' @export
+#' @usage NULL
+#' @return Object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM) with penalized likelihood (PL).
+#'\cr
+#'
+#'
+#' @section Usage:
+#' \code{lslx} is an \code{R6ClassGenerator} for constructing an \code{lslx} object that has methods for fitting semi-confirmatory SEM.
+#' In a simpliest case, the use of \code{lslx} involves three major steps
+#' \enumerate{
+#' \item {Initialize a new \code{lslx} object by specifying an equation for model specification and importing a data set. \cr
+#' 
+#' \code{r6_lslx <- lslx$new(equation, sample_data)}
+#' }
+#' 
+#' \item {
+#' Fit the specified model to the given data with specified fitting control. \cr
+#' 
+#' \code{r6_lslx$fit(penalty_method, lambda_grid, gamma_grid)}
+#' }
+#' 
+#' \item{
+#' Summarize the fitting results with specified selector. \cr
+#' 
+#' \code{r6_lslx$summarize(selector)} \cr
+#' }
+#' }
+#'\cr
+#'
+#' @section Overview:
+#' \pkg{lslx} is a package for fitting semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) developed by Huang, Chen, and Weng (2017).
+#' In this semi-confirmatory method, an SEM model is distinguished into two parts: a comfirmatory part and an exploratory part.
+#' The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing.
+#' The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory.
+#' By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relaitonships in the exploratory part can be efficiently determined by the sparsity pattern of these penalized parameters.
+#' \cr
+#' \cr
+#' The main function \code{lslx} generates an object of \code{lslx} R6 class.
+#' R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object oriented programming in \pkg{R} system.
+#' Hence, the \code{lslx} object is self-contained. 
+#' On the one hand, \code{lslx} object stores model specification, data, and fitting results.
+#' On the other hand, it has many built-in methods to respecify model, fit the model to data, and test goodness of fit and coefficients.
+#' The initialization of a new \code{lslx} object requires importing an equation for representing model and a data set to be analyzed.
+#' After an \code{lslx} object is initialized, build-methods can be used to modify the object, find the estimates, and summarize fitting result.
+#' Details of object initialization is described in the section of Initialization Method.
+#' \cr
+#' \cr
+#' In the current semi-confirmatory approach, the model specification is quite similar to the traditional practice of SEM except that some parameters can be set as penalized.
+#' Model specification in \code{lslx} mainly rely on the argument \code{equation} when creating a new \code{lslx} object.
+#' After an \code{lslx} object is initialized, the intialized model can be still modified by build-in methods.
+#' These build-in methods may hugely change the intialized model by just one simple command.
+#' This two-step approach allows users specifying their own models flexibly and efficiently.
+#' Details of the model specification can be found in the sections of Equation Syntax and Set-Related Methods.
+#' \cr
+#' \cr
+#' Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized maximum likelihood (ML) discrepancy function. 
+#' The penalty function can be set as lasso (Tibshirani, 1996) or mcp (minimax concave penalty; Zhang, 2010).
+#' \pkg{lslx} solves the optimization problem based on the improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
+#' The underlying optimizer is written by using \pkg{Rcpp} (Eddelbuettel & Francois, 2011) and \pkg{RcppEigen} (Bates & Eddelbuettel, 2013). 
+#' Our experience show that the algorithm can effeciently find a local minimum provided that (1) the starting value is reasonable, and (2) the saturated covariance matrix is not nearly singular.
+#' \pkg{lslx} will try to find solutions under all the penalty levels specified.
+#' Details of optimization algorithm and how to implement the algorithm can be found in the sections of Optimization Algorithm and Fit-Related Methods.
+#' \cr
+#' \cr
+#' After fitting the specified model to data under all the penalty levels specified, an optimal penalty level should be chosen.
+#' The naive method for penalty level selection is using information criteria.
+#' Huang, Chen, and Weng (2017) have shown the asymptotic properties of Akaike and Bayesian information criteria in selecting the penalty level.
+#' In \pkg{lslx}, fit indices other than infromation criteria can be also used for selecting optimal penalty levels.
+#' However, their theretical and empirical properties should be further studied.
+#' A summary of fitting result under the selected penalty level can be obtained by a build-in summarize method.
+#' Details of choosing an optimal penalty level and summarizing can be found in the sections of Penalty Level Selection and Summarize Method.
+#' \cr
+#' \cr
+#' \code{lslx} has many methods that can plot and test the fitting results. 
+#' In this alpha version, only statistical inference based on normal theory and complete data is available. 
+#' In addition, the inference method assumes that no model selection is conducted, which is not true in the case of using PL.
+#' Robust inference by considering non-normality, missing data, and model seleciton will be incorperated in the future version.
+#' Details of methods for summarizing the fitting results can be found in the sections of Plot-Related Methods and Test-Related Methods.
+#' 
+#' An object of \code{lslx} R6 class is composed by three R6 class objects: \code{lslxData}, \code{lslxModel}, and \code{lslxFitting}.
+#' \code{lslxData} object stores the raw data to be analyzed and \code{lslxModel} contains the model information. 
+#' When fitting the model to data, a reduced model and data will be sent to \code{lslxFitting}. 
+#' After the underlying optimizer finishes its job, the fitting results will be sent back to \code{lslxFitting}.
+#' Since the three members are set as private, they can be only assessed by defined member functions. 
+#' Other than the three members, quantities that are crucial for SEM can be also extracted, such as model-implied moments, information matrice, and etc..
+#' Details of methods for obtaining private members and SEM-related quantities can be found in the section of Get-Related Method and Extract-Related Methods.
+#' \cr
+#' \cr
+#' 
+#' @section Equation Syntax:
+#' With \pkg{lslx} the relationships among observed variables and latent factors are mainly specified via equation.
+#' The creation of syntax in \pkg{lslx} is highly motivated by \pkg{lavaan} (Rosseel, 2012), a successful package for fitting SEM. 
+#' However, \pkg{lslx} utilizes slightly more complex, but still intuitive operators to describe relation among variables.
+#' \cr
+#' \cr
+#' \strong{Example 1: Multiple Regression Model} \cr
+#' 
+#' Consider the first example of equation that specifies a multiple regression model
+#' \cr
+#' 
+#' \code{y <= x1 + x2}
+#' \cr
+#' 
+#' In this example, an dependent variable \code{y} is predicted by \code{x1} and \code{x2}.
+#' These three variables are all observed variables and should appear in the given data set.
+#' The operator \code{<=} means that the regression coefficients from the left-hand side (LHS) variables to the right-hand side (RHS) variables should be freely estimated.
+#' \cr
+#' 
+#' Although it is a very simple example, at least four important things behind this example should be addressed:
+#' \enumerate{
+#' \item{For any endogenous veriable (i.e., an variable that is influenced by any other variable), its residual term is not required to be specified.
+#' In this example, \code{lslx} recognizes \code{y} is an endogenous variable and hence the variance of corresponding variance will be set as freely estimated parameter.
+#' It is also possible to specify the variance of residual of \code{y} by \code{y <=> y}. 
+#' Here, the operator \code{"<=>"} indicates the covariance of the RHS and LHS variables should be freely estimated.}
+#' \item{If all of the specified equations do not contain the intercept variable \code{1}, then the intercept of each endogeneous and observed variable will be freely estimated.
+#' Since the intercept variable \code{1} doesn't appear in this example, the intercept for \code{y} will be set as a freely estimated parameter.
+#' We can explicitly set the intercept term by \code{y <= 1}. 
+#' However, under the situation that many equations are specified, once the intercept variable \code{1} appears in some equation, intercept terms in other equations should be explicitly specified.
+#' Otherwise, the intercepts of endogeneous and observed variables in other equations will be fixed at zero.
+#' }
+#' \item{For any set of exogeneous variables (i.e., variables that are not influenced by any other variable in the specified system), 
+#' not only their variances will be then freely estimated, but also their pairwise covariances will be set as freely estimated parameters.
+#' In this example, \code{x1} and \code{x2} are all exogeneous variables. 
+#' Hence, their variance and pairwise covariances will be automatically set as freely estimated parameters.
+#' These covariances can be explicitly stated by simply \code{x1 + x2 <=> x1 + x2}.
+#' The syntax parser in \code{lslx} will consider each combination of LHS and RHS variables.}
+#' \item{The intercepts (or means) of exogeneous and observed variables are always set as freely estimated parameters.
+#' In this example, the interceps of \code{x1} and \code{x2} will be freely estimated.
+#' It can be stated explicitly by \code{x1 + x2 <= 1}. 
+#' Also, the \code{lslx} parser will know that the intercept variable \code{1} has effect on all of \code{x1} and \code{x2}.}
+#' }
+#' The previous regression example can be equivalently represented by \code{x1 + x2 => y}. 
+#' In \pkg{lslx} all of the directed operators can be reversed. 
+#' Users can choose operators according to their own preference.
+#' \cr
+#' \cr
+#' The unique feature of \pkg{lslx} is that all of the parameters can be set as penalized. 
+#' To penalize all of the regression coefficients, the equation can be modified as 
+#' \cr
+#' 
+#' \code{y <~ x1 + x2}
+#' \cr
+#' 
+#' Here, the operator \code{<~} means that the regression coefficients from the LHS variables to the RHS variables should be estimated with penalization.
+#' If only the coefficient of \code{x1} should be penalized, we can use prefix to partly modify the equation
+#' \cr
+#' 
+#' \code{y <= pen() * x1 + x2}
+#' \cr
+#' 
+#' or equivalently
+#' \cr
+#' 
+#' \code{y <~ x1 + free() * x2} 
+#' \cr
+#' 
+#' Both \code{pen()} and \code{free()} are prefix to modify the \pkg{lslx} operators. 
+#' \code{pen()} makes the corresponding parameter to be penalized and \code{free()} makes it to be freely estimated. 
+#' Inside the parentheses, starting values can be specified.
+#' Any prefix must present before some variable name and divided by asterisk \code{*}.
+#' Note that prefix can appear in the either RHS or LHS of operators and its function can be 'distributed'.
+#' For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be penalized.
+#' However, any prefix cannot simultaneously appears in both sides of operators, which results in an ambiguity specification.
+#' \cr
+#' \cr
+#' \strong{Example 2: Factor Analysis Model} \cr
+#' 
+#' Now, we consider another example of equation specification. 
+#' \cr
+#' 
+#' \code{y1 + y2 + y3 <=: f1} \cr
+#' \code{y4 + y5 + y6 <=: f2} \cr
+#' \code{y7 + y8 + y9 <=: f3} \cr
+#' 
+#' This example is a factor analysis model with nine observed variables and three latent factors.
+#' In \pkg{lslx}, defining a latent factor can be through the operator \code{<=:} which means that the RHS factor is defined by RHS observed variables.
+#' The observed variables must be presented in the given data set.
+#' Of course, \code{f1} can be equivalently defined  by \code{f1 :=> y1 + y2 + y3}.
+#' 
+#' As addressed in the first example, the \code{lslx} parser will automatically set many parameters that are not directly presented in this equation.
+#' \enumerate{
+#' \item {
+#' In this example, all of the observed variables are directed by some latent factor and hence they are endogeneous.
+#' The variances of their residuals will be set as freely estimated parameters.
+#' Also, their intercepts will be freely estimated since no intercept variable \code{1} presents in the specified equations.
+#' }
+#' \item {
+#' The three latent factors \code{f1}, \code{f2}, and \code{f3} are exogenous variables.
+#' Their pairwise covariances will be also set as freely estimated parameters.
+#' However, because they are latent but not observed, their intercepts will be fixed at zero.
+#' If user hope to estimate the latent factor means, they should add an additional equation \code{f1 + f2 + f3 <= 1}.
+#' After adding this equation, on the one hand, the latent intercepts will be set as free as indicated by that equation.
+#' On the other hand, since intercet variable \code{1} now presents in the specified equations, the intercepts for the endogenous and observed variables will be then fixed at zero.
+#' }
+#' }
+#' So far, the specification for the factor analysis model is not complete since the scales of factors are not yet determined.
+#' In SEM, there are two common ways for scale setting. 
+#' The first way is to fix some loading per factor.
+#' For example, we may respecify the model via
+#' \cr
+#' 
+#' \code{fix(1) * y1 + y2 + y3 <=: f1} \cr
+#' \code{fix(1) * y4 + y5 + y6 <=: f2} \cr
+#' \code{fix(1) * y7 + y8 + y9 <=: f3} \cr
+#' 
+#' The prefix \code{fix(1)} will fix the corresponding loadings to be one. 
+#' Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by only using \code{1 * y1}.
+#' In \pkg{lslx}, \code{1 * y1} means that the starting value of coefficient corresponding to \code{y1} (which can be free or penalized parameter, depending on the specified operator) is set as one.
+#' The second way for scale setting is fixing the variance of latent factors, which can be acheived by considering additional equations
+#' \cr
+#' 
+#' \code{fix(1) * f1 <=> f1} \cr
+#' \code{fix(1) * f2 <=> f2} \cr
+#' \code{fix(1) * f3 <=> f3} \cr
+#' 
+#' When conducting factor analysis, we may face the problem that each variable may not be influenced by only one latent factor.
+#' The semi-confirmatory factor analysis, which penalizes majority of loadings, can be applied in this situation.
+#' One possible model specification for the semi-confirmatory approach is
+#' \cr
+#' 
+#' \code{y1 + y2 + y3 <=: f1} \cr
+#' \code{y4 + y5 + y6 <=: f2} \cr
+#' \code{y7 + y8 + y9 <=: f3} \cr
+#' \code{y4 + y5 + y6 + y7 + y8 + y9 <~: f1} \cr
+#' \code{y1 + y2 + y3 + y7 + y8 + y9 <~: f2} \cr
+#' \code{y4 + y5 + y6 + y7 + y8 + y9 <~: f3} \cr
+#' \code{fix(1) * f1 <=> f1} \cr
+#' \code{fix(1) * f2 <=> f2} \cr
+#' \code{fix(1) * f3 <=> f3} \cr
+#' 
+#' In this specification, loadings in the non-independent cluster will be also estimated but with penalization.
+#' \cr
+#' \cr
+#' \strong{Example 3: Path Models with both Observed Variables and Latent Factors} \cr
+#' 
+#' In the third example, we consider a path model with both observed variables and latent factors
+#' \cr
+#' 
+#' \code{fix(1) * y1 + y2 + y3 <=: f1} \cr
+#' \code{fix(1) * y4 + y5 + y6 <=: f2} \cr
+#' \code{fix(1) * y7 + y8 + y9 <=: f3} \cr
+#' \code{f3 <= f1 + f2} \cr
+#' \code{f1 + f2 + f3 <~ x1 + x2} \cr
+#' \code{f1 <~> f2} \cr
+#' 
+#' The first three equations specify the measurement model for \code{y1} - \code{y9} and \code{f1} - \code{f3}.
+#' The forth equation describes the relations among latent factor.
+#' The fifth equation sets all the coefficients from \code{x1} - \code{x2} to \code{f1} - \code{f3} to be penalized.
+#' The final equation states that the covariance of residuals of \code{f1} and \code{f2} is estimated with penalization, which is achieved by the operator \code{<~>}.
+#' 
+#' Like Example 1 and 2, many parameters in the current example are automatically set by \pkg{lslx}.
+#' \enumerate{
+#' \item {
+#' Because \code{y1} - \code{y9} and \code{f1} - \code{f3} are all endogenous, the variances of their residuals will be treated as freely estimated parameters.
+#' Also, due to the non-presence of intercept variable \code{1}, the intercept of \code{y1} - \code{y9} will be set as free parameters.
+#' }
+#' \item {
+#' The variance, intercepts, and pairwise covariances of exogenous and observed variables \code{x1} - \code{x2} will be all estimated freely.
+#' }
+#' }
+#' 
+#' In this example, we can see that model specification in \pkg{lslx} is quite flexible.
+#' Like usual SEM, users can specify their models according some substantive theory.
+#' If no theory is available to guide the relationships in some part of the model, 
+#' the semi-confirmatory approach can set this part as exploratory by setting the corresponding parameters as penalized.
+#' \cr
+#' \cr
+#' \strong{Example 4: Multi-Group Factor Analysis Model} \cr
+#' 
+#' In the fourth example, we consider a multi-group factor analysis model.
+#' \cr
+#' 
+#' \code{fix(1) * y1 + y2 + y3 <=: f1} \cr
+#' \code{fix(1) * y4 + y5 + y6 <=: f2} \cr
+#' \code{fix(1) * y7 + y8 + y9 <=: f3} \cr
+#' 
+#' The syntax specify a factor analysis model with nine observed variables and three latent factors.
+#' Loadings for \code{y2}, \code{y3}, \code{y5}, \code{y6}, \code{y8}, and \code{y9} are freely estimated in both groups.
+#' Loadings for \code{y1}, \code{y4}, and \code{y7} are set as fixed for scale setting in both groups.
+#' You may observe that the syntax for multi-group analysis is the same as that for single group analysis.
+#' That is true because in \pkg{lslx} a multi-group analysis is mainly identified when an \code{lslx} is initialzed.
+#' If the imported data can be divided into multiple samples based on some variable (argument \code{group_variable} in \code{new} method, please see the section of Initialize Method) for group labeling, \pkg{lslx} will automatically conduct multi-group analysis (see Example 4 in the Section of Examples).
+#' 
+#' Sometimes, we may hope to specify different model structures for the two groups.
+#' It can be achieved by using vector version of prefix, which is also motivated by the syntax in \pkg{lavaan}.
+#' For example, if we hope to restrict the loading for \code{y2} to be 1 in the first group but set it as freely estimate parameter in the second group.
+#' Then we may use
+#' \cr
+#' 
+#' \code{fix(1) * y1 + c(fix(1), free()) * y2 + y3 <=: f1} \cr
+#' 
+#' Note that the order of groups is important here.
+#' Since \pkg{lslx} treats the group variable as \code{factor}, its order is determined by the sorted name of groups.
+#' For example, if three groups \code{c}, \code{a}, and \code{b} are considered, then the first group is \code{a}, the second is \code{b}, and the third is \code{c}.
+#' 
+#' 
+#' In the current version of \pkg{lslx}, parameter constraints can be be imposed.
+#' It seems that testing parameter invariance is impossible in \pkg{lslx}.
+#' However, \pkg{lslx} parameterizes group parameters in different way compared to other SEM softwares.
+#' Under \pkg{lslx}, each group parameter is decomosed into a sum of a reference component and an increment component.
+#' If the reference component is assumed to be zero, the increment component represents the group parameter, which is equivalent to the usual parameterization in other softwares.
+#' On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of Initialize Method), then the reference component now represents the group parameter of the reference group and other increment components represent the differences from the reference group.  
+#' \cr
+#' \cr
+#' 
+#'@section Optimization Algorithm:
+#' Let \eqn{\theta} denote the vector of model parameter.
+#' \pkg{lslx} tries to find a PL estimate for \eqn{\theta} by minimizing the objective function
+#' \deqn{objective(\theta, \lambda) = loss(\theta) + regularizer(\theta, \lambda)}
+#' where \eqn{loss} is the ML discrepancy function, \eqn{regularizer} is a regularizer, possibly asso (Tibshirani, 1996) or mcp (Zhang, 2010), and \eqn{\lambda} is a regularization parameter.
+#' The optimization algorithm for minimizing the PL criterion is based on the improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
+#' The algorithm can be thought as a quasi-Newton method with inner loop and outer loop.
+#' The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
+#' The inner loop stops if the change of the derived direction is quite small.
+#' The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
+#' The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
+#' The minimizer is the so-called PL estimates.
+#' Note that the PL estimates is a function of penalty level, i.e., PL estimates can vary under different penalty levels.
+#' An optimal penalty level can be chosen by using model selection criterion.
+#' \cr
+#' \cr
+#' In \pkg{lslx}, PL estimates under each penalty levels specified by user will be calculated.
+#' The penalty levels will be sorted from large/convex to small/nonconvex based on the suggestion of Mazumder (2011).
+#' The previous obtained PL estimate will be used as warm start for further minimization problem.
+#' Since the solution path is continous, the warm start can speed up the convergence of minimization (see Friedman, Hastie, & Tibshirani, 2010).
+#' \cr
+#' \cr
+#'
+#'@section Penalty Level Selection:
+#' Penalty level selection in \pkg{lslx} is based on optimizing the value of some information criterion or goodness-of-fit indices.
+#' Many information criteria nad fit indices are available for this task (see the table below).
+#' However, so far only the asymptotic behaviors of AIC and BIC have been studied (Huang, Chen, & Weng, 2017).
+#' The use of goodness-of-fit for selecting penalty level needs further evaluation.
+#' \cr
+#' \cr
+#' In the current version, available model selection criterion and fit indices are
+#' \describe{
+#' \item{}{
+#'   \tabular{lll}{
+#'     \code{aic} \tab Akaike information criterion (Akaike, 1974) \tab \eqn{loss(\theta) + (2 / N) * #(\theta) } \cr
+#'     \code{aic3} \tab Akaike information criterion with penalty being 3 (Sclove, 1987) \tab \eqn{loss(\theta) + (3 / N) * #(\theta) } \cr
+#'     \code{caic} \tab consistent Akaike information criterion (Bozdogan, 1987) \tab \eqn{loss(\theta) + ((log(N) + 1) / N) * #(\theta) } \cr
+#'     \code{bic} \tab Bayesian information criterion (Schwarz, 1978) \tab \eqn{loss(\theta) + (log(N) / N) * #(\theta) }  \cr
+#'     \code{abic} \tab adjusted Bayesian information criterion (Yang, 2006) \tab \eqn{loss(\theta) + (log((N + 2) / 24 ) / N) * #(\theta) }  \cr
+#'     \code{hbic} \tab Haughton Bayesian information criterion (Haughton, 1997) \tab \eqn{loss(\theta) + (log(N / \pi ) / N) * #(\theta) }  \cr
+#'     \code{rmsea} \tab root mean square error of approximation (Steiger, 1998; Steiger & Lind, 1980) \tab \eqn{ \sqrt(G * max{loss(\theta) / df(\theta) - 1 / N, 0}) } \cr
+#'     \code{cfi} \tab comparative fit indice (Bentler, 1990) \tab \eqn{ (max{loss_0 - df_0 / N, 0} - max{loss(\theta) - df(\theta) / N, 0}) / max{loss_0 - df_0 / N, 0}}   \cr
+#'     \code{nnfi} \tab non-normed fit indice (Tucker & Lewis, 1973) \tab \eqn{ (loss_0 / df_0 - loss(\theta) / df(\theta)) / (loss_0 / df_0 - 1 /N) } \cr
+#'     \code{srmr} \tab standardized root mean of residual (Bentler, 1995) \tab \eqn{ \sqrt(\sum w_g \sum \sum ((sigma_gij - s_gij)^2 / (sigma_gii * sigma_gjj)) / (G *P * (P + 1) / 2) +  \sum w_g \sum((mu_gi - m_gi) ^ 2 / sigma_gii) / (G * P)) } \cr
+#'     \cr
+#'     }
+#' }
+#' }
+#' where 
+#' \itemize{
+#' \item{
+#' \eqn{N}: total number of sample size
+#' }
+#' \item{
+#' \eqn{G}: total number of group
+#' }
+#' \item{
+#' \eqn{P}: number of observed variables
+#' }
+#' \item{
+#' \eqn{w_g}: sample weight of group \eqn{g}
+#' }
+#' \item{
+#' \eqn{loss(\theta)}: the loss value under estimate \eqn{\theta}
+#' }
+#' \item{
+#' \eqn{#(\theta)}: the number of non-zero elements in \eqn{\theta}
+#' }
+#' \item{
+#' \eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - #(\theta)}
+#' }
+#' \item{
+#' \eqn{loss_0}: the loss value under baseline model
+#' }
+#' \item{
+#' \eqn{df_0}: the degree of freedom under baseline model
+#' }
+#' \item{
+#' \eqn{sigma_gij}: the \eqn{(i,j)} element of model implied covariance at group \eqn{g}
+#' }
+#' \item{
+#' \eqn{s_gij}: the \eqn{(i,j)} element of sample covariance at group \eqn{g}
+#' }
+#' \item{
+#' \eqn{mu_gi}: the \eqn{i} element of model implied mean at group \eqn{g}
+#' }
+#' \item{
+#' \eqn{m_gi}: the \eqn{i} element of sample mean at group \eqn{g}
+#' }
+#' }
+#' In \pkg{lslx}, the baseline model is the model assumming diagonal covariance matrice and saturated mean. 
+#'\cr
+#'\cr
+#'
+#' @section Initialize Method:
+#' The initialization of \code{lslx} is achieved by the \code{new()} method of R6 class generater \code{lslx}.
+#' An equation for model specification and a data set to be fitted must be supplied when creating a new \code{lslx} object.
+#' When the raw data is not available, \code{lslx} also supports fitting by only using sample moments.
+#' \code{lslx} also support multi-group SEM. In that case, variable for identifying group should be specified.
+#' 
+#' \describe{
+#'   \item{\code{new(equation, sample_data, sample_cov, sample_mean, sample_size, group_variable, reference_group, verbose = TRUE)}}{
+#'   The \code{new()} method is used to generate an object of \code{lslx} R6 class for fitting semi-confirmatory SEM.
+#'   Argument \code{equation} specifies the relations among observed variables and latent factors.
+#'   Argument \code{sample_data} is the raw data to be fitted.
+#'   In most cases, a new \code{lslx} object is intitialized by supplying \code{equation} and \code{sample_data}.
+#'   If raw data set is not available, \code{lslx} also supports initialization via sample moments.
+#'   In that case, \code{sample_cov} and \code{sample_size} are required.
+#'   Argument \code{sample_mean} is optional. If \code{sample_mean} is missing under \code{sample_cov} initialization, it is assumed to be zero.
+#'   If multi-group analysis is desired, argument \code{group_variable} should be given to specify what variable is used for labeling group.
+#'   Argument \code{reference_group} can be used to set reference group.
+#'   Note that if some group is set as reference, the coefficients in other groups will represent increments from the reference.
+#'    
+#'   \tabular{ll}{
+#'     \code{equation} \tab A \code{character} with length one to represent the model specification. See the section of Equation Syntax for more information. \cr
+#'     \code{sample_data} \tab  A \code{data.frame} of raw data. It must contains variables that have been specified in \code{equation} (and possibly the group variable specified by \code{group_variable}).  \cr
+#'     \code{sample_cov} \tab A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{equation}.\cr
+#'     \code{sample_mean} \tab A numeric \code{vector} (single group case) or a \code{list} of numeric \code{vector} (multi-group case) to represent sample mean vectors. \cr
+#'     \code{sample_size} \tab A numeric \code{vector} (single group case) or a \code{list} of numeric \code{vector} (multi-group case) to represent the sample sizes. \cr
+#'     \code{group_variable} \tab A \code{character} with length one to specify what variable is used for labeling group. \cr
+#'     \code{reference_group} \tab A \code{character} with length one to specify which group is set as reference. \cr
+#'     \code{verbose} \tab A bool to specify whether messages made by \code{lslx} should be returned. \cr
+#'     \cr
+#'     }
+#'    }
+#' }
+#'\cr
+#'
+#'
+#' @section Set-Related Methods:
+#' Set-related methods include several member functions that can modified the model specification. 
+#' Like most encapsulation objects, set-related function is used to set the inner members of object.
+#' So far, the set-related methods are all established to modify the model.
+#' The data are still protected without any changing.
+#' 
+#' Inside \code{lslx} object, every coefficient (or parameter) has its own name and belongs to some block.
+#' \itemize{
+#' \item{The coefficient name is constructed by a relation and a group name.
+#' A relation is defined by comining a left variable name, an operator, and a right variable name.
+#' For example, \code{y1<-f1} is a relation to represent the coefficient from \code{f1} to \code{y1}.
+#' Note that in relation we only use \code{<-} and \code{<->}. 
+#' \code{->} is illegal and not distinction between \code{=} and \code{~} are made.
+#' Because a relation can exist in different gorup, a parameter name reguires explicitly specifying group name.
+#' For example, \code{y1<-f1|G1} is the parameter name for the path coefficient form \code{f1} to \code{y1} in group \code{G1}.}
+#' \item{
+#' Block is defined by the type of left variable and right variable, and the operator.
+#' In \pkg{lslx}, \code{y} is used to mean observed responses, \code{f} is used for latent factors, and \code{1} is for intercept.
+#' Hence, \code{y<-f} is the block that contains all the coefficients from latent factors to observed responses.
+#' There are nine possible distinct blocks: \code{f<-1}, \code{y<-1}, \code{f<-f}, \code{f<-y}, \code{y<-f}, \code{y<-y}, \code{f<->f}, \code{f<->y} (which is used to instead of \code{y<->f}), \code{y<->y}
+#' }
+#' }
+#' Arguments in set-related methods may rely the naming rule of coefficent name and block to modify model specification.
+#' \cr
+#' 
+#' \describe{
+#'   \item{\code{free_coefficient(name, start, verbose = TRUE)}}{
+#'   The method sets the coefficient named \code{name} as free with stating value \code{start}.
+#'   Argument \code{name} is a character \code{vector} containing coefficient name and \code{start} is a numeric \code{vector} containing starting values.
+#'   The length of \code{start} should be one or the same with \code{name} to avoid ambiguity. 
+#'   If \code{start} is missing, the start valua will be set as \code{NA}.
+#'   In the case of single group analysis, argument \code{name} can be replaced by only specifying relations, i.e., group name can be omitted.
+#'   }
+#'   \item{\code{penalize_coefficient(name, start, verbose = TRUE)}}{
+#'   The method sets the coefficient named \code{name} as penalized with stating value \code{start}.
+#'   Argument \code{name} is a character \code{vector} containing coefficient name and \code{start} is a numeric \code{vector} containing starting values.
+#'   The length of \code{start} should be one or the same with \code{name} to avoid ambiguity. 
+#'   If \code{start} is missing, the start valua will be set as \code{NA}.
+#'   In the case of single group analysis, argument \code{name} can be replaced by only specifying relations, i.e., group name can be omitted.
+#'   }
+#'   \item{\code{fix_coefficient(name, start, verbose = TRUE)}}{
+#'   The method sets the coefficient named \code{name} as fixed with stating value \code{start}.
+#'   Argument \code{name} is a character \code{vector} containing coefficient name and \code{start} is a numeric \code{vector} containing starting values.
+#'   The length of \code{start} should be one or the same with \code{name} to avoid ambiguity. 
+#'   If \code{start} is missing, the start valua will be set as \code{0}.
+#'   In the case of single group analysis, argument \code{name} can be replaced by only specifying relations, i.e., group name can be omitted.
+#'   }
+#'   
+#'   \item{\code{free_directed(left, right, group, verbose = TRUE)}}{
+#'   The method sets all the regression coefficients from variables in \code{right} to variables in \code{left} at groups in \code{group} as free.
+#'   Argument \code{right} is a character \code{vector} containing variable names in the RHS.
+#'   Argument \code{left} is a character \code{vector} containing variable names in the LHS.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   }
+#'   \item{\code{penalize_directed(left, right, group, verbose = TRUE)}}{
+#'   The method sets all the regression coefficients from variables in \code{right} to variables in \code{left} at groups in \code{group} as penalized.
+#'   Argument \code{right} is a character \code{vector} containing variable names in the RHS.
+#'   Argument \code{left} is a character \code{vector} containing variable names in the LHS.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   }
+#'   \item{\code{fix_directed(left, right, group, verbose = TRUE)}}{
+#'   The method sets all the regression coefficients from variables in \code{right} to variables in \code{left} at groups in \code{group} as fixed.
+#'   Argument \code{right} is a character \code{vector} containing variable names in the RHS.
+#'   Argument \code{left} is a character \code{vector} containing variable names in the LHS.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   }
+#'   \item{\code{free_undirected(both, group, verbose = TRUE)}}{
+#'   The method sets all the covariances among variables in \code{both} at groups in \code{group} as free.
+#'   Argument \code{both} is a character \code{vector} containing variable names in both side.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   Note that this method all always not modify the variance of variables specified in \code{both}.
+#'   }
+#'   \item{\code{penalize_undirected(both, group, verbose = TRUE)}}{
+#'   The method sets all the covariances among variables in \code{both} at groups in \code{group} as penalized.
+#'   Argument \code{both} is a character \code{vector} containing variable names in both side.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   Note that this method all always not modify the variance of variables specified in \code{both}.
+#'   }
+#'   \item{\code{fix_undirected(both, group, verbose = TRUE)}}{
+#'   The method sets all the covariances among variables in \code{both} at groups in \code{group} as fixed.
+#'   Argument \code{both} is a character \code{vector} containing variable names in both side.
+#'   Argument \code{group} is a character \code{vector} containing group names.
+#'   Note that this method all always not modify the variance of variables specified in \code{both}.
+#'   }
+#'   \item{\code{free_heterogeneity(block, group, verbose = TRUE)}}{
+#'   The method frees the coefficient that 
+#'   (1) belong to \code{block} at \code{group}, and 
+#'   (2) has either free or penalized reference component.
+#'   In other word, the method makes all the coeffcients in \code{block} at \code{group} to be heterogenous with respect to the reference group.
+#'   The method is only available in the case of multi-group analysis with specified reference group.
+#'   It is particularly useful if users hope to test the heterogeneity of coefficients in some block.
+#'   }
+#'   \item{\code{penalize_heterogeneity(block, group, verbose = TRUE)}}{
+#'   The method penalizes the coefficient that 
+#'   (1) belong to \code{block} at \code{group}, and 
+#'   (2) has either free or penalized reference component.
+#'   In other word, the method makes all the coeffcients in \code{block} at \code{group} to be explored with respect to the reference group.
+#'   The method is only available in the case of multi-group analysis with specified reference group.
+#'   The method is particularly useful if users hope to explore the heterogeneity of coefficients in some block.
+#'   }
+#'   \item{\code{fix_heterogeneity(block, group, verbose = TRUE)}}{
+#'   The method fixes the coefficient that 
+#'   (1) belong to \code{block} at \code{group}, and 
+#'   (2) has either free or penalized reference component.
+#'   In other word, the method makes all the coeffcients in \code{block} at \code{group} to be homogenous with respect to the reference group.
+#'   The method is only available in the case of multi-group analysis with specified reference group.
+#'   }
+#' }
+#'\cr
+#'
+#'
+#' @section Fit-Related Methods:
+#' Fit-related methods are used to obtain the fitting results based on the given \code{model} and \code{data}.
+#' When implementing fit-related methods, user should specify parameters for penalization and optimization.
+#' Currently, three fit-related methods are available: \code{fit()}, \code{fit_lasso()}, and \code{fit_mcp()}.
+#' Fitting results will be stored in \code{fitting} and can be used for futther summary by member functions.
+#' 
+#' \describe{
+#'   \item{\code{fit(penalty_method = "none", lambda_grid = 0, gamma_grid = Inf, start_method = "MH", positive_diag = TRUE,
+#'   iter_out_max = 100L, iter_in_max = 50L, iter_armijo_max = 100L, tol_out = 1e-4, tol_in = 1e-4,
+#'   step_size = 0.5, armijo = 1e-5, ridge_cov = 1e-4, ridge_hessian = 1e-4, verbose = TRUE)}}{
+#'   The method fits the specified model to data by minimizing penalized ML discrepancy function.
+#'   It is the most comprehensive method for fitting and hence many arguments can be specified.
+#'   \tabular{ll}{
+#'     \code{penalty_method} \tab A character specifying the penalty method. The current version only supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.    \cr
+#'     \code{lambda_grid} \tab A non-negative numeric vector for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. \cr
+#'     \code{gamma_grid} \tab A numeric vector with values larger than one for specifying the non-convexity \code{"mcp"}. \cr
+#'     \code{start_method} \tab A character for determine the method for calculating unspecified starting values. The current version only supports \code{"MH"} (McDonald & Hartmann, 1992) and 'heuristic'. \cr
+#'     \code{positive_diag} \tab A bool to specify whether the variance estimate should be constrained to be larger than \code{ridge_cov}. \cr
+#'     \code{iter_out_max} \tab A positive integer to specify the maximal iterations of outer loop.  \cr
+#'     \code{iter_in_max} \tab A positive integer to specify the maximal iterations of inner loop.  \cr
+#'     \code{iter_armijo_max} \tab A positive integer to specify the maximal iterations for searching step-size via armijo rule.  \cr
+#'     \code{tol_out} \tab A small positive number to specify the tolerance (convergence criterion) for outer loop.  \cr
+#'     \code{tol_in} \tab A small positive number to specify the tolerance (convergence criterion) for inner loop.  \cr
+#'     \code{step_size} \tab A positive number smaller than one to specify the step-size.  \cr
+#'     \code{armijo} \tab A small positive number for the constant in armijo rule.  \cr
+#'     \code{ridge_cov} \tab A small positive number for the ridge of sample covariance matrix and the minimal value of variance estimate if \code{positive_diag = TRUE}. \cr
+#'     \code{ridge_hessian} \tab A small positive number for the ridge of approximated hessian in optimization. \cr
+#'     \code{verbose} \tab A bool to specify whether messages made by \code{lslx} should be returned. \cr
+#'     \cr
+#'     }
+#'   }
+#'   \item{\code{fit_lasso(lambda_grid = 0, ...)}}{
+#'   The method fits the specified model to data by minimizing ML discrepancy function with lasso penalty (Tibshirani, 1996).
+#'   It is a user friendly wrapper for \code{fit()} method with argument \code{penalty_method = "lasso"}.
+#'   Argument \code{lambda_grid} is a non-negative vector to specify the penalty levels under consideration.
+#'   Argument \code{...} can be used to specify other control parameters in \code{fit()} method.
+#'   }
+#'
+#'   \item{\code{fit_mcp(lambda_grid = 0, gamma_grid = Inf, ...)}}{
+#'   The method fits the specified model to data by minimizing ML discrepancy function with mcp (Zhang, 2010).
+#'   It is a user friendly wrapper for \code{fit()} method with argument \code{penalty_method = "mcp"}.
+#'   Argument \code{lambda_grid} is a non-negative vector to specify the penalty levels under consideration.
+#'   Argument \code{gamma_grid} specifies the values of parameter controling the non-convexity of MCP.
+#'   Argument \code{...} can be used to specify other control parameters in \code{fit()} method.
+#'   }
+#' }
+#' \cr
+#'
+#'
+#' @section Summarize Method:
+#' Like most functions for statistical modeling in \pkg{R}, summarize method is used to obtain a summary for the fitting result.
+#' However, the sumarize method requires users to specify which selector should be used.
+#' The summary includes model information, data-model fit, coefficient estimates, and related statistical inference.
+#' \describe{
+#'   \item{\code{summarize(selector, standard_error, exclude_nonconvergence, exclude_nonconvexity, verbose)}}{
+#'   The method prints a summary for the fitting result under the given selector.
+#'   \tabular{ll}{
+#'     \code{selector} \tab A character to specify a selector for determining an optimal penalty level. Its value can be any one in "loss", "aic", "aic3", "caic", "bic", "abic", "hbic", "rmsea", "cfi", "nnfi", or "srmr". \cr
+#'     \code{standard_error} \tab A character to specify the standard error to be used for hypothesis testing. In this alpha version, only 'expected_fisher' can be used. \cr
+#'     \code{exclude_nonconvergence} \tab A bool to specify whether non-convergence results should be removed for penalty level selection. Non-convergence result idetermined by examine the maximal elements of absolute objective gradient and the number of iteration. \cr
+#'     \code{exclude_nonconvexity} \tab A bool to specify whether non-convexity results should be removed for penalty level selection, which is determined by checking the minimum of univariate approximate hessian. \cr
+#'     \code{verbose} \tab A bool to specify whether messages made by \code{lslx} should be returned. \cr
+#'     \cr
+#'     }
+#'   }
+#' }
+#' \cr
+#'
+#'
+#' @section Plot-Related Methods:
+#' Three plot-related methods are defined for visualizing the fitting results.
+#' \code{plot_numerical_condition()} gives an overview of the quality of optimization.
+#' \code{plot_goodness_of_fit()} shows how the values of fit indices vary with penalty levels.
+#' Finally, \code{plot_coefficient()} visualizes the solution paths of coefficients.
+#' \describe{
+#'   \item{\code{plot_numerical_condition(criterion)}}{
+#'   The method plots the numerical information chosen by argument \code{criterion} across all possible penalty levels under consideration.
+#'   Argument \code{criterion} should be a character vector with element being \code{"objective_value"} (objective function value),
+#'   \code{"objective_gradient_abs_max"} (maximum of absolute value of gradient of objective function),
+#'   \code{"objective_hessian_convexity"} (minimum of univariate approximate hessian), \code{"n_iter_out"} (number of iterations in outer loop),
+#'   \code{"n_nonzero_coefficient"} (number of non-zero coefficient), or \code{"degree_of_freedom"} (degree of freedom).
+#'   The default value of \code{criterion} is \code{c("n_iter_out", "objective_gradient_abs_max", "objective_hessian_convexity")}
+#'   }
+#'
+#'   \item{\code{plot_goodness_of_fit(selector)}}{
+#'   The method plots the values of goodness of fit indices chosen by argument \code{selector} across all possible penalty levels under consideration.
+#'   Argument \code{selector} should be a character vector with element being \code{"loss"} (loss function value),
+#'   \code{"aic"} (Akaike information criterion), \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, or \code{"srmr"}.
+#'   The default \code{selector} contains all of these fit indices.
+#'   }
+#'
+#'   \item{\code{plot_coefficient(block, left, right, both)}}{
+#'   The method plots the solution paths of coefficients determined by arguments \code{block}, \code{from}, \code{to}, and \code{with}.
+#'   Argument \code{block} should be one of \code{"y<-1"}, \code{"f<-1"}, \code{"y<-y"}, \code{"y<-f"}, \code{"f<-f"}, \code{"f<-y"},
+#'   \code{"y<->y"}, \code{"f<->f"}, \code{"f<->y"} (which is used to instead of \code{y<->f}). Arguments \code{right}, \code{left}, and \code{both} are all character vectors that contain names of variables and factors.
+#'   \code{right} determines the LHS variables, \code{right} determines the RHS variables, and \code{both} determines both sides.
+#'   The \code{plot_coefficient()} method plots the solution paths of coefficients belonging to the intersection of \code{block}, \code{left}, \code{right}, and \code{both}.
+#'   }
+#' }
+#' \cr
+#' 
+#'
+#' @section Test-Related Methods:
+#' Test-related mthods are used to obtain the result of specific statistical test.
+#' So far, only tests for likelihood ratio, rmsea, and coefficients are available.
+#' For each test-related method, user should specify selector, exclude_nonconvergence, and exclude_nonconvexity. 
+#' Argument selector is used to specify which model selection criterion or fit indice should be used to choose an optimal penalty level. 
+#' Its value can be any one in "loss", "aic", "aic3", "caic", "bic", "abic", "hbic", "rmsea", "cfi", "nnfi", or "srmr". 
+#' Argument exclude_nonconvergence specifies whether non-convergence results should be removed for penalty level selection. 
+#' Non-convergence result idetermined by examine the maximal elements of absolute objective gradient and the number of iteration. 
+#' Argument exclude_nonconvergence specifies whether non-convexity results should be removed for penalty level selection, which is determined by checking the minimum of univariate approximate hessian.
+#' Because test results can be examined via \code{summarize} method, test-related methods are only relevant if users hope to obtain the test result for further manipulation.
+#' \describe{
+#'   \item{\code{test_likelihood_ratio(selector, exclude_nonconvergence, exclude_nonconvexity, verbose)}}{
+#'   The method returns a list of result for testing likelihood ratio.
+#'   }
+#'
+#'   \item{\code{test_rmsea(selector, exclude_nonconvergence, exclude_nonconvexity, verbose)}}{
+#'   The method returns a list of result for testing rmsea.
+#'   }
+#'
+#'   \item{\code{test_coefficient(selector, standard_error, exclude_nonconvergence, exclude_nonconvexity, verbose)}}{
+#'   The method returns a list of result for testing coefficient. 
+#'   Argument \code{standard_error} is a character to specify the standard error to be used for hypothesis testing. 
+#'   In this alpha version, only 'expected_fisher' can be used.
+#'   }
+#' }
+#' \cr
+#' 
+#'
+#' @section Get-Related Methods:
+#' Because all of the data members of \code{lslx} are set as private to protect inner data structure,
+#' three get-related methods are defined for obtaining a deep copy of data memeber inside \code{lslx}.
+#' \describe{
+#'   \item{\code{get_model()}}{
+#'   The method returns a deep copy of \code{model} member in the current \code{lslx} object.
+#'   }
+#'   \item{\code{get_data()}}{
+#'   The method returns a deep copy of \code{data} member in the current \code{lslx} object.
+#'   }
+#'   \item{\code{get_fitting()}}{
+#'   The method returns a deep copy of \code{fitting} member in the current \code{lslx} object.
+#'   }
+#' }
+#' \cr
+#' 
+#'
+#' @section Extract-Related Methods:
+#' Many extract-related methods are defined to obtain quantities that can be used for further SEM applications or model diagnosis.
+#' Some of these quantities only depend on data (e.g., saturated sample covariance matrix), but some of them relies on the penalty level (e.g., gradient of objective function).
+#' When implementing fit-related methods, \code{lslx} only records necessary results for saving memory.
+#' Therefore, the extract-related methods not only extract objects but may possibly re-compute some of them.
+#' \cr
+#' \cr
+#' In extract-related methods, there are many common arguments that should be introduced first: \code{selector}, \code{exclude_nonconvergence}, and \code{exclude_nonconvexity}.
+#' Argument \code{selector} is used to specify which model selection criterion or fit indice should be used to choose an optimal penalty level.
+#' Its value can be any one in \code{"loss"}, \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, or \code{"srmr"}
+#' Argument \code{exclude_nonconvergence} specifies whether non-convergence results should be removed for penalty level selection.
+#' Non-convergence result idetermined by examine the maximal elements of absolute objective gradient and the number of iteration.
+#' Argument \code{exclude_nonconvergence} specifies whether non-convexity results should be removed for penalty level selection, which is determined by checking the minimum of univariate approximate hessian.
+#'
+#' \describe{
+#' \item{\code{extract_specification()}}{
+#' The method returns a \code{data.frame} of model specification.
+#'   }
+#' \item{\code{extract_saturated_cov()}}{
+#' The method returns a \code{list} of saturated sample covariance matrices.
+#'   }
+#' \item{\code{extract_saturated_mean()}}{
+#' The method returns a \code{list} of saturated sample mean vectors.
+#'   }
+#' \item{\code{extract_saturated_moment_acov()}}{
+#' The method returns the asymptotic covariance matrix of saturated sample moments.
+#'   }
+#' \item{\code{extract_penalty_level(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the index name of the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_coefficient(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the coefficient estimate under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_goodness_of_fit(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the values of fit indices under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_numerical_condition(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the numerical conditions under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_implied_cov(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns a \code{list} of model-implied covariance matrices under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_implied_mean(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns a \code{list} of model-implied mean vectors under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_residual_cov(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns a \code{list} of residual matrices of covariance under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_residual_mean(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns a \code{list} of residual vectors of mean under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_coefficient_matrice(selector, block, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns a \code{list} of coefficient matrices specified by argument \code{block} under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_moment_gradient(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the gradient matrice of moment structure under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_fisher_information(selector, type = "expected", exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the Fisher information matrix under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_coefficient_acov(selector, standard_error = "expected_fisher", exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the asymptotic covariance of coefficients under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_loss_gradient(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the gradient of loss (or discrepancy) function under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_regularizer_gradient(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the gradient of regularizer (or penalty term) under the optimal penalty level selected by \code{selector}.
+#'   }
+#' \item{\code{extract_objective_gradient(selector, exclude_nonconvergence = TRUE, exclude_nonconvexity = TRUE, verbose = TRUE)}}{
+#' The method returns the gradient of objective (or penalized discrepancy) under the optimal penalty level selected by \code{selector}.
+#'   }
+#' }
+#' \cr
+#' 
+#'
+#' @examples
+#' ## Example 1: Regression Model with Lasso Penalty ##
+#' # run `vignette("lslx-example-1")` to see the vignette
+#' # generate data for regression analysis
+#' set.seed(9487)
+#' x <- matrix(rnorm(2000), 200, 10)
+#' colnames(x) <- paste0("x", 1:10)
+#' y <- matrix(rnorm(200), 200, 1)
+#' df_reg <- data.frame(y, x)
+#' 
+#' # specify a equation for model specification
+#' equation1 <-
+#' '
+#' y <= x1 + x2 + x3 + x4
+#' y <~ x5 + x6 + x7 + x8 + x9 + x10
+#' '
+#' 
+#' # create an lslx object via specified equation and raw data
+#' r6_lslx1 <- lslx$new(equation = equation1,
+#'                      sample_data = df_reg)
+#'                     
+#' # fit the specified model to data under specified penalty levels                  
+#' r6_lslx1$fit(penalty_method = "lasso",
+#'              lambda_grid = seq(.00, .30, .05))
+#' 
+#' # summarize fitting result under the penalty level selected by 'bic'
+#' r6_lslx1$summarize(selector = "bic")
+#' 
+#' 
+#' 
+#' ## Example 2: Semi-Confirmatory Factor Analysis ##
+#' # run `vignette("lslx-example-2")` to see the vignette
+#' equation2 <-
+#' '
+#' visual  :=> x1 + x2 + x3
+#' textual :=> x4 + x5 + x6
+#' speed   :=> x7 + x8 + x9
+#' visual  :~> x4 + x5 + x6 + x7 + x8 + x9
+#' textual :~> x1 + x2 + x3 + x7 + x8 + x9
+#' speed   :~> x1 + x2 + x3 + x4 + x5 + x6
+#' visual <=> fix(1)* visual
+#' textual <=> fix(1)* textual
+#' speed <=> fix(1)* speed
+#' '
+#' 
+#' r6_lslx2 <- lslx$new(equation = equation2,
+#'                      sample_data = lavaan::HolzingerSwineford1939)
+#'                     
+#' r6_lslx2$fit(penalty_method = "mcp",
+#'              lambda_grid = seq(.05, .30, .05),
+#'              gamma_grid = c(5, 10))
+#' 
+#' r6_lslx2$summarize(selector = "bic")
+#' 
+#' 
+#' 
+#' ## Example 3: Semi-Confirmatory Structural Equation Modeling ##
+#' # run `vignette("lslx-example-3")` to see the vignette
+#' equation3 <- 
+#' '
+#' fix(1) * x1 + x2 + x3      <=: ind60
+#' fix(1) * y1 + y2 + y3 + y4 <=: dem60
+#' fix(1) * y5 + y6 + y7 + y8 <=: dem65
+#' dem60 <= ind60
+#' dem65 <= ind60 + dem60
+#' '
+#' 
+#' # create an lslx object via specified equation and sample covariance matrix
+#' r6_lslx3 <- lslx$new(equation = equation3,
+#'                      sample_cov = cov(lavaan::PoliticalDemocracy),
+#'                      sample_size = nrow(lavaan::PoliticalDemocracy))
+#'
+#' # set some covariances of errors as penalized parameters
+#' r6_lslx3$penalize_coefficient(name = c("y1<->y5",
+#'                                        "y2<->y4",
+#'                                        "y2<->y6",
+#'                                        "y3<->y7",
+#'                                        "y4<->y8",
+#'                                        "y6<->y8"))  
+#'                                        
+#' r6_lslx3$fit_mcp(lambda_grid = seq(.00, .30, .05),
+#'                  gamma_grid = Inf)
+#'                  
+#' r6_lslx3$summarize(selector = "rmsea")
+#' 
+#' 
+#' 
+#' ## Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis ##
+#' # run `vignette("lslx-example-4")` to see the vignette
+#' # multiple-group analysis with Pasteur specified as reference
+#' equation4 <-
+#' '
+#' visual  :=> fix(1) * x1 + x2 + x3
+#' textual :=> fix(1) * x4 + x5 + x6
+#' speed   :=> fix(1) * x7 + x8 + x9
+#' '
+#' r6_lslx4 <- lslx$new(equation = equation4,
+#'                      sample_data = lavaan::HolzingerSwineford1939,
+#'                      group_variable = "school",
+#'                      reference_group = "Pasteur")
+#'                      
+#' # penalize increment components of loadings in 'Grant-White'
+#' r6_lslx4$penalize_heterogeneity("y<-f", group = "Grant-White")
+#'                            
+#' r6_lslx4$fit_lasso(lambda_grid = seq(.00, .30, .05))
+#' 
+#' r6_lslx4$summarize(selector = "aic")
+#' 
+#' 
+
+
+
+
+lslx <-
+  R6::R6Class(
+    classname = "lslx",
+    private = list(
+      model = "lslxModel",
+      data = "lslxData",
+      fitting = "lslxFitting"
+    )
+  )
+
+
+lslx$set("public",
+         "initialize",
+         function(equation,
+                  sample_data,
+                  sample_cov,
+                  sample_mean,
+                  sample_size,
+                  group_variable,
+                  reference_group,
+                  verbose = TRUE) {
+           if (missing(equation)) {
+             stop("Argument 'equation' cannot be empty.")
+           }
+           if (missing(sample_data) & missing(sample_cov)) {
+             stop("Argument 'sample_data' and 'sample_cov' cannot be both empty.")
+           } else if (!missing(sample_data)) {
+             if (!is.data.frame(sample_data)) {
+               if (!(is.matrix(sample_data) & is.numeric(sample_data))) {
+                 stop("Argument 'sample_data' must be a 'data.frame' or a 'matrix'.")
+               } else {
+                 sample_data <- as.data.frame(sample_data)
+               }
+             }
+             if (missing(group_variable)) {
+               name_group <- "G"
+             } else {
+               if (!(group_variable %in% colnames(sample_data))) {
+                 stop("Argument 'group_variable' is not recognized.")
+               } 
+               name_group <-
+                 sort(levels(factor(
+                   getElement(sample_data, group_variable)
+                 )))
+             }
+           } else {
+             if (!is.matrix(sample_cov) & !is.list(sample_cov)) {
+               stop(
+                 "Argument 'sample_cov' must be a 'matrix' (for single group analysis)",
+                 " or a 'list' of 'matrix' (for multiple group analysis)."
+               )
+             }
+             if (is.matrix(sample_cov)) {
+               sample_cov <- list(sample_cov)
+             }
+             if (is.null(names(sample_cov))) {
+               name_group <-
+                 paste0("G", 1:length(sample_cov))
+               names(sample_cov) <- name_group
+               if (verbose) {
+                 cat(
+                   "NOTE: Because argument 'sample_cov' doesn't contain group name(s), ",
+                   "default group name(s) is created: ",
+                   do.call(paste, as.list(name_group)),
+                   ".\n"
+                 )
+               }
+             } else {
+               name_group <- names(sample_cov)
+             }
+           }
+           
+           if (any(grepl(pattern = "/|\\||@",
+                         x = name_group))) {
+             stop(
+               "Name(s) of group(s) cannot contain '/', '|', and '@'.",
+               "\n  Please change the name(s) of group(s) in the specified data source."
+             )
+           }
+           
+           if (missing(reference_group)) {
+             reference_group <- NA_character_
+           } else {
+             if (length(name_group) == 1L) {
+               stop("Argument 'reference_group' is unnecessary for single group analysis.")
+             } else {
+               if (!(reference_group %in% name_group)) {
+                 stop(
+                   "Argument 'reference_group' is not recognized.",
+                   "\n  Group name(s) currently recognized by 'lslx' is ",
+                   do.call(paste, as.list(name_group)),
+                   " (possibly automatically created).",
+                   "\n  Specified 'reference_group' is ",
+                   reference_group,
+                   "."
+                 )
+               }
+             }
+           }
+           
+           private$model <-
+             lslxModel$new(
+               equation = equation,
+               name_group = name_group,
+               reference_group = reference_group
+             )
+
+           if (!missing(sample_data)) {
+             if (!all(private$model$name_response %in% colnames(sample_data))) {
+               stop(
+                 "Some response variable in 'equation' cannot be found in 'sample_data'.",
+                 "\n  Response variables specified by 'equation' are ",
+                 do.call(paste, as.list(private$model$name_response)),
+                 ".",
+                 "\n  Column names of 'sample_data' are ",
+                 do.call(paste, as.list(colnames(sample_data))),
+                 "."
+               )
+             } else {
+               if (missing(group_variable)) {
+                 sample_data <-
+                   list(sample_data[, private$model$name_response, drop = FALSE])
+                 names(sample_data) <- name_group
+               } else {
+                 sample_data <-
+                   sample_data[order(as.character(getElement(sample_data, group_variable))), ]
+                 sample_data[, group_variable] <-
+                   as.character(getElement(sample_data, group_variable))
+                 sample_data <-
+                   split(sample_data[, private$model$name_response],
+                         getElement(sample_data, group_variable))
+               }
+             }
+             private$data <- lslxData$new(sample_data = sample_data)
+             
+             if (verbose) {
+               cat("An 'lslx' R6 class is initialized via 'sample_data'.",
+                   "\n")
+             }
+           } else {
+             if (!all(private$model$name_response %in% colnames(sample_cov[[1]]))) {
+               stop(
+                 "Some response variable in 'equation' cannot be found in 'sample_cov'.",
+                 "\n  Response variables specified by 'equation' are ",
+                 do.call(paste, as.list(private$model$name_response)),
+                 ".",
+                 "\n  Column names of 'sample_cov' are ",
+                 do.call(paste, as.list(colnames(sample_cov[[1]]))),
+                 ".",
+                 "\n  Row names of 'sample_cov' are ",
+                 do.call(paste, as.list(rownames(sample_cov[[1]]))),
+                 "."
+               )
+             } else {
+               sample_cov <-
+                 lapply(
+                   X = sample_cov,
+                   FUN = function(sample_cov_i) {
+                     sample_cov_i <-
+                       sample_cov_i[private$model$name_response,
+                                    private$model$name_response,
+                                    drop = FALSE]
+                     return(sample_cov_i)
+                   }
+                 )
+               names(sample_cov) <- name_group
+             }
+             if (missing(sample_mean)) {
+               sample_mean <-
+                 lapply(
+                   X = name_group,
+                   FUN = function(i) {
+                     sample_mean_i <- rep(0, ncol(sample_cov[[1]]))
+                     names(sample_mean_i) <-
+                       colnames(sample_cov[[1]])
+                     return(sample_mean_i)
+                   }
+                 )
+               names(sample_mean) <- name_group
+               if (verbose) {
+                 cat(
+                   "NOTE: Because argument 'sample_mean' is missing, ",
+                   "default 'sample_mean' is created: ",
+                   "a list of zero vector(s) with appropriate size.\n"
+                 )
+               }
+             } else {
+               if (!is.numeric(sample_mean) & !is.list(sample_mean)) {
+                 stop("Argument 'sample_mean' must be 'numeric' or 'list' of 'numeric'.")
+               }
+               if (is.numeric(sample_mean)) {
+                 sample_mean <- list(sample_mean)
+               }
+               if (!all(private$model$name_response %in% names(sample_mean[[1]]))) {
+                 stop(
+                   "Some response variable in 'equation' cannot be found in 'sample_mean'.",
+                   "\n  Response variables specified by 'equation' are ",
+                   do.call(paste, as.list(private$model$name_response)),
+                   ".",
+                   "\n  Column names of 'sample_mean' are ",
+                   do.call(paste, as.list(colnames(
+                     sample_cov[[1]]
+                   ))),
+                   "."
+                 )
+               } else {
+                 sample_mean <-
+                   lapply(
+                     X = sample_mean,
+                     FUN = function(sample_mean_i) {
+                       sample_mean_i <-
+                         sample_mean_i[private$model$name_response]
+                       return(sample_mean_i)
+                     }
+                   )
+               }
+               if (length(sample_mean) != length(sample_cov)) {
+                 stop(
+                   "The length of argument 'sample_mean' doesn't match the length of 'sample_cov'.",
+                   "\n  The length of 'sample_mean' is ",
+                   length(sample_mean),
+                   ".",
+                   "\n  The length of 'sample_cov' is ",
+                   length(sample_cov),
+                   "."
+                 )
+               }
+               if (is.null(names(sample_mean))) {
+                 names(sample_mean) <- name_group
+               } else {
+                 if (!all(name_group %in% names(sample_mean))) {
+                   stop(
+                     "Argument 'sample_mean' contains unrecognized group name(s).",
+                     "\n  Group name(s) currently recognized by 'lslx' is ",
+                     do.call(paste, as.list(private$model$name_group)),
+                     " (possibly automatically created).",
+                     "\n  Group name(s) specified in 'sample_mean' is ",
+                     do.call(paste, as.list(names(
+                       sample_mean
+                     ))),
+                     "."
+                   )
+                 } else{
+                   sample_mean <- sample_mean[name_group]
+                 }
+               }
+             }
+             if (missing(sample_size)) {
+               stop("Argument 'sample_size' cannot be empty if 'sample_cov' is used.")
+             } else {
+               if (!is.numeric(sample_size) & !is.list(sample_size)) {
+                 stop("Argument 'sample_size' must be a 'numeric' or a 'list' of 'numeric'.")
+               }
+               if (is.numeric(sample_size)) {
+                 sample_size <- as.list(sample_size)
+               }
+               if (length(sample_size) != length(sample_cov)) {
+                 stop(
+                   "The length of argument 'sample_size' doesn't match the length of 'sample_cov'.",
+                   "\n  The length of 'sample_size' is ",
+                   length(sample_size),
+                   ".",
+                   "\n  The length of 'sample_cov' is ",
+                   length(sample_cov),
+                   "."
+                 )
+               }
+               if (is.null(names(sample_size))) {
+                 names(sample_size) <- name_group
+               } else {
+                 if (!all(name_group %in% names(sample_size))) {
+                   stop(
+                     "Argument 'sample_size' contains unrecognized group name(s).",
+                     "\n  Group name(s) currently recognized by 'lslx' is ",
+                     do.call(paste, as.list(private$model$name_group)),
+                     " (possibly automatically created).",
+                     "\n  Group name(s) specified in 'sample_size' is ",
+                     do.call(paste, as.list(names(
+                       sample_size
+                     ))),
+                     "."
+                   )
+                 } else{
+                   sample_size <- sample_size[name_group]
+                 }
+               }
+             }
+             private$data <-
+               lslxData$new(
+                 sample_cov = sample_cov,
+                 sample_mean = sample_mean,
+                 sample_size = sample_size
+               )
+             if (verbose) {
+               cat("An 'lslx' R6 class is initialized via 'sample_cov'. \n")
+             }
+           }
+           
+           private$fitting <- NULL
+           
+           if (verbose) {
+             cat("  Response Variable(s):",
+                 private$model$name_response,
+                 "\n")
+             cat("  Latent Factor(s):",
+                 private$model$name_factor,
+                 "\n")
+             cat("  Group(s):",
+                 private$model$name_group,
+                 "\n")
+             cat("  Reference Group:",
+                 private$model$reference_group,
+                 "\n")
+             if (!is.na(private$model$reference_group)) {
+               cat(
+                 "NOTE:",
+                 "Because",
+                 private$model$reference_group,
+                 "is set as reference,",
+                 "coefficients in other groups actually represent increments from the reference."
+               )
+             }
+           }
+         })

@@ -1,0 +1,111 @@
+---
+title: "Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis"
+author: "Po-Hsien Huang"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+In this example, we will show how to use `lslx` to conduct semi-confirmatory factor analysis.
+The example uses data `HolzingerSwineford1939` in the package `lavaan`.
+Hence, `lavaan` must be installed.
+
+## Model Sepcification
+In the following specification, `x1` - `x9` is assumed to be measurements of 3 latent factors: `visual`, `textual`, and `speed`.
+```{r comment = "", message = FALSE}
+equation4 <-
+'
+visual  :=> fix(1) * x1 + x2 + x3 
+textual :=> fix(1) * x4 + x5 + x6 
+speed   :=> fix(1) * x7 + x8 + x9 
+'
+```
+The operator `:=>` means that the LHS latent factors is defined by the RHS observed variables.
+In this model, `visual` is mainly measured by `x1` - `x3`, `textual` is mainly measured by `x4` - `x6`, and `speed` is mainly measured by `x7` - `x9`.
+Loadings of `x1`, `x4`, and `x7` are fixed at 1 for scale setting.
+The above specification is valid for both groups.
+Details of equation syntax can be found in the section of Equation Syntax via `?lslx`.
+
+## Object Initialization
+`lslx` is written as an `R6` class.
+Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
+The following code initializes an `lslx` object named `r6_lslx4`.
+```{r comment = "", message = FALSE}
+library(lslx)
+r6_lslx4 <- lslx$new(equation = equation4,
+                     sample_data = lavaan::HolzingerSwineford1939,
+                     group_variable = "school",
+                     reference_group = "Pasteur")
+```
+Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
+The initialization of `lslx` requires users to specify a equation for model specification (argument `equation`) and a data set to be fitted (argument `sample_data`).
+The data set must contains all the observed variables specified in the given equation.
+Because in this example a multi-group analysis is considered, variable for group labeling (argument `group_variable`) must be specified.
+In lslx, two types of parameterization can be used in multi-group analysis. 
+The first type is the same with the traditional multi-group SEM, which treats model parameters in each group seperately.
+The second type sets one group as reference and treats model parameters in other gorups as increments with respect to the reference.
+Under the second type of parameterization, the group heterogeneity can be efficiently explored if we treat the increments as penalized parameters.
+In this example, `Pasteur` is set as reference.
+Hence, the parameters in `Grant-White` now reflect differences from the reference.
+
+
+
+## Model Respecification
+After an `lslx` object is initialized, model can be respecified by `free_heterogeneity`, `fix_heterogeneity`, and `penalize_heterogeneity` methods.
+The following code sets `x2<-visual`, `x3<-visual`, `x5<-textual`, `x6<-textual`, `x8<-speed`, and `x9<-speed` in `Grant-White` as penalized parameters.
+Note that parameters in `Grant-White` now reflect differences since `Pasteur` is set as reference.
+```{r comment = "", message = FALSE}
+r6_lslx4$penalize_heterogeneity("y<-f", group = "Grant-White")
+```
+To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
+
+
+## Model Fitting
+After an `lslx` object is initialized, method `fit_lasso` can be used to fit the specified model into the given data with lasso penalty funtion.
+```{r comment = "", message = FALSE}
+r6_lslx4$fit_lasso(lambda_grid = seq(.00, .30, .05))
+```
+The `fit_lasso` requires users to specify the considerd penalty levels (argument `lambda_grid`).
+In this example, the lambda grid is `c(.00, .05, .10, .15, .20, .25, .30)`.
+All the fitting result will be stored in the `fitting` field of `r6_lslx4`.
+
+
+## Model Summarizing
+Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
+To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
+Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
+The following code summarize the fitting result under the penalty level selected by Akaike information criterion (AIC).
+```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
+r6_lslx4$summarize(selector = "aic")
+```
+In this example, we can see that measurements for `visual` and `speed` are invariant across the two populations.
+However, loadings of `x5` and `x6` seem to be heterogeneous across the two groups.
+So far, the hypothesis testing for the model coefficient are based on the expected Fisher information and doesn't consider the presence of model selection.
+In the future, other standard error formula and valid post model selection inference will be available.
+
+
+## Visualization
+`lslx` provides three methods for visualizaing the fitting result.
+The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
+The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
+The plot can be used to evaluate the quality of numerical optimization.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx4$plot_numerical_condition(criterion = c("n_iter_out", 
+                                                "objective_gradient_abs_max",
+                                                "objective_hessian_convexity"))
+```
+
+
+The method `plot_goodness_of_fit` shows the values of information criteria and fit indices under all the penalty levels.
+The following code plots the values of `aic`, `bic`, and `rmsea`.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx4$plot_goodness_of_fit(selector = c("aic", "bic", "rmsea"))
+```
+
+
+The method `plot_coefficient` shows the solution path of coefficients in the given block.
+The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the variance/covariance between observed variables.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx4$plot_coefficient(block = "y<-f")
+```

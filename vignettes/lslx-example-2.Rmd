@@ -1,0 +1,112 @@
+---
+title: "Example 2: Semi-Confirmatory Factor Analysis"
+author: "Po-Hsien Huang"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+In this example, we will show how to use `lslx` to conduct semi-confirmatory factor analysis.
+The example uses data `HolzingerSwineford1939` in the package `lavaan`.
+Hence, `lavaan` must be installed.
+
+## Model Sepcification
+In the following specification, `x1` - `x9` is assumed to be measurements of 3 latent factors: `visual`, `textual`, and `speed`.
+```{r comment = "", message = FALSE}
+equation2 <-
+'
+visual  :=> x1 + x2 + x3
+textual :=> x4 + x5 + x6
+speed   :=> x7 + x8 + x9
+visual  :~> x4 + x5 + x6 + x7 + x8 + x9 
+textual :~> x1 + x2 + x3 + x7 + x8 + x9 
+speed   :~> x1 + x2 + x3 + x4 + x5 + x6 
+visual  <=> fix(1) * visual
+textual <=> fix(1) * textual
+speed   <=> fix(1) * speed
+'
+```
+The operator `:=>` means that the LHS latent factors is defined by the RHS observed variables.
+In particular, the loadings are freely estimated.
+The operator `:~>` also means that the LHS latent factors is defined by the RHS observed variables, but the loadings are penalized.
+In this model, `visual` is mainly measured by `x1` - `x3`, `textual` is mainly measured by `x4` - `x6`, and `speed` is mainly measured by `x7` - `x9`.
+However, the inclusion of the penalized loadings indicates that each measurement may not be influenced by only one latent factor. 
+The operator `<=>` means that the LHS and RHS variables/factors are covaried.
+If the LHS and RHS variable/factor are the same, `<=>` specifies the variance of that variable/factor.
+For scale setting, `visual <=> fix(1) * visual` makes the variance of `visual` to be zero.
+Details of equation syntax can be found in the section of Equation Syntax via `?lslx`.
+
+## Object Initialization
+`lslx` is written as an `R6` class.
+Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
+The following code initializes an `lslx` object named `r6_lslx2`.
+```{r comment = "", message = FALSE}
+library(lslx)
+r6_lslx2 <- lslx$new(equation = equation2,
+                     sample_data = lavaan::HolzingerSwineford1939)
+```
+Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
+The initialization of `lslx` requires users to specify a equation for model specification (argument `equation`) and a data set to be fitted (argument `sample_data`).
+The data set must contains all the observed variables specified in the given equation.
+In is also possible to initialize an `lslx` object via sample moments (see Example 3).
+
+It is possible to see the model specification via the `extract_specification` method.
+```{r comment = "", message = FALSE}
+r6_lslx2$extract_specification()
+```
+The row names show the coefficient names. 
+The most two relevant columns are `type` which shows the type of the coefficient and `start` which shows the starting value.
+In `lslx`, many `extract` methods are defined that can be used to extract information stored in `lslx` object.
+For details, please see the the section of Extract-Related Methods via `?lslx`.
+
+## Model Fitting
+After an `lslx` object is initialized, method `fit` can be used to fit the specified model into the given data.
+```{r comment = "", message = FALSE}
+r6_lslx2$fit(penalty_method = "mcp",
+             lambda_grid = seq(.05, .30, .05),
+             gamma_grid = c(5, 10))
+```
+The fitting process requires users to specify the penalty method (argument `penalty_method`) and the considerd penalty levels (argument `lambda_grid` and `gamma_grid`).
+In this example, the `mcp` penalty is implemented on the lambda grid `c(.05, .10, .15, .20, .25, .30)` and gamma grid `c(5, 10)`.
+Note that in this example `lambda = 0` is not considered because it may result in unidentified result.
+All the fitting result will be stored in the `fitting` field of `r6_lslx2`.
+
+
+## Model Summarizing
+Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
+To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
+Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
+The following code summarize the fitting result under the penalty level selected by Bayesian information criterion.
+```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
+r6_lslx2$summarize(selector = "bic")
+```
+In ths example, we can see that most penalized parameters are zero under the selected penalty level except for `x9<-visual`, which shows the benefit of using the semi-confirmatory approach.
+So far, the hypothesis testing for the model coefficient are based on the expected Fisher information and doesn't consider the presence of model selection.
+In the future, other standard error formula and valid post model selection inference will be available.
+
+
+## Visualization
+`lslx` provides three methods for visualizaing the fitting result.
+The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
+The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
+The plot can be used to evaluate the quality of numerical optimization.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$plot_numerical_condition(criterion = c("n_iter_out", 
+                                                "objective_gradient_abs_max",
+                                                "objective_hessian_convexity"))
+```
+
+
+The method `plot_goodness_of_fit` shows the values of information criteria and fit indices under all the penalty levels.
+The following code plots the values of `loss` (ML discrepancy function value evaluated at the current estimate), `aic`, and `bic`.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$plot_goodness_of_fit(selector = c("loss", "aic", "bic"))
+```
+
+
+The method `plot_coefficient` shows the solution path of coefficients in the given block.
+The following code plots the solution paths of all coefficients in the block `y<-f`, which contains all the regression coeffcients from latent factors to observed variables (i.e., factor loadings).
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$plot_coefficient(block = "y<-f")
+```

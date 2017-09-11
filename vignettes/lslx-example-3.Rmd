@@ -1,0 +1,110 @@
+---
+title: "Example 3: Semi-Confirmatory Structural Equation Modeling"
+author: "Po-Hsien Huang"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+In this example, we will show how to use `lslx` to conduct semi-confirmatory structural equation modeling.
+The example uses data `PoliticalDemocracy` in the package `lavaan`.
+Hence, `lavaan` must be installed.
+
+## Model Sepcification
+In the following specification, `x1` - `x3` and `y1` - `y8` is assumed to be measurements of 3 latent factors: `ind60`, `dem60`, and `dem65`.
+```{r comment = "", message = FALSE}
+equation3 <-
+'
+fix(1) * x1 + x2 + x3      <=: ind60
+fix(1) * y1 + y2 + y3 + y4 <=: dem60
+fix(1) * y5 + y6 + y7 + y8 <=: dem65
+dem60 <= ind60
+dem65 <= ind60 + dem60
+'
+```
+The operator `<=:` means that the RHS latent factors is defined by the LHS observed variables.
+In particular, the loadings are freely estimated.
+In this model, `ind60` is measured by `x1` - `x3`, `dem60` is mainly measured by `y1` - `y4`, and `dem65` is mainly measured by `y5` - `y8`.
+The operator `<=` means that the regression coefficients from the RHS variables to the LHS variables are freely estimated.
+In this model, `dem60` is influenced by `ind60` and `dem65` is influenced by `dem60` and `ind60`.
+Details of equation syntax can be found in the section of Equation Syntax via `?lslx`.
+
+## Object Initialization
+`lslx` is written as an `R6` class.
+Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
+The following code initializes an `lslx` object named `r6_lslx3`.
+```{r comment = "", message = FALSE}
+library(lslx)
+r6_lslx3 <- lslx$new(equation = equation3,
+                     sample_cov = cov(lavaan::PoliticalDemocracy),
+                     sample_size = nrow(lavaan::PoliticalDemocracy))
+```
+Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
+The initialization of `lslx` requires users to specify a equation for model specification (argument `equation`) and a sample moments to be fitted (argument `sample_cov` and `sample_size`).
+The sample moment must contains all the observed variables specified in the given equation.
+
+
+## Model Respecification
+After an `lslx` object is initialized, model can be respecified by `free_coefficent`, `fix_coefficent`, and `penalize_coefficent` methods.
+The following code sets `y1<->y5`, `y2<->y4`, `y2<->y6`, `y3<->y7`, `y4<->y8`, and `y6<->y8` as penalized parameters.
+```{r comment = "", message = FALSE}
+r6_lslx3$penalize_coefficient(name = c("y1<->y5",
+                                       "y2<->y4",
+                                       "y2<->y6",
+                                       "y3<->y7",
+                                       "y4<->y8",
+                                       "y6<->y8"))
+```
+To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
+
+
+## Model Fitting
+After an `lslx` object is initialized, method `fit_mcp` can be used to fit the specified model into the given data with mcp penalty funtion.
+```{r comment = "", message = FALSE}
+r6_lslx3$fit_mcp(lambda_grid = seq(.00, .30, .05),
+                 gamma_grid = Inf)
+```
+The `fit_mcp` requires users to specify the considerd penalty levels (argument `lambda_grid` and `gamma_grid`).
+In this example, the lambda grid is `c(.00, .05, .10, .15, .20, .25, .30)` and the gamma grid is `Inf`.
+Note that in this example `gamma = Inf` makes mcp to be equivalent to the lasso panalty.
+All the fitting result will be stored in the `fitting` field of `r6_lslx3`.
+
+
+## Model Summarizing
+Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
+To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
+Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
+The following code summarize the fitting result under the penalty level selected by root mean square error of approximation.
+```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
+r6_lslx3$summarize(selector = "rmsea")
+```
+In this example, we can see that the PL estimate under the selected penalty level doesn't contain any zero value, which indicates that all of the covariance of measurements are relevant.
+So far, the hypothesis testing for the model coefficient are based on the expected Fisher information and doesn't consider the presence of model selection.
+In the future, other standard error formula and valid post model selection inference will be available.
+
+
+## Visualization
+`lslx` provides three methods for visualizaing the fitting result.
+The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
+The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
+The plot can be used to evaluate the quality of numerical optimization.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx3$plot_numerical_condition(criterion = c("n_iter_out", 
+                                                "objective_gradient_abs_max",
+                                                "objective_hessian_convexity"))
+```
+
+
+The method `plot_goodness_of_fit` shows the values of information criteria and fit indices under all the penalty levels.
+The following code plots the values of `aic`, `bic`, and `rmsea`.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx3$plot_goodness_of_fit(selector = c("aic", "bic", "rmsea"))
+```
+
+
+The method `plot_coefficient` shows the solution path of coefficients in the given block.
+The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the variance/covariance between observed variables.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx3$plot_coefficient(block = "y<->y")
+```
