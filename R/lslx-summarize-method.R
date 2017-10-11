@@ -370,8 +370,8 @@ lslx$set("public",
                  # if 'single group' or 'reference group not specified', print nothing.
                  if ((length(group_by_order)==1)|is.na(private$model$reference_group)) {
                    cat("\n")} else if (i_group == group_by_order[1]){
-                     cat(" (reference group)\n")} else {
-                       cat(" (increment group)\n")
+                     cat(" (reference component)\n")} else {
+                       cat(" (increment component)\n")
                      }
                  dta_single_group <- data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
                  colnames(dta_single_group) <- paste0(" ",colnames(dta_single_group))
