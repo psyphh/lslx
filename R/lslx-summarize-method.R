@@ -366,13 +366,15 @@ lslx$set("public",
              ## print by block types
              for (i_block_type in block_levels) {
                if (sum(data_single_group$block_type == i_block_type) > 0L) {
-                 cat(" ", i_block_type, "\n")
-                 dta_single_group <-
-                   data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
-                 colnames(dta_single_group) <-
-                   format(colnames(dta_single_group),
-                          width = 8,
-                          justify = "right")
+                 cat(" ", i_block_type)
+                 # if 'single group' or 'reference group not specified', print nothing.
+                 if ((length(group_by_order)==1)|is.na(private$model$reference_group)) {
+                   cat("\n")} else if (i_group == group_by_order[1]){
+                     cat(" (reference group)\n")} else {
+                       cat(" (increment group)\n")
+                     }
+                 dta_single_group <- data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
+                 colnames(dta_single_group) <- paste0(" ",colnames(dta_single_group))
                  print(dta_single_group)
                  cat("\n")
                }
