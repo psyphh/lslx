@@ -877,6 +877,8 @@
 #'
 #' Bozdogan, H. (1987). Model selection and Akaike’s Information Criterion (AIC): The general theory and its analytical extensions. Psychometrika, 52(3), 345–370.
 #'
+#' Browne, M. W. (1984). Asymptotic distribution-free methods for the analysis of covariance structures. British Journal of Mathematical and Statistical Psychology, 37(1), 62–83.
+#'
 #' Chang, W. (2017). R6: Classes with Reference Semantics.
 #'
 #' Eddelbuettel, D., & François, R. (2011). {Rcpp}: Seamless {R} and {C++} Integration. Journal of Statistical Software, 40(8), 1–18.
