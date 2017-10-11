@@ -11,6 +11,7 @@ devtools::install_github("psyphh/lslx",
 ```
 If you have not install package `devtools` before, please install `devtools` first.
 For windows users, `Rtools` (https://cran.r-project.org/bin/windows/Rtools/) should be installed first.
+For Mac OS users, `Xcode` should be installed first.
 
 # Usage
 `lslx` is an R6ClassGenerator for constructing an `lslx` object that has methods for fitting semi-confirmatory SEM. In a simpliest case, the use of `lslx` involves three major steps
