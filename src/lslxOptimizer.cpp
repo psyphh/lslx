@@ -8,7 +8,6 @@ using namespace Eigen;
 
 
 // [[Rcpp::depends(RcppEigen)]]
-
 class lslxOptimizer {
 public:
   char regularizer_type;
@@ -19,9 +18,9 @@ public:
   double ridge_cov, ridge_hessian;
   bool positive_diag;
   
-  int total_sample_size;
+  int n_observation;
   Rcpp::List  sample_proportion, saturated_cov, saturated_mean;
-  Eigen::MatrixXd  saturated_moment_acov;
+  Eigen::MatrixXd saturated_moment_acov;
   
   int n_response, n_factor, n_eta, n_moment, n_group;
   
@@ -30,8 +29,8 @@ public:
   Rcpp::IntegerVector theta_matrice_idx, theta_group_idx;
   Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx;
   
-  double loss_value_baseline;
-  int degree_of_freedom_baseline;
+  double baseline_loss_value;
+  int baseline_degree_of_freedom;
 
   Eigen::MatrixXd identity_y, identity_eta;  
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
@@ -64,7 +63,8 @@ public:
   
   lslxOptimizer(Rcpp::List reduced_data,
                 Rcpp::List reduced_model,
-                Rcpp::List control);
+                Rcpp::List control,
+                Rcpp::List supplied_result);
   
   void set_regularizer(char regularizer_type, double lambda_, double gamma_);
   void set_theta_value(Rcpp::NumericVector theta_value_);
@@ -83,11 +83,13 @@ public:
   void update_theta_value();
   void update_theta_start();
   void update_numerical_condition();
-  void update_goodness_of_fit();
+  void update_information_criterion();
+  void update_fit_indice();
   void optimize_theta_value();
   Rcpp::NumericVector extract_numerical_condition();
-  Rcpp::NumericVector extract_theta_value();
-  Rcpp::NumericVector extract_goodness_of_fit();
+  Rcpp::NumericVector extract_information_criterion();
+  Rcpp::NumericVector extract_fit_indice();
+  Rcpp::NumericVector extract_coefficient();
   Eigen::MatrixXd slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx);
   Eigen::MatrixXd vech(Eigen::MatrixXd x);
   int sign(double x);
@@ -95,7 +97,8 @@ public:
 
 lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
                              Rcpp::List reduced_model,
-                             Rcpp::List control) {
+                             Rcpp::List control,
+                             Rcpp::List supplied_result) {
 
   iter_in_max = Rcpp::as<int>(control["iter_in_max"]);
   iter_out_max = Rcpp::as<int>(control["iter_out_max"]);
@@ -109,11 +112,6 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   ridge_hessian = Rcpp::as<double>(control["ridge_hessian"]);
   armijo = Rcpp::as<double>(control["armijo"]);
   positive_diag = Rcpp::as<bool>(control["positive_diag"]);
-  
-  total_sample_size = Rcpp::as<int>(reduced_data["total_sample_size"]);
-  sample_proportion = Rcpp::as<List>(reduced_data["sample_proportion"]);
-  saturated_cov = Rcpp::as<List>(reduced_data["saturated_cov"]);
-  saturated_mean = Rcpp::as<List>(reduced_data["saturated_mean"]);
   
   n_response = Rcpp::as<int>(reduced_model["n_response"]);
   n_factor = Rcpp::as<int>(reduced_model["n_factor"]);
@@ -132,6 +130,22 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_right_idx = Rcpp::as<IntegerVector>(reduced_model["theta_right_idx"]) - 1;
   theta_flat_idx = Rcpp::as<IntegerVector>(reduced_model["theta_flat_idx"]) - 1;
   
+  identity_y  = Rcpp::as<Eigen::MatrixXd >(reduced_model["identity_y"]);
+  identity_eta  = Rcpp::as<Eigen::MatrixXd >(reduced_model["identity_eta"]);
+  
+  identity_y2  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["identity_y2"]);
+  duplication_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["duplication_y"]);
+  elimination_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["elimination_y"]);
+  duplication_eta  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["duplication_eta"]);
+  commutation_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["commutation_y"]);
+
+  n_observation = Rcpp::as<int>(reduced_data["n_observation"]);
+  sample_proportion = Rcpp::as<List>(reduced_data["sample_proportion"]);
+  saturated_cov = Rcpp::as<List>(reduced_data["saturated_cov"]);
+  saturated_mean = Rcpp::as<List>(reduced_data["saturated_mean"]);
+  saturated_moment_acov = Eigen::MatrixXd::Zero(n_group * n_moment, n_group * n_moment);
+  Eigen::MatrixXd saturated_moment_acov_i;
+  
   int i;
   for (i = 0; i < n_group; i ++) {
     alpha.push_back(Eigen::MatrixXd::Zero(n_eta, 1));
@@ -141,22 +155,15 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
     mu.push_back(Eigen::MatrixXd::Zero(n_response, 1));
     sigma.push_back(Eigen::MatrixXd::Zero(n_response, n_response));
     sigma_inv.push_back(Eigen::MatrixXd::Zero(n_response, n_response));
+    saturated_moment_acov_i = Rcpp::as<Eigen::MatrixXd>(Rcpp::as<List>(reduced_data["saturated_moment_acov"])[i]);
+    saturated_moment_acov.block(i * n_moment, i * n_moment, n_moment, n_moment) = saturated_moment_acov_i;
   }
   
-  loss_value_baseline = Rcpp::as<double>(reduced_model["loss_value_baseline"]);
-  degree_of_freedom_baseline = Rcpp::as<int>(reduced_model["degree_of_freedom_baseline"]);
+  baseline_loss_value = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["loss_value"]);
+  baseline_degree_of_freedom = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["degree_of_freedom"]);
   
-  identity_y  = Rcpp::as<Eigen::MatrixXd >(reduced_model["identity_y"]);
-  identity_eta  = Rcpp::as<Eigen::MatrixXd >(reduced_model["identity_eta"]);
-  
-  identity_y2  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["identity_y2"]);
-  duplication_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["duplication_y"]);
-  elimination_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["elimination_y"]);
-  duplication_eta  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["duplication_eta"]);
-  commutation_y  = Rcpp::as<Eigen::SparseMatrix<double> >(reduced_model["commutation_y"]);
-  
-  theta_start = Rcpp::clone(Rcpp::as<NumericVector>(reduced_model["fitted_start"]));
-  theta_value = Rcpp::clone(Rcpp::as<NumericVector>(reduced_model["fitted_start"]));
+  theta_start = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
+  theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
   theta_direction = Rcpp::rep(0.0, theta_name.size());
   theta_value.attr("names") = theta_name;
   
@@ -702,7 +709,8 @@ void lslxOptimizer::optimize_theta_value() {
       
       if ((objective_gradient_abs_max < tol_out) | (i == iter_out_max)) {
         update_numerical_condition();
-        update_goodness_of_fit();
+        update_information_criterion();
+        update_fit_indice();
         break;
       }
     }
@@ -734,15 +742,19 @@ void lslxOptimizer::update_numerical_condition() {
   degree_of_freedom = n_group * n_moment - n_nonzero_coefficient;
 }
 
-void lslxOptimizer::update_goodness_of_fit() {
-  aic = loss_value + (2.0 / double(total_sample_size)) * double(n_nonzero_coefficient);
-  aic3 = loss_value + (3.0 / double(total_sample_size)) * double(n_nonzero_coefficient);
-  caic = loss_value + ((1 + std::log(double(total_sample_size))) / double(total_sample_size)) * double(n_nonzero_coefficient);
+
+void lslxOptimizer::update_information_criterion() {
+  aic = loss_value + (2.0 / double(n_observation)) * double(n_nonzero_coefficient);
+  aic3 = loss_value + (3.0 / double(n_observation)) * double(n_nonzero_coefficient);
+  caic = loss_value + ((1 + std::log(double(n_observation))) / double(n_observation)) * double(n_nonzero_coefficient);
   
-  bic = loss_value + (std::log(double(total_sample_size)) / double(total_sample_size)) * double(n_nonzero_coefficient);
-  abic = loss_value + (std::log((double(total_sample_size) + 2.0) / 24.0) / double(total_sample_size)) * double(n_nonzero_coefficient);
-  hbic = loss_value + (std::log(double(total_sample_size) / (2.0 * 3.1415926)) / double(total_sample_size)) * double(n_nonzero_coefficient);
-  
+  bic = loss_value + (std::log(double(n_observation)) / double(n_observation)) * double(n_nonzero_coefficient);
+  abic = loss_value + (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(n_nonzero_coefficient);
+  hbic = loss_value + (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(n_nonzero_coefficient);
+}
+
+
+void lslxOptimizer::update_fit_indice() {
   if ((degree_of_freedom == 0) & (std::fabs(loss_value) > DBL_EPSILON)) {
     rmsea = NAN;
   } else {
@@ -750,13 +762,13 @@ void lslxOptimizer::update_goodness_of_fit() {
       rmsea = 0;
     } else {
       rmsea = std::sqrt(n_group * std::max(((loss_value / double(degree_of_freedom)) - 
-        (1 / double(total_sample_size))), 0.0)); 
+        (1 / double(n_observation))), 0.0)); 
     }
   }
   
-  double cfi_num = std::max((double(total_sample_size) * loss_value - double(degree_of_freedom)), 0.0);
-  double cfi_den = std::max(std::max(double(total_sample_size) * loss_value - double(degree_of_freedom),
-                                     double(total_sample_size) * loss_value_baseline - double(degree_of_freedom_baseline)), 0.0);
+  double cfi_num = std::max((double(n_observation) * loss_value - double(degree_of_freedom)), 0.0);
+  double cfi_den = std::max(std::max(double(n_observation) * loss_value - double(degree_of_freedom),
+                                     double(n_observation) * baseline_loss_value - double(baseline_degree_of_freedom)), 0.0);
   if ((cfi_num < DBL_EPSILON) & (cfi_den < DBL_EPSILON)) {
     cfi = NAN;
   } else {
@@ -767,9 +779,9 @@ void lslxOptimizer::update_goodness_of_fit() {
     }
   }
   
-  double nnfi_num = (double(total_sample_size) * loss_value_baseline) / double(degree_of_freedom_baseline) -
-    (double(total_sample_size) * loss_value) / double(degree_of_freedom);
-  double nnfi_den = (double(total_sample_size) * loss_value_baseline) / double(degree_of_freedom_baseline) - 1;
+  double nnfi_num = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom) -
+    (double(n_observation) * loss_value) / double(degree_of_freedom);
+  double nnfi_den = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom) - 1;
   nnfi = nnfi_num / nnfi_den;
   
   srmr = 0;
@@ -793,12 +805,6 @@ void lslxOptimizer::update_goodness_of_fit() {
     double srmr_i = sample_proportion_i * std::sqrt(srmr_sigma_i + srmr_mu_i);
     srmr += srmr_i;
   }
-  
-}
-
-
-Rcpp::NumericVector lslxOptimizer::extract_theta_value() {
-  return Rcpp::clone(theta_value);
 }
 
 Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
@@ -810,28 +816,38 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
       _["objective_gradient_abs_max"] = objective_gradient_abs_max,
       _["objective_hessian_convexity"] = objective_hessian_convexity,
       _["n_iter_out"] = n_iter_out,
+      _["loss_value"] = loss_value,
       _["n_nonzero_coefficient"] = n_nonzero_coefficient,
       _["degree_of_freedom"] = degree_of_freedom);
   return Rcpp::clone(numerical_condition);
 }
 
-
-Rcpp::NumericVector lslxOptimizer::extract_goodness_of_fit() {
-  Rcpp::NumericVector goodness_of_fit = 
+Rcpp::NumericVector lslxOptimizer::extract_information_criterion() {
+  Rcpp::NumericVector information_criterion = 
     Rcpp::NumericVector::create(
-      _["loss"] = loss_value,
-      _["rmsea"] = rmsea,
       _["aic"] = aic,
       _["aic3"] = aic3,
       _["caic"] = caic,
       _["bic"] = bic,
       _["abic"] = abic,
-      _["hbic"] = hbic,
+      _["hbic"] = hbic);
+  return Rcpp::clone(information_criterion);
+}
+
+Rcpp::NumericVector lslxOptimizer::extract_fit_indice() {
+  Rcpp::NumericVector fit_indice = 
+    Rcpp::NumericVector::create(
+      _["rmsea"] = rmsea,
       _["cfi"] = cfi,
       _["nnfi"] = nnfi,
       _["srmr"] = srmr);
-  return Rcpp::clone(goodness_of_fit);
+  return Rcpp::clone(fit_indice);
 }
+
+Rcpp::NumericVector lslxOptimizer::extract_coefficient() {
+  return Rcpp::clone(theta_value);
+}
+
 
 
 Eigen::MatrixXd lslxOptimizer::slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx) {
@@ -842,7 +858,6 @@ Eigen::MatrixXd lslxOptimizer::slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector 
   }
   return(y);
 }
-
 
 Eigen::MatrixXd lslxOptimizer::vech(Eigen::MatrixXd x) {
   int n_col = x.cols();
@@ -870,20 +885,129 @@ int lslxOptimizer::sign(double x) {
   return(y);
 }
 
+
+Eigen::MatrixXd slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx) {
+  Eigen::MatrixXd y(x.rows(), col_idx.size());
+  int i;
+  for (i = 0; i < col_idx.size(); i++) {
+    y.col(i) = x.col(col_idx[i]);
+  }
+  return(y);
+}
+
+
+Eigen::MatrixXd slice_row(Eigen::MatrixXd x, Rcpp::IntegerVector row_idx) {
+  Eigen::MatrixXd y(row_idx.size(), x.cols());
+  int i;
+  for (i = 0; i < row_idx.size(); i++) {
+    y.row(i) = x.row(row_idx[i]);
+  }
+  return(y);
+}
+
+
+Eigen::MatrixXd slice_both(Eigen::MatrixXd x, 
+                           Rcpp::IntegerVector row_idx, 
+                           Rcpp::IntegerVector col_idx) {
+  Eigen::MatrixXd y(row_idx.size(), col_idx.size());
+  int i, j;
+  for (i = 0; i < row_idx.size(); i++) {
+    for (j = 0; j < col_idx.size(); j++) {
+      y(i, j) = x(row_idx[i], col_idx[j]);
+    }
+  }
+  return(y);
+}
+
+
+Eigen::MatrixXd expand_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx, int n_col) {
+  Eigen::MatrixXd y;
+  y = Eigen::MatrixXd::Zero(x.rows(), n_col);
+  int i;
+  for (i = 0; i < col_idx.size(); i++) {
+    y.col(col_idx[i]) = x.col(i);
+  }
+  return(y);
+}
+
+
+
+Eigen::MatrixXd expand_both(Eigen::MatrixXd x, 
+                            Rcpp::IntegerVector row_idx, 
+                            Rcpp::IntegerVector col_idx,
+                            int n_row,
+                            int n_col) {
+  Eigen::MatrixXd y;
+  y = Eigen::MatrixXd::Zero(n_row, n_col);
+  int i, j;
+  for (i = 0; i < row_idx.size(); i++) {
+    for (j = 0; j < col_idx.size(); j++) {
+      y(row_idx[i], col_idx[j]) = x(i, j);
+    }
+  }
+  return(y);
+}
+
+
+
+
+Eigen::MatrixXd vech(Eigen::MatrixXd x) {
+  int n_col = x.cols();
+  Eigen::MatrixXd y((n_col * (n_col + 1)) / 2, 1);
+  int idx = 0;
+  int i, j;
+  for (i = 0; i < n_col; i ++ ) {
+    for (j = i; j < n_col; j ++ ) {
+      y(idx, 0) = x(j, i);
+      idx += 1;
+    }
+  }
+  return(y);
+}
+
+
+Eigen::SparseMatrix<double> create_duplication(int n) {
+  SparseMatrix<double> duplication(n * n, (n * (n + 1)) / 2);
+  int i, j, idx, row_idx, col_idx;
+  idx = 0;
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      if (j >= i) {
+        row_idx = n * i + j - i * (i + 1) / 2;
+        col_idx = n * i + j - i * (i + 1) / 2;
+      } else {
+        row_idx = n * j + i - j * (j + 1) / 2;
+        col_idx = n * j + i - j * (j + 1) / 2;
+      }
+      if (row_idx == col_idx) {
+        duplication.insert(idx, col_idx) = 1;
+      }
+      idx += 1;
+    }
+  }
+  return duplication;
+}
+
+
+
 // [[Rcpp::export]]
 void compute_regularized_path_cpp(
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::List numerical_condition,
-    Rcpp::List goodness_of_fit,
-    Rcpp::List coefficient) {
+    Rcpp::List supplied_result,
+    Rcpp::List fitted_result) {
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   char regularizer_type = Rcpp::as<char>(control["penalty_method"]);
   Rcpp::NumericVector lambda_grid = Rcpp::as<Rcpp::NumericVector>(control["lambda_grid"]);
   Rcpp::NumericVector gamma_grid = Rcpp::as<Rcpp::NumericVector>(control["gamma_grid"]);
+  Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
+  Rcpp::List information_criterion = Rcpp::as<Rcpp::List>(fitted_result["information_criterion"]);
+  Rcpp::List fit_indice = Rcpp::as<Rcpp::List>(fitted_result["fit_indice"]);
+  Rcpp::List coefficient = Rcpp::as<Rcpp::List>(fitted_result["coefficient"]);
   
   int i, j, idx;
   for (i = 0; i < lambda_grid.size(); i++) {
@@ -892,22 +1016,25 @@ void compute_regularized_path_cpp(
       optimizer.optimize_theta_value();
       idx = i * gamma_grid.size() + j;
       numerical_condition[idx] = optimizer.extract_numerical_condition();
-      goodness_of_fit[idx] = optimizer.extract_goodness_of_fit();
-      coefficient[idx] = optimizer.extract_theta_value();
+      information_criterion[idx] = optimizer.extract_information_criterion();
+      fit_indice[idx] = optimizer.extract_fit_indice();
+      coefficient[idx] = optimizer.extract_coefficient();
     }
   }
 }
 
 // [[Rcpp::export]]
 Rcpp::List compute_coefficient_matrice_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
+    Rcpp::List supplied_result) {
   Rcpp::List coefficient_matrice;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   
@@ -921,14 +1048,16 @@ Rcpp::List compute_coefficient_matrice_cpp(
 
 // [[Rcpp::export]]
 Rcpp::List compute_implied_cov_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
+    Rcpp::List supplied_result) {
   Rcpp::List implied_cov;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
@@ -939,14 +1068,16 @@ Rcpp::List compute_implied_cov_cpp(
 
 // [[Rcpp::export]]
 Rcpp::List compute_implied_mean_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
+    Rcpp::List supplied_result) {
   Rcpp::List implied_mean;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
@@ -955,16 +1086,42 @@ Rcpp::List compute_implied_mean_cpp(
   return Rcpp::wrap(implied_mean);
 }
 
+
 // [[Rcpp::export]]
-Rcpp::NumericMatrix compute_moment_gradient_cpp(
+Rcpp::NumericMatrix compute_weight_normal_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
+    Rcpp::List supplied_result) {
+  Eigen::MatrixXd weight_normal;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_theta_value(theta_value);
+  optimizer.update_coefficient_matrice();
+  optimizer.update_implied_moment();
+  
+  optimizer.update_weight_normal();
+  weight_normal = 0.5 * optimizer.weight_normal;
+  return Rcpp::wrap(weight_normal);
+}
+
+
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix compute_moment_gradient_cpp(
+    Rcpp::NumericVector theta_value,
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result) {
   Eigen::MatrixXd moment_gradient;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
 
   optimizer.update_coefficient_matrice();
@@ -977,15 +1134,17 @@ Rcpp::NumericMatrix compute_moment_gradient_cpp(
 
 
 // [[Rcpp::export]]
-Rcpp::NumericMatrix compute_expected_fisher_information_cpp(
+Rcpp::NumericMatrix compute_expected_fisher_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
-  Eigen::MatrixXd expected_fisher_information;
+    Rcpp::List supplied_result) {
+  Eigen::MatrixXd expected_fisher;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
@@ -993,20 +1152,72 @@ Rcpp::NumericMatrix compute_expected_fisher_information_cpp(
   optimizer.update_weight_normal();
   optimizer.update_moment_gradient();
   optimizer.update_loss_expected_hessian();
-  expected_fisher_information = 0.5 * optimizer.loss_expected_hessian;
-  return Rcpp::wrap(expected_fisher_information);
+  expected_fisher = 0.5 * optimizer.loss_expected_hessian;
+  return Rcpp::wrap(expected_fisher);
 }
 
+
 // [[Rcpp::export]]
-Rcpp::NumericMatrix compute_loss_gradient_cpp(
+Rcpp::NumericMatrix compute_score_acov_cpp(
+    Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value) {
+    Rcpp::List supplied_result) {
+  Eigen::MatrixXd score_acov;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_theta_value(theta_value);
+  optimizer.update_coefficient_matrice();
+  optimizer.update_implied_moment();
+  
+  optimizer.update_weight_normal();
+  optimizer.update_moment_gradient();
+  score_acov = 0.25 *
+    optimizer.moment_gradient.transpose() * optimizer.weight_normal * 
+    optimizer.saturated_moment_acov * optimizer.weight_normal * optimizer.moment_gradient;
+  return Rcpp::wrap(score_acov);
+}
+
+
+
+// [[Rcpp::export]]
+double compute_loss_value_cpp(
+    Rcpp::NumericVector theta_value,
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result) {
+  double loss_value;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_theta_value(theta_value);
+  
+  optimizer.update_coefficient_matrice();
+  optimizer.update_implied_moment();
+  optimizer.update_loss_value();
+  loss_value = optimizer.loss_value;
+  return loss_value;
+}
+
+
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix compute_loss_gradient_cpp(
+    Rcpp::NumericVector theta_value,
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result) {
   Eigen::MatrixXd loss_gradient;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
@@ -1020,16 +1231,18 @@ Rcpp::NumericMatrix compute_loss_gradient_cpp(
 
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
+    Rcpp::NumericVector theta_value,
+    double lambda,
+    double gamma,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value,
-    double lambda,
-    double gamma) {
+    Rcpp::List supplied_result) {
   Eigen::MatrixXd regularizer_gradient;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.set_regularizer(Rcpp::as<char>(control["penalty_method"]), lambda, gamma);
   optimizer.update_regularizer_gradient();
@@ -1040,16 +1253,18 @@ Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
 
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_objective_gradient_cpp(
+    Rcpp::NumericVector theta_value,
+    double lambda,
+    double gamma,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
-    Rcpp::NumericVector theta_value,
-    double lambda,
-    double gamma) {
+    Rcpp::List supplied_result) {
   Eigen::MatrixXd objective_gradient;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
-                          control);
+                          control,
+                          supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.set_regularizer(Rcpp::as<char>(control["penalty_method"]), lambda, gamma);
   
@@ -1066,4 +1281,172 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
 }
 
 
+// [[Rcpp::export]]
+void compute_saturated_moment_cpp(
+      Rcpp::List y_obs,
+      Rcpp::List w,
+      Rcpp::List m_idx,
+      Rcpp::List saturated_mean,
+      Rcpp::List saturated_cov,
+      int iter_other_max,
+      double tol_other) {
+    Rcpp::List y_obs_i;
+    Rcpp::List w_i;
+    Rcpp::List m_idx_i;
+    Eigen::MatrixXd saturated_mean_i, saturated_cov_i;
+    Rcpp::IntegerVector m_idx_ik;
+    Eigen::MatrixXd saturated_cov_ik, saturated_cov_ik_inv;
+    Eigen::MatrixXd e_sum_i, c_sum_i;
+    Eigen::MatrixXd a_ik, b_ik;
+    Eigen::MatrixXd y_ik, y_ik_w;
+    
+    int i, j, k;
+    int n_group = y_obs.size();
+    for (i = 0; i < n_group; i++) {
+      y_obs_i = Rcpp::as<List>(y_obs[i]);
+      m_idx_i = Rcpp::as<List>(m_idx[i]);
+      w_i = Rcpp::as<List>(w[i]);
+      for (j = 0; j < iter_other_max; j++) {
+        saturated_cov_i = Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]);
+        saturated_mean_i = Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]);
+        e_sum_i = Eigen::MatrixXd::Zero(saturated_mean_i.rows(), 1);
+        c_sum_i = Eigen::MatrixXd::Zero(saturated_cov_i.rows(), saturated_cov_i.cols());
+        for (k = 0; k < y_obs_i.size(); k++) {
+          Eigen::Map<Eigen::MatrixXd> y_obs_ik(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(y_obs_i[k]));
+          Eigen::Map<Eigen::VectorXd> w_ik(Rcpp::as< Eigen::Map <Eigen::VectorXd> >(w_i[k]));
+          m_idx_ik = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[k]);
+          saturated_cov_ik = slice_both(saturated_cov_i, m_idx_ik, m_idx_ik);
+          saturated_cov_ik_inv = saturated_cov_ik.inverse();
+          
+          a_ik = saturated_mean_i.transpose() - 
+            slice_row(saturated_mean_i, m_idx_ik).transpose() * 
+            saturated_cov_ik_inv * slice_row(saturated_cov_i, m_idx_ik);
+          b_ik = saturated_cov_ik_inv * slice_row(saturated_cov_i, m_idx_ik);
+          y_ik = y_obs_ik * b_ik + Eigen::MatrixXd::Ones(y_obs_ik.rows(), 1)  * a_ik;
+          y_ik_w = (y_ik.array().colwise() * w_ik.array()).matrix();
+          e_sum_i += y_ik_w.colwise().sum().transpose();
+          c_sum_i += w_ik.sum() * saturated_cov_i -
+            w_ik.sum() * slice_col(saturated_cov_i, m_idx_ik) * b_ik +
+            y_ik_w.transpose() * y_ik;
+        }
+        saturated_mean[i] = e_sum_i;
+        saturated_cov[i] = c_sum_i - e_sum_i * e_sum_i.transpose();
+        double delta_max = 
+          std::max((Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]) - saturated_mean_i).array().abs().maxCoeff(),
+                   (Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]) - saturated_cov_i).array().abs().maxCoeff());
+        if (delta_max < tol_other) {
+          break;
+        }
+      }
+    }
+  }
+
+
+
+
+// [[Rcpp::export]]
+void compute_saturated_moment_acov_cpp(
+    Rcpp::List y_obs,
+    Rcpp::List w,
+    Rcpp::List m_idx,
+    Rcpp::List m2_idx,
+    Rcpp::List saturated_mean,
+    Rcpp::List saturated_cov,
+    Rcpp::List saturated_moment_acov) {
+  int n_response_i, n_moment_i, sample_size_i;
+  Rcpp::List y_obs_i;
+  Rcpp::List w_i;
+  Rcpp::List m_idx_i;
+  Rcpp::List m2_idx_i;
+  Eigen::MatrixXd saturated_mean_i, saturated_cov_i;
+  Eigen::SparseMatrix<double> duplication_i;
+  Eigen::MatrixXd score2_sum_i;
+  Eigen::MatrixXd hessian_sum_i, hessian_sum_i_inv;
+  Eigen::MatrixXd saturated_mean_ij, saturated_cov_ij, saturated_cov_ij_vech, saturated_cov_ij_inv;
+  Eigen::MatrixXd y_obs_ij;
+  Eigen::VectorXd w_ij;
+  Eigen::MatrixXd yc_obs_ij;
+  Eigen::MatrixXd yc2c_obs_ij, yc2c_obs_ijk;
+  Eigen::MatrixXd score_ij, score_ij_w;
+  Eigen::MatrixXd saturated_moment_acov_i;
+  Rcpp::IntegerVector m_idx_ij, m2_idx_ij;
+  int n_response_ij, n_moment_ij, sample_size_ij;
+  Eigen::SparseMatrix<double> duplication_ij;
+  
+  int i, j, k;
+  int n_group = y_obs.size();
+  for (i = 0; i < n_group; i++) {
+    sample_size_i = 0;
+    y_obs_i = Rcpp::as<List>(y_obs[i]);
+    m_idx_i = Rcpp::as<List>(m_idx[i]);
+    m2_idx_i = Rcpp::as<List>(m2_idx[i]);
+    w_i = Rcpp::as<List>(w[i]);
+    saturated_cov_i = Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]);
+    saturated_mean_i = Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]);
+    n_response_i = saturated_mean_i.rows();
+    n_moment_i = (n_response_i * (n_response_i + 3)) / 2;
+    score2_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
+    hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
+
+    duplication_i = create_duplication(n_response_i);
+    for (j = 0; j < y_obs_i.size(); j++) {
+      y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[j]);
+      w_ij = Rcpp::as<Eigen::VectorXd>(w_i[j]);
+      m_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[j]);
+      m2_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m2_idx_i[j]);
+      sample_size_ij = y_obs_ij.rows();
+      sample_size_i += sample_size_ij;
+      saturated_mean_ij = slice_row(saturated_mean_i, m_idx_ij);
+      saturated_cov_ij = slice_both(saturated_cov_i, m_idx_ij, m_idx_ij);
+      saturated_cov_ij_vech = vech(saturated_cov_ij); 
+      n_response_ij = saturated_mean_ij.rows();
+      n_moment_ij = (n_response_ij * (n_response_ij + 3)) / 2;
+      
+      yc_obs_ij = y_obs_ij - 
+        Eigen::MatrixXd::Ones(sample_size_ij, 1) * saturated_mean_ij.transpose();
+      yc2c_obs_ij.resize(sample_size_ij, n_moment_ij - n_response_ij);
+      
+      for (k = 0; k < sample_size_ij; k++) {
+        yc2c_obs_ijk = vech(yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k));
+        yc2c_obs_ij.row(k) = (yc2c_obs_ijk - saturated_cov_ij_vech).transpose();
+      }
+      saturated_cov_ij_inv = saturated_cov_ij.inverse();
+      duplication_ij = create_duplication(n_response_ij);
+
+      score_ij.resize(sample_size_ij, n_moment_i);
+      score_ij.leftCols(n_response_i) = 
+        expand_col((yc_obs_ij * saturated_cov_ij_inv), m_idx_ij, n_response_i);
+      score_ij.rightCols((n_moment_i - n_response_i)) = 
+        expand_col((0.5 * yc2c_obs_ij * duplication_ij.transpose() *
+        Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij), 
+        m2_idx_ij, (n_moment_i - n_response_i));
+      
+      score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
+      score2_sum_i += score_ij_w.transpose() * score_ij;
+      
+      yc_obs_ij = expand_col(yc_obs_ij, m_idx_ij, n_response_i);
+      yc2c_obs_ij = expand_col(yc2c_obs_ij, m2_idx_ij, (n_moment_i - n_response_i));
+      saturated_cov_ij_inv = expand_both(saturated_cov_ij_inv, m_idx_ij, m_idx_ij,
+                                         n_response_i, n_response_i);
+      for (k = 0; k < sample_size_ij; k++) {
+        hessian_sum_i.block(0, 0, n_response_i, n_response_i) +=
+          w_ij(k) * saturated_cov_ij_inv;
+        hessian_sum_i.block(n_response_i, n_response_i, (n_moment_i - n_response_i), (n_moment_i - n_response_i)) += 
+          w_ij(k) * duplication_i.transpose() * 
+          (Eigen::kroneckerProduct(saturated_cov_ij_inv,
+                                   (saturated_cov_ij_inv * 
+                                     (yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k)) * 
+                                     saturated_cov_ij_inv - 0.5 * saturated_cov_ij_inv))) * duplication_i;
+        hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)) += 
+          w_ij(k) * (Eigen::kroneckerProduct(saturated_cov_ij_inv, 
+                                   yc_obs_ij.row(k) * saturated_cov_ij_inv)) * duplication_i;
+        hessian_sum_i.block(n_response_i, 0, (n_moment_i - n_response_i), n_response_i) = 
+          hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)).transpose(); 
+      }
+    }
+    hessian_sum_i_inv = hessian_sum_i.inverse();
+    saturated_moment_acov_i = (hessian_sum_i_inv * score2_sum_i * hessian_sum_i_inv) / double(sample_size_i);
+    saturated_moment_acov[i] = saturated_moment_acov_i;
+  }
+}
 

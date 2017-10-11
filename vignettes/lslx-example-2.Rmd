@@ -7,6 +7,11 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+```{r comment = "", message = FALSE, setup, include=FALSE}
+options(digits = 3)
+options(width = 100)
+```
+
 In this example, we will show how to use `lslx` to conduct semi-confirmatory factor analysis.
 The example uses data `HolzingerSwineford1939` in the package `lavaan`.
 Hence, `lavaan` must be installed.
@@ -14,7 +19,7 @@ Hence, `lavaan` must be installed.
 ## Model Sepcification
 In the following specification, `x1` - `x9` is assumed to be measurements of 3 latent factors: `visual`, `textual`, and `speed`.
 ```{r comment = "", message = FALSE}
-equation2 <-
+model2 <-
 '
 visual  :=> x1 + x2 + x3
 textual :=> x4 + x5 + x6
@@ -35,7 +40,7 @@ However, the inclusion of the penalized loadings indicates that each measurement
 The operator `<=>` means that the LHS and RHS variables/factors are covaried.
 If the LHS and RHS variable/factor are the same, `<=>` specifies the variance of that variable/factor.
 For scale setting, `visual <=> fix(1) * visual` makes the variance of `visual` to be zero.
-Details of equation syntax can be found in the section of Equation Syntax via `?lslx`.
+Details of model syntax can be found in the section of Model Syntax via `?lslx`.
 
 ## Object Initialization
 `lslx` is written as an `R6` class.
@@ -43,12 +48,12 @@ Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
 The following code initializes an `lslx` object named `r6_lslx2`.
 ```{r comment = "", message = FALSE}
 library(lslx)
-r6_lslx2 <- lslx$new(equation = equation2,
-                     sample_data = lavaan::HolzingerSwineford1939)
+r6_lslx2 <- lslx$new(model = model2,
+                     data = lavaan::HolzingerSwineford1939)
 ```
 Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
-The initialization of `lslx` requires users to specify a equation for model specification (argument `equation`) and a data set to be fitted (argument `sample_data`).
-The data set must contains all the observed variables specified in the given equation.
+The initialization of `lslx` requires users to specify a model for model specification (argument `model`) and a data set to be fitted (argument `sample_data`).
+The data set must contains all the observed variables specified in the given model.
 In is also possible to initialize an `lslx` object via sample moments (see Example 3).
 
 It is possible to see the model specification via the `extract_specification` method.
@@ -82,26 +87,30 @@ The following code summarize the fitting result under the penalty level selected
 r6_lslx2$summarize(selector = "bic")
 ```
 In ths example, we can see that most penalized parameters are zero under the selected penalty level except for `x9<-visual`, which shows the benefit of using the semi-confirmatory approach.
-So far, the hypothesis testing for the model coefficient are based on the expected Fisher information and doesn't consider the presence of model selection.
-In the future, other standard error formula and valid post model selection inference will be available.
+The `summarize` method also shows the result of significance tests for the coefficients.
+In `lslx`, the default standard errors are calculated based on sandwich formula whenever raw data is available.
+It is generally valid even when the model is misspecified and the data is not normal.
+However, it may not be valid after selecting an optimal penalty level.
 
 
 ## Visualization
-`lslx` provides three methods for visualizaing the fitting result.
+`lslx` provides four methods for visualizing the fitting results.
 The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
 The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
 The plot can be used to evaluate the quality of numerical optimization.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_numerical_condition(criterion = c("n_iter_out", 
-                                                "objective_gradient_abs_max",
-                                                "objective_hessian_convexity"))
+r6_lslx2$plot_numerical_condition()
 ```
 
 
-The method `plot_goodness_of_fit` shows the values of information criteria and fit indices under all the penalty levels.
-The following code plots the values of `loss` (ML discrepancy function value evaluated at the current estimate), `aic`, and `bic`.
+The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_goodness_of_fit(selector = c("loss", "aic", "bic"))
+r6_lslx2$plot_information_criterion()
+```
+
+The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$plot_fit_indice()
 ```
 
 
@@ -109,4 +118,18 @@ The method `plot_coefficient` shows the solution path of coefficients in the giv
 The following code plots the solution paths of all coefficients in the block `y<-f`, which contains all the regression coeffcients from latent factors to observed variables (i.e., factor loadings).
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx2$plot_coefficient(block = "y<-f")
+```
+
+## Objects Extraction
+In `lslx`, many quantities related to SEM can be extracted by extract-related method.
+For example, the loading matrix can be obtained by
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$extract_coefficient_matrice(selector = "bic", block = "y<-f")
+```
+The model-implied covariance matrix and residual matrix can be obtained by 
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$extract_implied_cov(selector = "bic")
+```
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+r6_lslx2$extract_residual_cov(selector = "bic")
 ```

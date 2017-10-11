@@ -37,24 +37,33 @@ lslx$set("public",
 lslx$set("public",
          "extract_penalty_level",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (!all(selector %in% names(private$fitting$goodness_of_fit[[1]]))) {
+                  exclude_improper = TRUE) {
+           if (missing(selector)) {
+             if (length(private$fitting$fitted_result$numerical_condition) == 1) {
+               selector <- "bic"
+             } else {
+               stop("Argument 'selector' is missing.")
+             }
+           }
+           if (length(selector) > 1) {
+             stop("The length of argument 'selector' can be only one.")
+           }
+           
+           if (!(selector %in% names(private$fitting$fitted_result$information_criterion[[1]]))) {
              stop(
-               "Argument 'selector' contains unrecognized fit indice(s).",
-               "\n  Fit indice(s) currently recognized by 'lslx' is \n  ",
+               "Argument 'selector' is unrecognized.",
+               "\n  Selector currently recognized by 'lslx' is \n  ",
                do.call(paste, as.list(
-                 names(private$fitting$goodness_of_fit[[1]])
+                 names(private$fitting$fitted_result$information_criterion[[1]])
                )),
                "."
              )
            }
-           if (exclude_nonconvergence) {
+           if (exclude_improper) {
              idx_convergence <-
                which(
                  sapply(
-                   X = private$fitting$numerical_condition,
+                   X = private$fitting$fitted_result$numerical_condition,
                    FUN = function(x) {
                      getElement(object = x,
                                 name = "objective_gradient_abs_max")
@@ -67,20 +76,16 @@ lslx$set("public",
                  "Please try larger value of 'iter_out_max' or specify better starting values."
                )
              }
-           } else {
-             idx_convergence <-
-               seq_len(length(private$fitting$numerical_condition))
-           }
-           
-           if (exclude_nonconvexity) {
              idx_convexity <-
-               which(sapply(
-                 X = private$fitting$numerical_condition,
-                 FUN = function(x) {
-                   getElement(object = x,
-                              name = "objective_hessian_convexity")
-                 }
-               ) > 0)
+               which(
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(object = x,
+                                name = "objective_hessian_convexity")
+                   }
+                 ) > 0
+               )
              if (length(idx_convexity) == 0) {
                stop(
                  "The PL estimates under all penalty levels are derived under nonconvex hessian. \n",
@@ -88,32 +93,26 @@ lslx$set("public",
                )
              }
            } else {
+             idx_convergence <-
+               seq_len(length(private$fitting$fitted_result$numerical_condition))
              idx_convexity <-
-               seq_len(length(private$fitting$numerical_condition))
+               seq_len(length(private$fitting$fitted_result$numerical_condition))
            }
-           
            idx_selection <-
              intersect(x = idx_convergence, y = idx_convexity)
-           
            penalty_level <-
              sapply(
                X = selector,
                FUN = function(selector_i) {
-                 goodness_of_fit_i <- sapply(
-                   X = private$fitting$goodness_of_fit,
-                   FUN = function(goodness_of_fit_j) {
-                     getElement(object = goodness_of_fit_j,
+                 information_criterion_i <- sapply(
+                   X = private$fitting$fitted_result$information_criterion,
+                   FUN = function(information_criterion_j) {
+                     getElement(object = information_criterion_j,
                                 name = selector_i)
                    }
                  )
-                 if (selector_i %in% c("cfi",
-                                       "nnfi")) {
-                   penalty_level_i <-
-                     names(which.max(goodness_of_fit_i[idx_selection]))
-                 } else {
-                   penalty_level_i <-
-                     names(which.min(goodness_of_fit_i[idx_selection]))
-                 }
+                 penalty_level_i <-
+                   names(which.min(information_criterion_i[idx_selection]))
                  return(penalty_level_i)
                }
              )
@@ -121,90 +120,73 @@ lslx$set("public",
          })
 
 
+lslx$set("public",
+         "extract_numerical_condition",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           numerical_condition <-
+             private$fitting$fitted_result$numerical_condition[[penalty_level]]
+           return(numerical_condition)
+         })
+
+
+lslx$set("public",
+         "extract_information_criterion",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           information_criterion <-
+             private$fitting$fitted_result$information_criterion[[penalty_level]]
+           return(information_criterion)
+         })
+
+lslx$set("public",
+         "extract_fit_indice",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           fit_indice <-
+             private$fitting$fitted_result$fit_indice[[penalty_level]]
+           return(fit_indice)
+         })
+
 
 lslx$set("public",
          "extract_coefficient",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
            coefficient <-
-             private$fitting$coefficient[penalty_level]
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            return(coefficient)
-         })
-
-lslx$set("public",
-         "extract_goodness_of_fit",
-         function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           goodness_of_fit <-
-             private$fitting$goodness_of_fit[penalty_level]
-           return(goodness_of_fit)
-         })
-
-
-lslx$set("public",
-         "extract_numerical_condition",
-         function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           numerical_condition <-
-             private$fitting$numerical_condition[penalty_level]
-           return(numerical_condition)
          })
 
 
 lslx$set("public",
          "extract_implied_cov",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            implied_cov <-
              compute_implied_cov_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient
+               supplied_result = private$fitting$supplied_result
              )
            implied_cov <-
              lapply(
@@ -223,30 +205,19 @@ lslx$set("public",
 lslx$set("public",
          "extract_implied_mean",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            implied_mean <-
              compute_implied_mean_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient
+               supplied_result = private$fitting$supplied_result
              )
            implied_mean <-
              lapply(
@@ -264,22 +235,10 @@ lslx$set("public",
 lslx$set("public",
          "extract_residual_cov",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            implied_cov <-
-             self$extract_implied_cov(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
+             self$extract_implied_cov(selector = selector,
+                                      exclude_improper = exclude_improper)
            residual_cov <-
              mapply(
                FUN = function(implied_cov_i,
@@ -299,22 +258,10 @@ lslx$set("public",
 lslx$set("public",
          "extract_residual_mean",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            implied_mean <-
-             self$extract_implied_mean(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
+             self$extract_implied_mean(selector = selector,
+                                       exclude_improper = exclude_improper)
            residual_mean <-
              mapply(
                FUN = function(implied_mean_i,
@@ -335,196 +282,75 @@ lslx$set("public",
          "extract_coefficient_matrice",
          function(selector,
                   block,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            if (missing(block)) {
              stop("Argument 'block' is missing.")
            }
            if (length(block) > 1) {
              stop("The length of argument 'block' can be only one.")
            }
-           
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            coefficient_matrice <-
              compute_coefficient_matrice_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient
+               supplied_result = private$fitting$supplied_result
              )
+           
            if (block %in% c("f<-1", "y<-1")) {
-             alpha <- coefficient_matrice$alpha
-             alpha <-
-               lapply(
-                 X = alpha,
-                 FUN = function(alpha_i) {
-                   rownames(alpha_i) <- private$model$name_eta
-                   colnames(alpha_i) <- "1"
-                   return(alpha_i)
-                 }
-               )
-             if (block == "f<-1") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = alpha,
-                   FUN = function(alpha_i) {
-                     coefficient_matrice_block_i <-
-                       alpha_i[private$model$name_factor, "1", drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = alpha,
-                   FUN = function(alpha_i) {
-                     coefficient_matrice_block_i <-
-                       alpha_i[private$model$name_response, "1", drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             }
-           } else if (block %in% c("f<-f", "f<-y", "y<-f", "y<-y")) {
-             beta <- coefficient_matrice$beta
-             beta <-
-               lapply(
-                 X = beta,
-                 FUN = function(beta_i) {
-                   rownames(beta_i) <- private$model$name_eta
-                   colnames(beta_i) <- private$model$name_eta
-                   return(beta_i)
-                 }
-               )
-             if (block == "f<-f") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = beta,
-                   FUN = function(beta_i) {
-                     coefficient_matrice_block_i <-
-                       beta_i[private$model$name_factor,
-                              private$model$name_factor,
-                              drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else if (block == "f<-y") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = beta,
-                   FUN = function(beta_i) {
-                     coefficient_matrice_block_i <-
-                       beta_i[private$model$name_factor,
-                              private$model$name_response,
-                              drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else if (block == "y<-f") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = beta,
-                   FUN = function(beta_i) {
-                     coefficient_matrice_block_i <-
-                       beta_i[private$model$name_response,
-                              private$model$name_factor,
-                              drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = beta,
-                   FUN = function(beta_i) {
-                     coefficient_matrice_block_i <-
-                       beta_i[private$model$name_response,
-                              private$model$name_response,
-                              drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             }
-           } else if (block %in% c("f<->f", "f<->y", "y<->f", "y<->y")) {
-             psi <- coefficient_matrice$psi
-             psi <-
-               lapply(
-                 X = psi,
-                 FUN = function(psi_i) {
-                   rownames(psi_i) <- private$model$name_eta
-                   colnames(psi_i) <- private$model$name_eta
-                   return(psi_i)
-                 }
-               )
-             if (block == "f<->f") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = psi,
-                   FUN = function(psi_i) {
-                     coefficient_matrice_block_i <-
-                       psi_i[private$model$name_factor,
-                             private$model$name_factor,
-                             drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else if (block == "f<->y") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = psi,
-                   FUN = function(psi_i) {
-                     coefficient_matrice_block_i <-
-                       psi_i[private$model$name_factor,
-                             private$model$name_response,
-                             drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else if (block == "y<->f") {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = psi,
-                   FUN = function(psi_i) {
-                     coefficient_matrice_block_i <-
-                       psi_i[private$model$name_response,
-                             private$model$name_factor,
-                             drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             } else {
-               coefficient_matrice_block <-
-                 lapply(
-                   X = psi,
-                   FUN = function(psi_i) {
-                     coefficient_matrice_block_i <-
-                       psi_i[private$model$name_response,
-                             private$model$name_response,
-                             drop = FALSE]
-                     return(coefficient_matrice_block_i)
-                   }
-                 )
-             }
+             selected_matrix <- coefficient_matrice$alpha
+             col_names <- "1"
            } else {
-             stop(
-               "Argument 'block' is unrecognized. It must be one of the following:\n",
-               "  'f<-1', 'y<-1', 'f<-f', 'f<-y', 'y<-f', 'f<-f', 'f<->f', 'f<->y', 'y<->f', 'f<->f'."
-             )
+             if (block %in% c("f<-f", "f<-y", "y<-f", "y<-y")) {
+               selected_matrix <- coefficient_matrice$beta
+             } else if (block %in% c("f<->f", "f<->y", "y<->f", "y<->y")) {
+               selected_matrix <- coefficient_matrice$psi
+             } else {
+               stop(
+                 "Argument 'block' is unrecognized. It must be one of the following:\n",
+                 "  'f<-1', 'y<-1', 'f<-f', 'f<-y', 'y<-f', 'f<-f', 'f<->f', 'f<->y', 'y<->f', 'f<->f'."
+               )
+             }
+             col_names <- private$model$name_eta
            }
+           row_select <- strsplit(block, split = "<-|<->|->")[[1]][1]
+           col_select <- strsplit(block, split = "<-|<->|->")[[1]][2]
+           if (row_select == "f") {
+             row_select <- private$model$name_factor
+           } else if (row_select == "y") {
+             row_select <- private$model$name_response
+           }
+           if (col_select == "f") {
+             col_select <- private$model$name_factor
+           } else if (col_select == "y") {
+             col_select <- private$model$name_response
+           }
+           selected_matrix <-
+             lapply(
+               X = selected_matrix,
+               FUN = function(selected_matrix_i) {
+                 rownames(selected_matrix_i) <- private$model$name_eta
+                 colnames(selected_matrix_i) <- col_names
+                 return(selected_matrix_i)
+               }
+             )
+           coefficient_matrice_block <-
+             lapply(
+               X = selected_matrix,
+               FUN = function(selected_matrix_i) {
+                 coefficient_matrice_block_i <-
+                   selected_matrix_i[row_select,
+                                     col_select,
+                                     drop = FALSE]
+                 return(coefficient_matrice_block_i)
+               }
+             )
            names(coefficient_matrice_block) <-
              private$model$name_group
            return(coefficient_matrice_block)
@@ -536,30 +362,19 @@ lslx$set("public",
 lslx$set("public",
          "extract_moment_gradient",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            moment_gradient <-
              compute_moment_gradient_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient
+               supplied_result = private$fitting$supplied_result
              )
            colnames(moment_gradient) <-
              rownames(private$model$specification)
@@ -567,98 +382,172 @@ lslx$set("public",
          })
 
 
+lslx$set("public",
+         "extract_weight_normal",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           weight_normal <-
+             compute_weight_normal_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           return(weight_normal)
+         })
+
+
 
 lslx$set("public",
-         "extract_fisher_information",
+         "extract_expected_fisher",
          function(selector,
-                  type = "expected",
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           expected_fisher <-
+             compute_expected_fisher_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
              )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
-           if (type == "expected") {
-             fisher_information <-
-               compute_expected_fisher_information_cpp(
-                 reduced_data = private$fitting$reduced_data,
-                 reduced_model = private$fitting$reduced_model,
-                 control = private$fitting$control,
-                 theta_value = fitted_coefficient
-               )
-           } else {
-             stop("So far only expected Fisher information can be extracted.")
-           }
-           colnames(fisher_information) <-
+           colnames(expected_fisher) <-
              rownames(private$model$specification)
-           rownames(fisher_information) <-
+           rownames(expected_fisher) <-
              rownames(private$model$specification)
-           return(fisher_information)
+           return(expected_fisher)
          })
+
+
+
+lslx$set("public",
+         "extract_observed_fisher",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           observed_fisher <-
+             0.5 * numDeriv::jacobian(
+               func = compute_loss_gradient_cpp,
+               x = coefficient,
+               method = "simple",
+               method.args = list(),
+               side = NULL,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           colnames(observed_fisher) <-
+             rownames(private$model$specification)
+           rownames(observed_fisher) <-
+             rownames(private$model$specification)
+           return(observed_fisher)
+         })
+
+
+lslx$set("public",
+         "extract_score_acov",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           score_acov <-
+             compute_score_acov_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           colnames(score_acov) <-
+             rownames(private$model$specification)
+           rownames(score_acov) <-
+             rownames(private$model$specification)
+           return(score_acov)
+         })
+
 
 lslx$set("public",
          "extract_coefficient_acov",
          function(selector,
-                  standard_error = "expected_fisher",
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
-           if (standard_error == "expected_fisher") {
-             fisher_information <-
-               self$extract_fisher_information(
-                 selector = selector,
-                 type = "expected",
-                 exclude_nonconvergence = exclude_nonconvergence,
-                 exclude_nonconvexity = exclude_nonconvexity,
-                 verbose = verbose
-               )
-           } else {
+                  standard_error = "default",
+                  exclude_improper = TRUE) {
+           if (!(
+             standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
+           )) {
              stop(
-               "In the current version, only acov based on expected Fisher information can be extracted."
+               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_fisher', or 'expected_fisher'."
              )
            }
-           fitted_coefficient <-
-             self$extract_coefficient(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )[[1]]
+           if (standard_error == "default") {
+             if (private$fitting$control$raw) {
+               standard_error <- "sandwich"
+             } else {
+               standard_error <- "observed_fisher"
+             }
+           }
+           coefficient <-
+             self$extract_coefficient(selector = selector,
+                                      exclude_improper = exclude_improper)
            idc_effective <-
              private$fitting$reduced_model$theta_is_free |
              (private$fitting$reduced_model$theta_is_pen &
-                fitted_coefficient != 0)
+                coefficient != 0)
            coefficient_acov <-
-             matrix(NA, length(fitted_coefficient), length(fitted_coefficient))
+             matrix(NA, length(coefficient), length(coefficient))
            colnames(coefficient_acov) <-
              rownames(private$model$specification)
            rownames(coefficient_acov) <-
              rownames(private$model$specification)
-           
-           coefficient_acov[idc_effective, idc_effective] <-
-             solve(fisher_information[idc_effective, idc_effective]) /
-             private$fitting$reduced_data$total_sample_size
+           if (standard_error == "sandwich") {
+             score_acov <-
+               self$extract_score_acov(selector = selector,
+                                       exclude_improper = exclude_improper)
+             observed_fisher <-
+               self$extract_observed_fisher(selector = selector,
+                                            exclude_improper = exclude_improper)
+             observed_fisher_pinv <-
+               solve(observed_fisher[idc_effective, idc_effective])
+             coefficient_acov[idc_effective, idc_effective] <-
+               (observed_fisher_pinv %*%
+                  score_acov[idc_effective, idc_effective] %*%
+                  observed_fisher_pinv)
+           } else if (standard_error == "expected_fisher") {
+             expected_fisher <-
+               self$extract_expected_fisher(selector = selector,
+                                            exclude_improper = exclude_improper)
+             coefficient_acov[idc_effective, idc_effective] <-
+               solve(expected_fisher[idc_effective, idc_effective]) /
+               private$fitting$reduced_data$n_observation
+           } else if (standard_error == "observed_fisher") {
+             observed_fisher <-
+               self$extract_observed_fisher(selector = selector,
+                                            exclude_improper = exclude_improper)
+             coefficient_acov[idc_effective, idc_effective] <-
+               solve(observed_fisher[idc_effective, idc_effective]) /
+               private$fitting$reduced_data$n_observation
+           } else {
+           }
+           attr(coefficient_acov, "standard_error") <- standard_error
            return(coefficient_acov)
          })
-
 
 
 
@@ -666,30 +555,19 @@ lslx$set("public",
 lslx$set("public",
          "extract_loss_gradient",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            loss_gradient <-
              compute_loss_gradient_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient
+               supplied_result = private$fitting$supplied_result
              )
            rownames(loss_gradient) <-
              rownames(private$model$specification)
@@ -699,37 +577,25 @@ lslx$set("public",
 lslx$set("public",
          "extract_regularizer_gradient",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
-           
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
            gamma <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            regularizer_gradient <-
              compute_regularizer_gradient_cpp(
+               theta_value = coefficient,
+               lambda = lambda,
+               gamma = gamma,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient,
-               lambda = lambda,
-               gamma = gamma
+               supplied_result = private$fitting$supplied_result
              )
            rownames(regularizer_gradient) <-
              rownames(private$model$specification)
@@ -739,36 +605,25 @@ lslx$set("public",
 lslx$set("public",
          "extract_objective_gradient",
          function(selector,
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
-           }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
+                  exclude_improper = TRUE) {
            penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )
-           fitted_coefficient <-
-             private$fitting$coefficient[[penalty_level]]
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
            gamma <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            objective_gradient <-
              compute_objective_gradient_cpp(
+               theta_value = coefficient,
+               lambda = lambda,
+               gamma = gamma,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
-               theta_value = fitted_coefficient,
-               lambda = lambda,
-               gamma = gamma
+               supplied_result = private$fitting$supplied_result
              )
            rownames(objective_gradient) <-
              rownames(private$model$specification)

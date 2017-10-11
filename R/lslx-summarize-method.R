@@ -1,324 +1,381 @@
 lslx$set("public",
          "summarize",
          function(selector,
-                  standard_error = "expected_fisher",
-                  exclude_nonconvergence = TRUE,
-                  exclude_nonconvexity = TRUE,
-                  verbose = TRUE) {
-           if (missing(selector)) {
-             stop("Argument 'selector' is missing.")
+                  standard_error = "default",
+                  alpha_level = .05,
+                  digit = 3,
+                  exclude_improper = TRUE) {
+           if (standard_error == "default") {
+             if (private$fitting$control$raw) {
+               standard_error <- "sandwich"
+             } else {
+               standard_error <- "observed_fisher"
+             }
            }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
            
-           fitted_numerical_condition <-
-             self$extract_numerical_condition(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )[[1]]
-           
-           
-           fitted_goodness_of_fit <-
-             self$extract_goodness_of_fit(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )[[1]]
-           
-           
-           fitted_coefficient <-
-             self$extract_coefficient(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
-             )[[1]]
-           
-           
-           general_information <- list()
-           general_information$sample_size <- private$fitting$reduced_data$total_sample_size 
-           general_information$n_group <- private$fitting$reduced_model$n_group
-           general_information$n_response <- private$fitting$reduced_model$n_response
-           general_information$n_factor <- private$fitting$reduced_model$n_factor
-           general_information$n_free_parameter <- sum(private$fitting$reduced_model$theta_is_free)
-           general_information$n_penalized_parameter <- sum(private$fitting$reduced_model$theta_is_pen)
-           
-           fitting_information <- list()
-           fitting_information$penalty_method <- private$fitting$control$penalty_method
-           fitting_information$lambda_grid <- private$fitting$control$lambda_grid
-           fitting_information$gamma_grid <- private$fitting$control$gamma_grid
-           
-           saturated_model_information <- list()           
-           saturated_model_information$loss_value <- 0
-           saturated_model_information$n_nonzero_coefficient <- 
-             private$fitting$reduced_model$n_moment * private$fitting$reduced_model$n_group
-           
-           baseline_model_information <- list()           
-           baseline_model_information$loss_value <- private$fitting$reduced_model$loss_value_baseline
-           baseline_model_information$n_nonzero_coefficient <- 
-             2 * private$fitting$reduced_model$n_response * private$fitting$reduced_model$n_group
-           
-           selected_model_information <- list()           
-           selected_model_information$selector <- selector
-           selected_model_information$lambda <- fitted_numerical_condition[["lambda"]]
-           selected_model_information$gamma <- fitted_numerical_condition[["gamma"]]
-           selected_model_information$n_iter_out <- fitted_numerical_condition[["n_iter_out"]]
-           selected_model_information$objective_value <- fitted_numerical_condition[["objective_value"]]
-           selected_model_information$loss_value <- fitted_goodness_of_fit[["loss"]]
-           selected_model_information$n_nonzero_coefficient <- fitted_numerical_condition[["n_nonzero_coefficient"]]
-           
-           information_criteria <- list()
-           information_criteria$aic <- fitted_goodness_of_fit[["aic"]]
-           information_criteria$aic3 <- fitted_goodness_of_fit[["aic3"]]
-           information_criteria$caic <- fitted_goodness_of_fit[["caic"]]
-           information_criteria$bic <- fitted_goodness_of_fit[["bic"]]
-           information_criteria$abic <- fitted_goodness_of_fit[["abic"]]
-           information_criteria$hbic <- fitted_goodness_of_fit[["hbic"]]
-           
-           likelihood_ratio <-
-             self$test_likelihood_ratio(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
+           general_information <-
+             formatC(
+               x = c(
+                 private$fitting$reduced_data$n_observation,
+                 private$fitting$reduced_data$n_complete_observation,
+                 private$fitting$reduced_data$n_missing_pattern,
+                 private$fitting$reduced_model$n_group,
+                 private$fitting$reduced_model$n_response,
+                 private$fitting$reduced_model$n_factor,
+                 sum(private$fitting$reduced_model$theta_is_free),
+                 sum(private$fitting$reduced_model$theta_is_pen)
+               ),
+               digits = digit,
+               format = "f"
              )
-           
-           root_mean_square_error_of_approximation <-
-             self$test_rmsea(
-               selector = selector,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
+           names(general_information) <-
+             c(
+               "number of observation",
+               "number of complete observation",
+               "number of missing pattern",
+               "number of group",
+               "number of response",
+               "number of factor",
+               "number of free parameter",
+               "number of penalized parameter"
              )
-           
-           comparative_fit_indice <- list()
-           comparative_fit_indice$cfi <- fitted_goodness_of_fit[["cfi"]]
-           
-           non_normed_fit_indice <- list()
-           non_normed_fit_indice$nnfi <- fitted_goodness_of_fit[["nnfi"]]
-           
-           standardized_root_mean_of_residual <- list() 
-           standardized_root_mean_of_residual$srmr <- fitted_goodness_of_fit[["srmr"]]
-           
-           coefficient <-
-             self$test_coefficient(
-               selector = selector,
-               standard_error = standard_error,
-               exclude_nonconvergence = exclude_nonconvergence,
-               exclude_nonconvexity = exclude_nonconvexity,
-               verbose = verbose
+           fitting_information <-
+             formatC(
+               x = c(
+                 private$fitting$control$penalty_method,
+                 ifelse(
+                   length(private$fitting$control$lambda_grid) == 1,
+                   private$fitting$control$lambda_grid,
+                   paste(
+                     min(private$fitting$control$lambda_grid),
+                     max(private$fitting$control$lambda_grid),
+                     sep = " - "
+                   )
+                 ),
+                 ifelse(
+                   length(private$fitting$control$gamma_grid) == 1,
+                   private$fitting$control$gamma_grid,
+                   paste(
+                     min(private$fitting$control$gamma_grid),
+                     max(private$fitting$control$gamma_grid),
+                     sep = " - "
+                   )
+                 ),
+                 sub(pattern = "_", replacement = " ", 
+                     x = private$fitting$control$missing_method),
+                 private$fitting$control$tol_out
+               ),
+               digits = digit,
+               format = "f"
              )
-           list_summary <- list(general_information = general_information,
-                                fitting_information = fitting_information,
-                                saturated_model_information = saturated_model_information,
-                                baseline_model_information = baseline_model_information,
-                                selected_model_information = selected_model_information,
-                                information_criteria = information_criteria,
-                                likelihood_ratio = likelihood_ratio,
-                                root_mean_square_error_of_approximation = root_mean_square_error_of_approximation,
-                                comparative_fit_indice = comparative_fit_indice,
-                                non_normed_fit_indice = non_normed_fit_indice,
-                                standardized_root_mean_of_residual = standardized_root_mean_of_residual,
-                                coefficient = coefficient)
-           
-           
-           digit = 3
-           
-           
-           relation_as_groupname <- format(private$model$specification$relation,
-                                           width = max(nchar(private$model$specification$relation)),
-                                           justify = "right")
-           block_levels <- c("Factor Loading","Regression","Covariance","Variance","Intercept")
-           
-           fitting_information$lambda_grid <- paste(min(fitting_information$lambda_grid),
-                                                    max(fitting_information$lambda_grid),
-                                                    sep = " - ")
-           fitting_information$gamma_grid <- paste(min(fitting_information$gamma_grid),
-                                                   max(fitting_information$gamma_grid),
-                                                   sep = " - ")
-           
-           
-           information_names <- c(gen_inf = "General Information",
-                                  fit_inf = "Fitting Information",
-                                  sat_mod_inf = "Saturated Model Information",
-                                  bas_mod_inf = "Baseline Model Information",
-                                  sel_mod_inf = "Selected Model Information",
-                                  info_cri = "Information Crirteria",
-                                  lik_rat = "Likelihood Ratio",
-                                  rmsea = "Root Mean Square Error of Approximation",
-                                  cfi = "Comparative Fit Indice",
-                                  nnfi = "Non Normed Fit Indice",
-                                  srmr = "Standardized Root Mean of Residual")
-           
-           information_data <- list(gen_inf = unlist(general_information),
-                                    fit_inf = unlist(fitting_information),
-                                    sat_mod_inf = formatC(unlist(saturated_model_information),
-                                                          digits = digit,
-                                                          format = "f"),
-                                    bas_mod_inf = formatC(unlist(baseline_model_information),
-                                                          digits = digit,
-                                                          format = "f"),
-                                    sel_mod_inf = c(selector = selected_model_information[[1]],
-                                                    formatC(unlist(selected_model_information[2:7]),
-                                                            digits = digit,
-                                                            format = "f")),
-                                    info_cri = formatC(unlist(information_criteria),
-                                                       digits = digit,
-                                                       format = "f"),
-                                    lik_rat = formatC(unlist(likelihood_ratio),
-                                                      digits = digit,
-                                                      format = "f"),
-                                    rmsea = formatC(unlist(root_mean_square_error_of_approximation),
-                                                    digits = digit,
-                                                    format = "f"),
-                                    cfi = formatC(unlist(comparative_fit_indice),
-                                                  digits = digit,
-                                                  format = "f"),
-                                    nnfi = formatC(unlist(non_normed_fit_indice),
-                                                   digits = digit,
-                                                   format = "f"),
-                                    srmr = formatC(unlist(standardized_root_mean_of_residual),
-                                                   digits = digit,
-                                                   format = "f"))
-           
-           information_row_names <- list(gen_inf = c("sample size",
-                                                     "number of groups",
-                                                     "number of response",
-                                                     "number of factor",
-                                                     "number of free parameter",
-                                                     "number of penalized parameter"),
-                                         fit_inf = c("penalty method",
-                                                     "lambda grid",
-                                                     "gamma grid"),
-                                         sat_mod_inf = c("loss value",
-                                                         "number of non-zero coefficient"),
-                                         bas_mod_inf = c("loss value",
-                                                         "number of non-zero coefficient"),
-                                         sel_mod_inf = c("selector",
-                                                         "lambda",
-                                                         "gamma",
-                                                         "number of iteration",
-                                                         "objective value",
-                                                         "loss value",
-                                                         "number of non-zero coefficient"),
-                                         info_cri =  c("aic (Akaike, 1974)",
-                                                       "aic3 (Sclove, 1987)",
-                                                       "caic (Bozdogan, 1987)",
-                                                       "bic (Schwarz, 1978)",
-                                                       "abic (Yang, 2006)",
-                                                       "hbic (Haughton, 1997)"),
-                                         lik_rat = c("statistic",
-                                                     "degree of freedom",
-                                                     "p-value"),
-                                         rmsea = c("rmsea",
-                                                   "lower limit",
-                                                   "upper limit"),
-                                         cfi = c("cfi"),
-                                         nnfi = c("nnfi"),
-                                         srmr = c("srmr")
+           names(fitting_information) <-
+             c("penalty method",
+               "lambda grid",
+               "gamma grid",
+               "missing method",
+               "tolerance for convergence")
+           saturated_model_information <-
+             formatC(
+               x = private$fitting$supplied_result$saturated_model,
+               digits = digit,
+               format = "f"
+             )
+           names(saturated_model_information) <-
+             c("loss value",
+               "number of non-zero coefficient",
+               "degree of freedom")
+           baseline_model_information <-
+             formatC(
+               x = private$fitting$supplied_result$baseline_model,
+               digits = digit,
+               format = "f"
+             )
+           names(baseline_model_information) <-
+             c("loss value",
+               "number of non-zero coefficient",
+               "degree of freedom")
+           numerical_condition <-
+             formatC(
+               x = self$extract_numerical_condition(selector = selector,
+                                                    exclude_improper = exclude_improper),
+               digits = digit,
+               format = "f"
+             )
+           names(numerical_condition) <-
+             c(
+               "lambda",
+               "gamma",
+               "objective value",
+               "objective gradient abs.maximum",
+               "objective hessian convexity",
+               "number of iteration",
+               "loss value",
+               "number of non-zero coefficient",
+               "degree of freedom"
+             )
+           information_criterion <-
+             formatC(
+               x = self$extract_information_criterion(selector = selector,
+                                                      exclude_improper = exclude_improper),
+               digits = digit,
+               format = "f"
+             )
+           names(information_criterion) <-
+             c(
+               "Akaike information criterion (aic)",
+               "Akaike information criterion with penalty being 3 (aic3)",
+               "consistent Akaike information criterion (caic)",
+               "Bayesian information criterion (bic))",
+               "adjusted Bayesian information criterion (abic)",
+               "Haughton Bayesian information criterion (hbic)"
+             )
+           fit_indice <-
+             formatC(
+               x = self$extract_fit_indice(selector = selector,
+                                           exclude_improper = exclude_improper),
+               digits = digit,
+               format = "f"
+             )
+           names(fit_indice) <-
+             c(
+               "root mean square error of approximation (rmsea)",
+               "comparative fit indice (cfi)",
+               "non-normed fit indice (nnfi)",
+               "standardized root mean of residual (srmr)"
+             )
+           summary_list <-
+             list(
+               general_information,
+               fitting_information,
+               saturated_model_information,
+               baseline_model_information,
+               numerical_condition,
+               information_criterion,
+               fit_indice
+             )
+           names(summary_list) <- c(
+             "General Information",
+             "Fitting Information",
+             "Saturated Model Information",
+             "Baseline Model Information",
+             "Numerical Condition",
+             "Information Criteria",
+             "Fit Indices"
            )
            
-           rowname_width <- max(nchar(information_names))+5
-           value_width <- max(unlist(lapply(information_data,nchar)))+3
+           rowname_width <-
+             max(nchar(unlist(lapply(
+               X = summary_list, FUN = names
+             )))) + 5
+           value_width <-
+             max(unlist(lapply(X = summary_list, FUN = nchar))) + 3
            
-           for (i_information in names(information_names)){
-             cat(information_names[i_information])
-             values <- as.data.frame(information_data[i_information][[1]])
-             colnames(values) <- NULL
-             rownames(values) <- format(paste("  ",information_row_names[i_information][[1]]),
-                                        width = rowname_width,
-                                        justify = "left")               
-             print(format(values, width = value_width, justify = "right"))
+           for (name_i in names(summary_list)) {
+             cat(name_i)
+             summary_list_i <-
+               as.data.frame(summary_list[[name_i]])
+             colnames(summary_list_i) <- NULL
+             rownames(summary_list_i) <-
+               format(paste("  ", rownames(summary_list_i)),
+                      width = rowname_width,
+                      justify = "left")
+             print(format(summary_list_i, width = value_width, justify = "right"))
              cat("\n")
-             
            }
            
-           rounded_coe <- lapply(coefficient,function(i_list) {
-             single_col_dta <- formatC(i_list,digits = 3,format = "f")
-             single_col_dta[grepl("NA",single_col_dta)] <- "-"
-             return(single_col_dta)
-           }
+           ## printing likelihood ratio test
+           
+           lr_test_rounded <-
+             sapply(self$test_lr(selector = selector), function(i_list) {
+               lr_test_single_column <-
+                 formatC(i_list, digits = digit, format = "f")
+               lr_test_single_column[grepl("NA", lr_test_single_column)] <-
+                 "  -  "
+               return(lr_test_single_column)
+             })
+           lr_test_rounded <- data.frame(lr_test_rounded)
+           colnames(lr_test_rounded) <-
+             format(c("statistic", "df", "p-value"),
+                    width = 10,
+                    justify = "right")
+           rownames(lr_test_rounded) <-
+             paste0("   ", rownames(self$test_lr(selector = selector)), "  ")
+           
+           cat("Likelihood Ratio Test\n")
+           print(lr_test_rounded)
+           cat("\n")
+           
+           ## printing root mean square error of approximation test
+           
+           rmsea_test_rounded <-
+             sapply(self$test_rmsea(selector = selector), function(i_list) {
+               rmsea_test_single_column <-
+                 formatC(i_list, digits = digit, format = "f")
+               rmsea_test_single_column[grepl("NA", rmsea_test_single_column)] <-
+                 "  -  "
+               return(rmsea_test_single_column)
+             })
+           rmsea_test_rounded <- data.frame(rmsea_test_rounded)
+           colnames(rmsea_test_rounded) <-
+             format(colnames(self$test_rmsea(selector = selector)),
+                    width = 10,
+                    justify = "right")
+           rownames(rmsea_test_rounded) <-
+             paste0("   ", rownames(self$test_rmsea(selector = selector)), "  ")
+           
+           cat("Root Mean Square Error of Approximation Test\n")
+           print(rmsea_test_rounded)
+           cat("\n")
+           
+           
+           
+           ## printing coefficient
+           
+           coefficient <- self$test_coefficient(
+             selector = selector,
+             standard_error = standard_error,
+             exclude_improper = exclude_improper
            )
            
-           rounded_coe$block <- private$model$specification$block
-           rounded_coe$block_type <- rep(NA,nrow(private$model$specification))
-           rounded_coe$type <- format(private$model$specification$type,width = 6, justify = "right")
-           rounded_coe$left <- private$model$specification$left
-           rounded_coe$right <- private$model$specification$right
+           relation_as_groupname <-
+             format(
+               private$model$specification$relation,
+               width = max(nchar(private$model$specification$relation)),
+               justify = "right"
+             )
+           block_levels <-
+             c("Factor Loading",
+               "Regression",
+               "Covariance",
+               "Variance",
+               "Intercept")
            
+           coefficient_rounded <-
+             lapply(coefficient, function(i_list) {
+               data_single_column <- formatC(i_list, digits = digit, format = "f")
+               data_single_column[grepl("NA", data_single_column)] <-
+                 "  -  "
+               return(data_single_column)
+             })
            
+           coefficient_rounded$block <-
+             private$model$specification$block
+           coefficient_rounded$block_type <-
+             rep(NA, nrow(private$model$specification))
+           coefficient_rounded$type <-
+             format(private$model$specification$type,
+                    width = 6,
+                    justify = "right")
+           coefficient_rounded$group <-
+             private$model$specification$group
+           coefficient_rounded$left <-
+             private$model$specification$left
+           coefficient_rounded$right <-
+             private$model$specification$right
            
-           rounded_coe$block_type[rounded_coe$block=="y<-1"] <- "Intercept"
-           rounded_coe$block_type[rounded_coe$block=="f<-1"] <- "Intercept"
-           rounded_coe$block_type[rounded_coe$block=="y<-f"] <- "Factor Loading"
-           rounded_coe$block_type[rounded_coe$block=="y<-y"] <- "Regression"
-           rounded_coe$block_type[rounded_coe$block=="f<-y"] <- "Regression"
-           rounded_coe$block_type[rounded_coe$block=="f<-f"] <- "Regression"
-           rounded_coe$block_type[rounded_coe$block=="y<->f"] <- "Covariance"
-           rounded_coe$block_type[rounded_coe$block=="f<->y"] <- "Covariance"
-           rounded_coe$block_type[rounded_coe$block=="y<->y"] <- "Covariance"
-           rounded_coe$block_type[rounded_coe$block=="f<->f"] <- "Covariance"
-           rounded_coe$block_type[rounded_coe$left==rounded_coe$right] <- "Variance"
+           coefficient_rounded$block_type[coefficient_rounded$block == "y<-1"] <-
+             "Intercept"
+           coefficient_rounded$block_type[coefficient_rounded$block == "f<-1"] <-
+             "Intercept"
+           coefficient_rounded$block_type[coefficient_rounded$block == "y<-f"] <-
+             "Factor Loading"
+           coefficient_rounded$block_type[coefficient_rounded$block == "y<-y"] <-
+             "Regression"
+           coefficient_rounded$block_type[coefficient_rounded$block == "f<-y"] <-
+             "Regression"
+           coefficient_rounded$block_type[coefficient_rounded$block == "f<-f"] <-
+             "Regression"
+           coefficient_rounded$block_type[coefficient_rounded$block == "y<->f"] <-
+             "Covariance"
+           coefficient_rounded$block_type[coefficient_rounded$block == "f<->y"] <-
+             "Covariance"
+           coefficient_rounded$block_type[coefficient_rounded$block == "y<->y"] <-
+             "Covariance"
+           coefficient_rounded$block_type[coefficient_rounded$block == "f<->f"] <-
+             "Covariance"
+           coefficient_rounded$block_type[coefficient_rounded$left == coefficient_rounded$right] <-
+             "Variance"
            
-           rounded_coe <- data.frame(rounded_coe[c(1:7)])
-           
+           coefficient_rounded <-
+             data.frame(coefficient_rounded[c(1:10)])
            
            ## print by different groups
-           
-           if (!is.na(private$model$reference_group)){
-             group_by_order <- c(grep(private$model$reference_group,private$model$name_group),
-                                 c(1:(length(private$model$name_group)))[!(c(1:(length(private$model$name_group)) %in%
-                                                                               c(grep(private$model$reference_group,private$model$name_group))))])
+           if (!is.na(private$model$reference_group)) {
+             reference_group_order <-
+               which(private$model$name_group %in% private$model$reference_group)
+             group_by_order <- c(reference_group_order,
+                                 c(1:(length(
+                                   private$model$name_group
+                                 )))[!(c(1:(length(
+                                   private$model$name_group
+                                 ))) %in% reference_group_order)])
            } else {
              group_by_order <- 1:length(private$model$name_group)
            }
            
-           for (i_group in group_by_order){
+           for (i_group in group_by_order) {
+             selected_rows <-
+               coefficient_rounded$group == private$model$name_group[i_group]
              
-             single_group_dta <- rounded_coe[grepl(private$model$name_group[[i_group]],
-                                                   rownames(rounded_coe)),]
+             data_single_group <-
+               coefficient_rounded[selected_rows, ]
              
-             rownames(single_group_dta) <- relation_as_groupname[grepl(private$model$name_group[[i_group]],
-                                                                       rownames(rounded_coe))]
+             rownames(data_single_group) <-
+               paste0(relation_as_groupname[selected_rows], "  ")
              
-             colnames(single_group_dta) <- c("estimate",
-                                             "std.error",
-                                             "z-value",
-                                             "p-value",
-                                             "block",
-                                             "block_type",
-                                             "type")
-             
-             if (length(private$model$name_group)!=1) {
-               cat(paste0(
-                 "Coefficient Estimate (Group = \"",
-                 private$model$name_group[[i_group]],
-                 "\")\n"))
+             colnames(data_single_group) <- c(
+               "estimate",
+               "std.error",
+               "z-value",
+               "p-value",
+               "lower",
+               "upper",
+               "block",
+               "block_type",
+               "type",
+               "group"
+             )
+             if (length(private$model$name_group) != 1) {
+               cat(
+                 paste0(
+                   "Coefficient Test (Group = \"",
+                   private$model$name_group[[i_group]],
+                   "\"",
+                   ", Standard Error = \"",
+                   standard_error,
+                   "\"",
+                   ", Alpha Level = ",
+                   alpha_level,
+                   ")\n"
+                 )
+               )
              } else {
-               cat("Coefficient Estimate",
-                   "\n")
+               cat(
+                 paste0(
+                   "Coefficient Test",
+                   " (Standard Error = \"",
+                   standard_error,
+                   "\"",
+                   ", Alpha Level = ",
+                   alpha_level,
+                   ")\n"
+                 )
+               )
              }
              
-             
-             
              ## print by block types
-             
-             for (i_block_type in block_levels){
-               if(
-                 sum(single_group_dta$block_type == i_block_type)>0L
-               ) {
-                 cat(" ",i_block_type,"\n")
-                 print(single_group_dta[single_group_dta$block_type == i_block_type,c(7,1:4)])
+             for (i_block_type in block_levels) {
+               if (sum(data_single_group$block_type == i_block_type) > 0L) {
+                 cat(" ", i_block_type, "\n")
+                 dta_single_group <-
+                   data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
+                 colnames(dta_single_group) <-
+                   format(colnames(dta_single_group),
+                          width = 8,
+                          justify = "right")
+                 print(dta_single_group)
                  cat("\n")
                }
              }
            }
-           
-           
-           
-           #return(list_summary)
          })

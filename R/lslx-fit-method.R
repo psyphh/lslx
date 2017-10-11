@@ -25,18 +25,22 @@ lslx$set("public",
          function(penalty_method = "none",
                   lambda_grid = 0,
                   gamma_grid = Inf,
-                  start_method = "MH",
+                  missing_method = "default",
+                  start_method = "default",
                   positive_diag = TRUE,
                   iter_out_max = 100L,
                   iter_in_max = 50L,
+                  iter_other_max = 500L,
                   iter_armijo_max = 100L,
                   tol_out = 1e-4,
                   tol_in = 1e-4,
+                  tol_other = 1e-4,
                   step_size = 0.5,
                   armijo = 1e-5,
                   ridge_cov = 1e-4,
                   ridge_hessian = 1e-4,
                   verbose = TRUE) {
+           proc_time_start <- proc.time()
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
              stop("Argument 'penalty_method' can be only either 'none', 'lasso', or 'mcp'.")
            } else {
@@ -65,8 +69,11 @@ lslx$set("public",
                }
              }
            }
-           if (!(start_method %in% c("MH", "heuristic"))) {
-             stop("Argument 'start_method' can be only 'MH' or 'heuristic'")
+           if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
+             stop("Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'.")
+           }
+           if (!(start_method %in% c("default", "MH", "heuristic"))) {
+             stop("Argument 'start_method' can be only 'default', 'MH', or 'heuristic'.")
            }
            if (!(is.logical(positive_diag) &
                  (length(positive_diag) = 1))) {
@@ -103,44 +110,42 @@ lslx$set("public",
                  (length(ridge_hessian) = 1))) {
              stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
            }
-           
            control <-
              list(
                penalty_method = penalty_method,
                lambda_grid = lambda_grid,
                gamma_grid = gamma_grid,
+               missing_method = missing_method,
                start_method = start_method,
                positive_diag = positive_diag,
                iter_out_max = iter_out_max,
                iter_in_max = iter_in_max,
+               iter_other_max = iter_other_max,
                iter_armijo_max = iter_armijo_max,
                tol_out = tol_out,
                tol_in = tol_in,
+               tol_other = tol_other,
                step_size = step_size,
                armijo = armijo,
                ridge_cov = ridge_cov,
                ridge_hessian = ridge_hessian
              )
-           
            private$fitting <-
              lslxFitting$new(model = private$model,
                              data = private$data,
                              control = control)
-
            compute_regularized_path_cpp(
              private$fitting$reduced_data,
              private$fitting$reduced_model,
              private$fitting$control,
-             private$fitting$numerical_condition,
-             private$fitting$goodness_of_fit,
-             private$fitting$coefficient
+             private$fitting$supplied_result,
+             private$fitting$fitted_result
            )
-           
            name_grid <-
              paste0(
                "ld=",
                sapply(
-                 X = private$fitting$numerical_condition,
+                 X = private$fitting$fitted_result$numerical_condition,
                  FUN = function(x) {
                    getElement(x, "lambda")
                  }
@@ -148,14 +153,36 @@ lslx$set("public",
                "/",
                "gm=",
                sapply(
-                 X = private$fitting$numerical_condition,
+                 X = private$fitting$fitted_result$numerical_condition,
                  FUN = function(x) {
                    getElement(x, "gamma")
                  }
                )
              )
-           
-           names(private$fitting$numerical_condition) <- name_grid
-           names(private$fitting$goodness_of_fit) <- name_grid
-           names(private$fitting$coefficient) <- name_grid
+           names(private$fitting$fitted_result$numerical_condition) <- name_grid
+           names(private$fitting$fitted_result$information_criterion) <- name_grid
+           names(private$fitting$fitted_result$fit_indice) <- name_grid
+           names(private$fitting$fitted_result$coefficient) <- name_grid
+           idc_problem <-
+             sapply(X = private$fitting$fitted_result$numerical_condition,
+                  FUN = function(numerical_condition_i) {
+                    idc_problem_i <- 
+                      (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
+                      (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
+                    return(idc_problem_i)
+                  })
+           if (any(idc_problem)) {
+             cat("WARNING: The optimization algorithm may not converge under some penalty level. ")
+             cat("Please try larger value of 'iter_out_max' or specify better starting values.")
+           } else {
+             if (verbose) {
+               cat("CONGRATS: The optimization algorithm converged under all specified penalty levels. \n")
+               cat("  Specified Tolerance for Convergence:",
+                   private$fitting$control$tol_out,
+                   "\n")
+               cat("  Specified Maximal Number of Iterations:",
+                   private$fitting$control$iter_out_max,
+                   "\n")
+             }
+           }
          })

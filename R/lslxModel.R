@@ -9,45 +9,39 @@ lslxModel <-
       name_eta = "character",
       name_exogenous = "character",
       name_endogenous = "character",
-      specification = "data.frame",
-      constraint = "list"
+      specification = "data.frame"
     )
   )
 
 
 lslxModel$set("public",
               "initialize",
-              function(equation,
+              function(model,
                        name_group,
                        reference_group) {
                 self$name_group <- name_group
                 self$reference_group <- reference_group
-                
-                equation_parsed <-
-                  private$parse_equation(equation = equation)
-                
+                model_parsed <-
+                  private$parse_model(model = model)
                 self$name_factor <-
-                  unique(equation_parsed[equation_parsed$operator %in%
-                                           c("<=:", "<~:"), "right"])
+                  unique(model_parsed[model_parsed$operator %in%
+                                        c("<=:", "<~:"), "right"])
                 self$name_response <-
-                  setdiff(x = unique(unlist(equation_parsed[, c("left", "right")])),
+                  setdiff(x = unique(unlist(model_parsed[, c("left", "right")])),
                           y = c(self$name_factor, "1"))
                 self$name_eta <-
                   c(self$name_response, self$name_factor)
-                
                 self$name_endogenous <-
-                  unique(equation_parsed[(equation_parsed$operator %in%
-                                            c("<=:", "<~:", "<=", "<~")) &
-                                           (equation_parsed$right != "1"),
-                                         "left"])
+                  unique(model_parsed[(model_parsed$operator %in%
+                                         c("<=:", "<~:", "<=", "<~")) &
+                                        (model_parsed$right != "1"),
+                                      "left"])
                 self$name_exogenous <-
                   unique(setdiff(x = self$name_eta,
                                  y = self$name_endogenous))
-                
-                private$initialize_specification(equation_parsed = equation_parsed)
+                private$initialize_specification(model_parsed = model_parsed)
                 private$expand_specification_alpha()
                 private$expand_specification_psi()
-
                 self$specification <-
                   self$specification[order(
                     self$specification$reference,
@@ -58,39 +52,34 @@ lslxModel$set("public",
                     match(self$specification$left, self$name_eta),
                     decreasing = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
                     method = "radix"
-                  ), ]
+                  ),]
               })
 
 
 lslxModel$set("private",
-              "parse_equation",
-              function(equation) {
-                #remove undesired symbol
-                equation_cleaned <-
+              "parse_model",
+              function(model) {
+                model_cleaned <-
                   gsub(pattern = "[[:blank:]]",
                        replacement = "",
-                       x = equation)
-                equation_cleaned <-
+                       x = model)
+                model_cleaned <-
                   gsub(pattern = "\\$|\\?|\\||\\\\|\\^|%|&|#|\\[|\\]|\\{|\\}",
                        replacement = "",
-                       x = equation_cleaned)
-                equation_cleaned <-
+                       x = model_cleaned)
+                model_cleaned <-
                   gsub(pattern = ";",
                        replacement = "\n",
-                       x = equation_cleaned)
-                equation_cleaned <-
+                       x = model_cleaned)
+                model_cleaned <-
                   gsub(pattern = "\n{2,}",
                        replacement = "\n",
-                       x = equation_cleaned)
-                
-                #split equations into individuals
-                equation_split <-
-                  unlist(x = strsplit(x = equation_cleaned,
+                       x = model_cleaned)
+                model_split <-
+                  unlist(x = strsplit(x = model_cleaned,
                                       split = "\n"),
                          use.names = FALSE)
-                #split individual equation into idx, left, right, and operator
-                #idx is the index for individual equation
-                equation_split <-
+                model_split <-
                   sapply(
                     X = c("<=:", "<~:", ":=>", ":~>",
                           "<=", "<~", "=>", "~>", "<=>", "<~>"),
@@ -102,18 +91,17 @@ lslxModel$set("private",
                             paste0("[^:<]", operator_i),
                             paste0(operator_i, "[^:>]")
                           ),
-                          x = equation_split,
+                          x = model_split,
                           value = FALSE
                         )
-                      equation_split_i <-
+                      model_split_i <-
                         do.call(what = rbind,
-                                args = strsplit(x = equation_split[idx],
+                                args = strsplit(x = model_split[idx],
                                                 split = operator_i))
-                      #reverse the directions of operators ":=>", ":~>", "=>", "~>"
-                      if (length(equation_split_i) > 0) {
+                      if (length(model_split_i) > 0) {
                         if (operator_i %in% c(":=>", ":~>", "=>", "~>")) {
-                          equation_split_i <-
-                            equation_split_i[, c(2, 1), drop = FALSE]
+                          model_split_i <-
+                            model_split_i[, c(2, 1), drop = FALSE]
                           operator_i <-
                             paste0(rev(gsub(
                               pattern = ">",
@@ -124,62 +112,58 @@ lslxModel$set("private",
                             )),
                             collapse = "")
                         }
-                        equation_split_i <-
-                          cbind(
-                            idx = idx,
-                            "colnames<-"(equation_split_i,
-                                         value = c("left", "right")),
-                            operator = operator_i
-                          )
+                        model_split_i <-
+                          cbind(idx = idx,
+                                "colnames<-"(model_split_i,
+                                             value = c("left", "right")),
+                                operator = operator_i)
                       }
-                      return(equation_split_i)
+                      return(model_split_i)
                     },
                     simplify = TRUE,
                     USE.NAMES = TRUE
                   )
-                equation_split <-
-                  do.call(what = rbind, args = equation_split)
-                #sort equation_split by idx and remove idx
-                equation_split <-
-                  equation_split[order(as.numeric(equation_split[, "idx"])),
-                                 ,
-                                 drop = FALSE]
-                equation_split <-
-                  equation_split[, -1, drop = FALSE]
-                #parse left and right sides of equation by "+" and consider their combinations
-                equation_parsed <-
+                model_split <-
+                  do.call(what = rbind, args = model_split)
+                model_split <-
+                  model_split[order(as.numeric(model_split[, "idx"])),
+                              ,
+                              drop = FALSE]
+                model_split <-
+                  model_split[,-1, drop = FALSE]
+                model_parsed <-
                   apply(
-                    X = equation_split,
+                    X = model_split,
                     MARGIN = 1,
-                    FUN = function(equation_split_i) {
+                    FUN = function(model_split_i) {
                       left_split <-
-                        unlist(strsplit(x = equation_split_i[["left"]],
+                        unlist(strsplit(x = model_split_i[["left"]],
                                         split = "\\+"),
                                use.names = FALSE)
                       right_split <-
-                        unlist(strsplit(x = equation_split_i[["right"]],
+                        unlist(strsplit(x = model_split_i[["right"]],
                                         split = "\\+"),
                                use.names = FALSE)
-                      equation_parsed_i <-
+                      model_parsed_i <-
                         expand.grid(
                           relation = NA_character_,
                           left = left_split,
                           right = right_split,
-                          operator = equation_split_i["operator"],
+                          operator = model_split_i["operator"],
                           KEEP.OUT.ATTRS = FALSE,
                           stringsAsFactors = FALSE
                         )
                       left_split <-
-                        strsplit(equation_parsed_i$left, split = "\\*")
+                        strsplit(model_parsed_i$left, split = "\\*")
                       right_split <-
-                        strsplit(equation_parsed_i$right, split = "\\*")
-                      equation_parsed_i$left <-
+                        strsplit(model_parsed_i$right, split = "\\*")
+                      model_parsed_i$left <-
                         sapply(
                           left_split,
                           FUN = function(i)
                             getElement(i, length(i))
                         )
-                      equation_parsed_i$right <-
+                      model_parsed_i$right <-
                         sapply(
                           right_split,
                           FUN = function(i)
@@ -189,103 +173,100 @@ lslxModel$set("private",
                       #check invalid intercept specification
                       if ("|"(any(
                         "["(
-                          equation_parsed_i$right,
-                          equation_parsed_i$operator %in%
+                          model_parsed_i$right,
+                          model_parsed_i$operator %in%
                           c("<=>", "<~>")
                         ) == "1"
                       ),
                       any(
                         "["(
-                          equation_parsed_i$left,
-                          equation_parsed_i$operator %in%
+                          model_parsed_i$left,
+                          model_parsed_i$operator %in%
                           c("<=>", "<~>")
                         ) == "1"
                       ))) {
                         stop(
                           "Intercept term '1' cannot present at the expression for covariance.",
-                          "\n  Please check the specified 'equation'."
+                          "\n  Please check the specified 'model'."
                         )
                       }
-                      if (any("["(
-                        equation_parsed_i$left,
-                        !(equation_parsed_i$operator %in% c("<=>", "<~>"))
-                      ) == "1")) {
+                      if (any("["(model_parsed_i$left,!(
+                        model_parsed_i$operator %in% c("<=>", "<~>")
+                      )) == "1")) {
                         stop(
                           "Intercept term '1' cannot present at the arrow side of expression.",
-                          "\n  Please check the specified 'equation'."
+                          "\n  Please check the specified 'model'."
                         )
                       }
-                      equation_parsed_i$left_prefix <-
+                      model_parsed_i$left_prefix <-
                         sapply(
                           left_split,
                           FUN = function(i) {
                             ifelse(length(i) == 1L, NA_character_, i[1])
                           }
                         )
-                      equation_parsed_i$right_prefix <-
+                      model_parsed_i$right_prefix <-
                         sapply(
                           right_split,
                           FUN = function(i) {
                             ifelse(length(i) == 1L, NA_character_, i[1])
                           }
                         )
-                      #clean prefix and integrate them
                       if (any(!(
-                        is.na(equation_parsed_i$left_prefix) |
-                        is.na(equation_parsed_i$right_prefix)
+                        is.na(model_parsed_i$left_prefix) |
+                        is.na(model_parsed_i$right_prefix)
                       ))) {
                         stop(
                           "Prefix before '*' cannot simultaneously present at both side of expression.",
-                          "\n  Please check the specified 'equation'."
+                          "\n  Please check the specified 'model'."
                         )
-                      } else if (any(!is.na(equation_parsed_i$left_prefix))) {
-                        equation_parsed_i$prefix <-
-                          equation_parsed_i$left_prefix
-                      } else if (any(!is.na(equation_parsed_i$right_prefix))) {
-                        equation_parsed_i$prefix <-
-                          equation_parsed_i$right_prefix
+                      } else if (any(!is.na(model_parsed_i$left_prefix))) {
+                        model_parsed_i$prefix <-
+                          model_parsed_i$left_prefix
+                      } else if (any(!is.na(model_parsed_i$right_prefix))) {
+                        model_parsed_i$prefix <-
+                          model_parsed_i$right_prefix
                       } else {
-                        equation_parsed_i$prefix <- NA_character_
+                        model_parsed_i$prefix <- NA_character_
                       }
-                      equation_parsed_i$left_prefix <- NULL
-                      equation_parsed_i$right_prefix <- NULL
-                      equation_parsed_i$relation <-
+                      model_parsed_i$left_prefix <- NULL
+                      model_parsed_i$right_prefix <- NULL
+                      model_parsed_i$relation <-
                         paste0(
-                          equation_parsed_i$left,
+                          model_parsed_i$left,
                           ifelse(
-                            equation_parsed_i$operator %in%
+                            model_parsed_i$operator %in%
                               c("<=:", "<~:", "<=", "<~"),
                             "<-",
                             "<->"
                           ),
-                          equation_parsed_i$right
+                          model_parsed_i$right
                         )
-                      equation_parsed_i$operator <-
+                      model_parsed_i$operator <-
                         ifelse(
-                          equation_parsed_i$right == "1",
+                          model_parsed_i$right == "1",
                           ifelse(
-                            equation_parsed_i$operator == "<=:",
+                            model_parsed_i$operator == "<=:",
                             "<=",
                             ifelse(
-                              equation_parsed_i$operator == "<~:",
+                              model_parsed_i$operator == "<~:",
                               "<~",
-                              equation_parsed_i$operator
+                              model_parsed_i$operator
                             )
                           ),
-                          equation_parsed_i$operator
+                          model_parsed_i$operator
                         )
-                      return(equation_parsed_i)
+                      return(model_parsed_i)
                     }
                   )
-                equation_parsed <-
-                  do.call(what = rbind, args = equation_parsed)
-                #check whether names of variable(s) or factor(s) are start with numbers
+                model_parsed <-
+                  do.call(what = rbind, args = model_parsed)
                 if (any(grepl(
                   pattern = "[[:digit:]]",
                   x = substr(
                     x = setdiff(x = unique(
-                      c(equation_parsed$left,
-                        equation_parsed$right)
+                      c(model_parsed$left,
+                        model_parsed$right)
                     ),
                     y = c("1")),
                     start = 1,
@@ -294,55 +275,53 @@ lslxModel$set("private",
                 ))) {
                   stop(
                     "Names of variable(s) or factor(s) cannot start with numbers.",
-                    "\n  Please check the specified 'equation'."
+                    "\n  Please check the specified 'model'."
                   )
                 }
-                return(equation_parsed)
+                return(model_parsed)
               })
 
 
 lslxModel$set("private",
               "initialize_specification",
-              function(equation_parsed) {
-                equation_parsed <-
+              function(model_parsed) {
+                model_parsed <-
                   apply(
-                    equation_parsed,
+                    model_parsed,
                     1,
-                    FUN = function(equation_parsed_i) {
-                      if ((equation_parsed_i[["operator"]] %in% c("<=>", "<~>")) &
-                          (
-                            match(equation_parsed_i[["left"]], self$name_eta) <
-                            match(equation_parsed_i[["right"]], self$name_eta)
-                          )) {
-                        equation_parsed_i <-
+                    FUN = function(model_parsed_i) {
+                      if ((model_parsed_i[["operator"]] %in% c("<=>", "<~>")) &
+                          (match(model_parsed_i[["left"]], self$name_eta) <
+                           match(model_parsed_i[["right"]], self$name_eta))) {
+                        model_parsed_i <-
                           c(
-                            relation = paste0(equation_parsed_i[["right"]],
+                            relation = paste0(model_parsed_i[["right"]],
                                               "<->",
-                                              equation_parsed_i[["left"]]),
-                            left = equation_parsed_i[["right"]],
-                            operator = equation_parsed_i[["operator"]],
-                            right = equation_parsed_i[["left"]],
-                            prefix = equation_parsed_i[["prefix"]]
+                                              model_parsed_i[["left"]]),
+                            left = model_parsed_i[["right"]],
+                            operator = model_parsed_i[["operator"]],
+                            right = model_parsed_i[["left"]],
+                            prefix = model_parsed_i[["prefix"]]
                           )
                       } else {
-                        equation_parsed_i <-
+                        model_parsed_i <-
                           c(
-                            relation = equation_parsed_i[["relation"]],
-                            left = equation_parsed_i[["left"]],
-                            operator = equation_parsed_i[["operator"]],
-                            right = equation_parsed_i[["right"]],
-                            prefix = equation_parsed_i[["prefix"]]
+                            relation = model_parsed_i[["relation"]],
+                            left = model_parsed_i[["left"]],
+                            operator = model_parsed_i[["operator"]],
+                            right = model_parsed_i[["right"]],
+                            prefix = model_parsed_i[["prefix"]]
                           )
                       }
-                      return(equation_parsed_i)
+                      return(model_parsed_i)
                     }
                   )
                 self$specification <-
-                  data.frame(t(equation_parsed), stringsAsFactors = FALSE)
+                  data.frame(t(model_parsed), stringsAsFactors = FALSE)
                 
                 self$specification <-
                   self$specification[!duplicated(self$specification$relation,
-                                                 fromLast = TRUE), ]
+                                                 fromLast = TRUE),]
                 prefix_split <-
                   strsplit(self$specification$prefix, ",")
                 
@@ -398,7 +377,6 @@ lslxModel$set("private",
                               return(specification_i)
                             }
                           ))
-                
                 self$specification$matrice <-
                   ifelse(self$specification$operator %in% c("<=>", "<~>"),
                          "psi",
@@ -443,7 +421,6 @@ lslxModel$set("private",
                       return(block)
                     }
                   )
-                
                 self$specification$type <-
                   ifelse(grepl("fix", self$specification$prefix),
                          "fixed",
@@ -461,7 +438,6 @@ lslxModel$set("private",
                              )
                            )
                          ))
-                
                 self$specification$start <-
                   as.numeric(gsub("[^[:digit:].-]",
                                   "",
@@ -483,24 +459,34 @@ lslxModel$set("private",
                             X = self$name_group,
                             FUN = function(name_group_i) {
                               if (any(self$specification$matrice[self$specification$group == name_group_i] == "alpha")) {
-                                relation_alpha_i <- 
-                                  setdiff(x = paste(intersect(x = self$name_response,
-                                                              y = self$name_exogenous),
-                                                    "1",
-                                                    sep = "<-"),
-                                          y = self$specification$relation[self$specification$group == name_group_i])
+                                relation_alpha_i <-
+                                  setdiff(
+                                    x = paste(
+                                      intersect(
+                                        x = self$name_response,
+                                        y = self$name_exogenous
+                                      ),
+                                      "1",
+                                      sep = "<-"
+                                    ),
+                                    y = self$specification$relation[self$specification$group == name_group_i]
+                                  )
                               } else {
-                                relation_alpha_i <- 
-                                  setdiff(x = paste(self$name_response,
-                                                    "1",
-                                                    sep = "<-"),
-                                          y = self$specification$relation[self$specification$group == name_group_i])
+                                relation_alpha_i <-
+                                  setdiff(
+                                    x = paste(self$name_response,
+                                              "1",
+                                              sep = "<-"),
+                                    y = self$specification$relation[self$specification$group == name_group_i]
+                                  )
                               }
                               specification_alpha_i <- data.frame(
                                 relation = relation_alpha_i,
-                                left = substr(relation_alpha_i,
-                                              start = 1,
-                                              stop = regexpr("<-", relation_alpha_i) - 1),
+                                left = substr(
+                                  relation_alpha_i,
+                                  start = 1,
+                                  stop = regexpr("<-", relation_alpha_i) - 1
+                                ),
                                 right = "1",
                                 group = name_group_i,
                                 reference = ifelse(
@@ -577,8 +563,6 @@ lslxModel$set("private",
                                     start = regexpr("<->", relation_psi_i) + 3,
                                     stop = nchar(relation_psi_i)
                                   )
-                                
-                                
                                 specification_psi_i <-
                                   data.frame(
                                     relation = relation_psi_i,

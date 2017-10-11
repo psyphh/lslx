@@ -9,16 +9,16 @@ devtools::install_github("psyphh/lslx",
                           dependencies = TRUE,
                           build_vignettes = TRUE)
 ```
-If you have not install `devtools` before, please install `devtools` first.
-For windows users, Rtools (https://cran.r-project.org/bin/windows/Rtools/) should be installed first.
+If you have not install package `devtools` before, please install `devtools` first.
+For windows users, `Rtools` (https://cran.r-project.org/bin/windows/Rtools/) should be installed first.
 
 # Usage
-lslx is an R6ClassGenerator for constructing an lslx object that has methods for fitting semi- confirmatory SEM. In a simpliest case, the use of lslx involves three major steps
-1. Initialize a new lslx object by specifying an equation for model specification and importing a data set. 
+`lslx` is an R6ClassGenerator for constructing an `lslx` object that has methods for fitting semi-confirmatory SEM. In a simpliest case, the use of `lslx` involves three major steps
+1. Initialize a new `lslx` object by specifying a model and importing a data set.
 ``` r
-r6_lslx <- lslx$new(equation, sample_data)
+r6_lslx <- lslx$new(model, data)
 ```
-2. Fit the specified model to the given data with specified fitting control.
+2. Fit the specified model to the imported data with specified fitting control.
 ``` r
 r6_lslx$fit(penalty_method, lambda_grid, gamma_grid)
 ```
@@ -28,7 +28,7 @@ r6_lslx$summarize(selector)
 ```
 
 # Tutorial
-You can learn how to use `lslx` by the vignettes.
+You can learn how to use `lslx` by examples with the vignettes.
 ``` r
 vignette("lslx-example-1")
 vignette("lslx-example-2")
@@ -41,15 +41,10 @@ Of course, help file is also available.
 ```
 
 # On Going Jobs
-The current alpha version only provides limited functionality. 
-The road map for updating is
-1. Implementing sandwitch formula for standard error.
-2. Implementing two-stage approach for missing data.
-3. Implementing valid post model selection inference methods.
-4. Implementing pairwise likelihood approach for ordinal data.
-
-It is planned that the first two updates should be availble before the package is on cran.
-
+The current beta version only provides limited functionality. 
+The road map for major updating is
+1. Implementing valid post model selection inference methods.
+2. Implementing pairwise likelihood approach for ordinal data.
 
 # Bug Reporting
 If you find any bug, please mail psyphh@gmail.com.

@@ -241,7 +241,7 @@ lslx$set("private",
                cat(
                  "The relation",
                  specification_i$relation,
-                 "under group",
+                 "under",
                  specification_i$group,
                  "is set as",
                  ifelse(
