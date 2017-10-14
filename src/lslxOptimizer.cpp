@@ -1389,15 +1389,13 @@ void compute_saturated_moment_acov_cpp(
     hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
 
     duplication_i = create_duplication(n_response_i);
-    for (j = 0; j < y_obs_i.size(); j++) {
-      y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[j]);
-      w_ij = Rcpp::as<Eigen::VectorXd>(w_i[j]);
-      m_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[j]);
-      m2_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m2_idx_i[j]);
+    if (y_obs_i.size() == 1 | (Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i) {
+      y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[0]);
+      w_ij = Rcpp::as<Eigen::VectorXd>(w_i[0]);
       sample_size_ij = y_obs_ij.rows();
       sample_size_i += sample_size_ij;
-      saturated_mean_ij = slice_row(saturated_mean_i, m_idx_ij);
-      saturated_cov_ij = slice_both(saturated_cov_i, m_idx_ij, m_idx_ij);
+      saturated_mean_ij = saturated_mean_i;
+      saturated_cov_ij = saturated_cov_i;
       saturated_cov_ij_vech = vech(saturated_cov_ij); 
       n_response_ij = saturated_mean_ij.rows();
       n_moment_ij = (n_response_ij * (n_response_ij + 3)) / 2;
@@ -1412,40 +1410,75 @@ void compute_saturated_moment_acov_cpp(
       }
       saturated_cov_ij_inv = saturated_cov_ij.inverse();
       duplication_ij = create_duplication(n_response_ij);
-
+      
       score_ij.resize(sample_size_ij, n_moment_i);
-      score_ij.leftCols(n_response_i) = 
-        expand_col((yc_obs_ij * saturated_cov_ij_inv), m_idx_ij, n_response_i);
+      score_ij.leftCols(n_response_i) = yc_obs_ij * saturated_cov_ij_inv;
       score_ij.rightCols((n_moment_i - n_response_i)) = 
-        expand_col((0.5 * yc2c_obs_ij * duplication_ij.transpose() *
-        Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij), 
-        m2_idx_ij, (n_moment_i - n_response_i));
+        0.5 * yc2c_obs_ij * duplication_ij.transpose() *
+        Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij;
       
       score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
       score2_sum_i += score_ij_w.transpose() * score_ij;
-      
-      yc_obs_ij = expand_col(yc_obs_ij, m_idx_ij, n_response_i);
-      yc2c_obs_ij = expand_col(yc2c_obs_ij, m2_idx_ij, (n_moment_i - n_response_i));
-      saturated_cov_ij_inv = expand_both(saturated_cov_ij_inv, m_idx_ij, m_idx_ij,
-                                         n_response_i, n_response_i);
-      for (k = 0; k < sample_size_ij; k++) {
-        hessian_sum_i.block(0, 0, n_response_i, n_response_i) +=
-          w_ij(k) * saturated_cov_ij_inv;
-        hessian_sum_i.block(n_response_i, n_response_i, (n_moment_i - n_response_i), (n_moment_i - n_response_i)) += 
-          w_ij(k) * duplication_i.transpose() * 
-          (Eigen::kroneckerProduct(saturated_cov_ij_inv,
-                                   (saturated_cov_ij_inv * 
-                                     (yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k)) * 
-                                     saturated_cov_ij_inv - 0.5 * saturated_cov_ij_inv))) * duplication_i;
-        hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)) += 
-          w_ij(k) * (Eigen::kroneckerProduct(saturated_cov_ij_inv, 
-                                   yc_obs_ij.row(k) * saturated_cov_ij_inv)) * duplication_i;
-        hessian_sum_i.block(n_response_i, 0, (n_moment_i - n_response_i), n_response_i) = 
-          hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)).transpose(); 
+      saturated_moment_acov_i = score2_sum_i / double(sample_size_i);
+    } else {
+      for (j = 0; j < y_obs_i.size(); j++) {
+        y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[j]);
+        w_ij = Rcpp::as<Eigen::VectorXd>(w_i[j]);
+        m_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[j]);
+        m2_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m2_idx_i[j]);
+        sample_size_ij = y_obs_ij.rows();
+        sample_size_i += sample_size_ij;
+        saturated_mean_ij = slice_row(saturated_mean_i, m_idx_ij);
+        saturated_cov_ij = slice_both(saturated_cov_i, m_idx_ij, m_idx_ij);
+        saturated_cov_ij_vech = vech(saturated_cov_ij); 
+        n_response_ij = saturated_mean_ij.rows();
+        n_moment_ij = (n_response_ij * (n_response_ij + 3)) / 2;
+        
+        yc_obs_ij = y_obs_ij - 
+          Eigen::MatrixXd::Ones(sample_size_ij, 1) * saturated_mean_ij.transpose();
+        yc2c_obs_ij.resize(sample_size_ij, n_moment_ij - n_response_ij);
+        
+        for (k = 0; k < sample_size_ij; k++) {
+          yc2c_obs_ijk = vech(yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k));
+          yc2c_obs_ij.row(k) = (yc2c_obs_ijk - saturated_cov_ij_vech).transpose();
+        }
+        saturated_cov_ij_inv = saturated_cov_ij.inverse();
+        duplication_ij = create_duplication(n_response_ij);
+        
+        score_ij.resize(sample_size_ij, n_moment_i);
+        score_ij.leftCols(n_response_i) = 
+          expand_col((yc_obs_ij * saturated_cov_ij_inv), m_idx_ij, n_response_i);
+        score_ij.rightCols((n_moment_i - n_response_i)) = 
+          expand_col((0.5 * yc2c_obs_ij * duplication_ij.transpose() *
+          Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij), 
+          m2_idx_ij, (n_moment_i - n_response_i));
+        
+        score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
+        score2_sum_i += score_ij_w.transpose() * score_ij;
+        
+        yc_obs_ij = expand_col(yc_obs_ij, m_idx_ij, n_response_i);
+        yc2c_obs_ij = expand_col(yc2c_obs_ij, m2_idx_ij, (n_moment_i - n_response_i));
+        saturated_cov_ij_inv = expand_both(saturated_cov_ij_inv, m_idx_ij, m_idx_ij,
+                                           n_response_i, n_response_i);
+        for (k = 0; k < sample_size_ij; k++) {
+          hessian_sum_i.block(0, 0, n_response_i, n_response_i) +=
+            w_ij(k) * saturated_cov_ij_inv;
+          hessian_sum_i.block(n_response_i, n_response_i, (n_moment_i - n_response_i), (n_moment_i - n_response_i)) += 
+            w_ij(k) * duplication_i.transpose() * 
+            (Eigen::kroneckerProduct(saturated_cov_ij_inv,
+                                     (saturated_cov_ij_inv * 
+                                       (yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k)) * 
+                                       saturated_cov_ij_inv - 0.5 * saturated_cov_ij_inv))) * duplication_i;
+          hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)) += 
+            w_ij(k) * (Eigen::kroneckerProduct(saturated_cov_ij_inv, 
+                       yc_obs_ij.row(k) * saturated_cov_ij_inv)) * duplication_i;
+          hessian_sum_i.block(n_response_i, 0, (n_moment_i - n_response_i), n_response_i) = 
+            hessian_sum_i.block(0, n_response_i, n_response_i, (n_moment_i - n_response_i)).transpose(); 
+        }
       }
+      hessian_sum_i_inv = hessian_sum_i.inverse();
+      saturated_moment_acov_i = (hessian_sum_i_inv * score2_sum_i * hessian_sum_i_inv) / double(sample_size_i);
     }
-    hessian_sum_i_inv = hessian_sum_i.inverse();
-    saturated_moment_acov_i = (hessian_sum_i_inv * score2_sum_i * hessian_sum_i_inv) / double(sample_size_i);
     saturated_moment_acov[i] = saturated_moment_acov_i;
   }
 }
