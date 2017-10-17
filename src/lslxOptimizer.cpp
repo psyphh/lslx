@@ -20,7 +20,7 @@ public:
   
   int n_observation;
   Rcpp::List  sample_proportion, saturated_cov, saturated_mean;
-  Eigen::MatrixXd saturated_moment_acov;
+  Rcpp::List  saturated_moment_acov;
   
   int n_response, n_factor, n_eta, n_moment, n_group;
   
@@ -41,18 +41,18 @@ public:
   Rcpp::List alpha, beta, beta_pinv, psi;
   Rcpp::List mu, sigma, sigma_inv;
   
-  Eigen::MatrixXd weight_normal;
-  Eigen::MatrixXd moment_gradient;
+  Rcpp::List weight_normal;
+  Rcpp::List moment_gradient;
   
   double loss_value;
-  Eigen::VectorXd loss_gradient;
+  Eigen::MatrixXd loss_gradient;
   Eigen::MatrixXd loss_expected_hessian;
   
   double regularizer_value;
-  Eigen::VectorXd regularizer_gradient;
+  Eigen::MatrixXd regularizer_gradient;
   
   double objective_value;
-  Eigen::VectorXd objective_gradient;
+  Eigen::MatrixXd objective_gradient;
   
   double objective_gradient_abs_max, objective_hessian_convexity;
   int n_iter_out, n_nonzero_coefficient, degree_of_freedom;
@@ -143,8 +143,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   sample_proportion = Rcpp::as<List>(reduced_data["sample_proportion"]);
   saturated_cov = Rcpp::as<List>(reduced_data["saturated_cov"]);
   saturated_mean = Rcpp::as<List>(reduced_data["saturated_mean"]);
-  saturated_moment_acov = Eigen::MatrixXd::Zero(n_group * n_moment, n_group * n_moment);
-  Eigen::MatrixXd saturated_moment_acov_i;
+  saturated_moment_acov = Rcpp::as<List>(reduced_data["saturated_moment_acov"]);
   
   int i;
   for (i = 0; i < n_group; i ++) {
@@ -155,8 +154,8 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
     mu.push_back(Eigen::MatrixXd::Zero(n_response, 1));
     sigma.push_back(Eigen::MatrixXd::Zero(n_response, n_response));
     sigma_inv.push_back(Eigen::MatrixXd::Zero(n_response, n_response));
-    saturated_moment_acov_i = Rcpp::as<Eigen::MatrixXd>(Rcpp::as<List>(reduced_data["saturated_moment_acov"])[i]);
-    saturated_moment_acov.block(i * n_moment, i * n_moment, n_moment, n_moment) = saturated_moment_acov_i;
+    weight_normal.push_back(Eigen::MatrixXd::Zero(n_moment, n_moment));
+    moment_gradient.push_back(Eigen::MatrixXd::Zero(n_moment, theta_name.size()));
   }
   
   baseline_loss_value = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["loss_value"]);
@@ -166,9 +165,6 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
   theta_direction = Rcpp::rep(0.0, theta_name.size());
   theta_value.attr("names") = theta_name;
-  
-  moment_gradient = Eigen::MatrixXd::Zero(n_group * n_moment, theta_name.size());
-  weight_normal = Eigen::MatrixXd::Zero(n_group * n_moment, n_group * n_moment);
   
   loss_gradient = Eigen::MatrixXd::Zero(theta_name.size(), 1);
   loss_expected_hessian = Eigen::MatrixXd::Zero(theta_name.size(), theta_name.size());
@@ -347,26 +343,24 @@ void lslxOptimizer::update_implied_moment() {
 
 void lslxOptimizer::update_weight_normal() {
   int i;
+  double sample_proportion_i;
   for (i = 0; i < n_group; i++) {
+    sample_proportion_i = Rcpp::as<double>(sample_proportion[i]);
     Eigen::Map<MatrixXd> sigma_inv_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(sigma_inv[i]));
-    double sample_proportion_i = Rcpp::as<double>(sample_proportion[i]);
-    weight_normal.block(i * n_moment, 
-                        i * n_moment, 
-                        n_response, n_response) = 
+    Eigen::Map<MatrixXd> weight_normal_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(weight_normal[i]));
+    weight_normal_i.block(0, 0, n_response, n_response) = 
                           2 * sample_proportion_i * sigma_inv_i;
-    weight_normal.block((i * n_moment) + n_response, 
-                        (i * n_moment) + n_response, 
-                        (n_moment - n_response), 
-                        (n_moment - n_response)) = 
-                          sample_proportion_i * duplication_y.transpose() * 
-                          kroneckerProduct(sigma_inv_i, sigma_inv_i) * duplication_y;
+    weight_normal_i.block(n_response, n_response, 
+                          (n_moment - n_response), 
+                          (n_moment - n_response)) = 
+                            sample_proportion_i * duplication_y.transpose() * 
+                            Eigen::kroneckerProduct(sigma_inv_i, sigma_inv_i) * duplication_y;
   }
 }
 
 
 void lslxOptimizer::update_moment_gradient() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
-  
   Rcpp::IntegerVector theta_flat_idx_j;
   Rcpp::IntegerVector theta_matrice_idx_j;
   Rcpp::IntegerVector theta_flat_idx_jk;
@@ -376,8 +370,9 @@ void lslxOptimizer::update_moment_gradient() {
   for (i = 0; i < n_group; i++) {
     n_theta_sum = 0;
     Eigen::Map<Eigen::MatrixXd> alpha_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(alpha[i]));
-    Eigen::Map<MatrixXd> beta_pinv_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(beta_pinv[i]));
+    Eigen::Map<Eigen::MatrixXd> beta_pinv_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(beta_pinv[i]));
     Eigen::Map<Eigen::MatrixXd> psi_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(psi[i]));
+    Eigen::Map<Eigen::MatrixXd> moment_gradient_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(moment_gradient[i]));
     
     for (j = 0; j < theta_group_idx_unique.size(); j++) {
       n_theta_j = 0;
@@ -392,31 +387,25 @@ void lslxOptimizer::update_moment_gradient() {
           if (n_theta_jk > 0) {
             switch(k) {
             case 1: {
-          moment_gradient.block(
-            (i * n_moment), 
-            n_theta_sum + n_theta_j,
-            n_response,
-            n_theta_jk) = 
+          moment_gradient_i.block(
+            0, n_theta_sum + n_theta_j,
+            n_response, n_theta_jk) = 
               slice_col(beta_pinv_i.topRows(n_response), theta_flat_idx_jk);
           break;
         }
             case 2: {
-              moment_gradient.block(
-                (i * n_moment), 
-                n_theta_sum + n_theta_j,
-                n_response,
-                n_theta_jk) = 
+              moment_gradient_i.block(
+                0, n_theta_sum + n_theta_j,
+                n_response, n_theta_jk) = 
                   slice_col(
                     kroneckerProduct(
                       (alpha_i.transpose() * beta_pinv_i.transpose()),
                       beta_pinv_i.topRows(n_response)),
                       theta_flat_idx_jk);
               
-              moment_gradient.block(
-                (i * n_moment) + n_response, 
-                n_theta_sum + n_theta_j,
-                (n_moment - n_response),
-                n_theta_jk) = 
+              moment_gradient_i.block(
+                n_response, n_theta_sum + n_theta_j,
+                (n_moment - n_response), n_theta_jk) = 
                   slice_col(
                     ((elimination_y * (commutation_y + identity_y2)) * 
                       kroneckerProduct(
@@ -426,11 +415,9 @@ void lslxOptimizer::update_moment_gradient() {
               break;
             }
             case 3: {
-              moment_gradient.block(
-                (i * n_moment) + n_response, 
-                n_theta_sum + n_theta_j,
-                (n_moment - n_response),
-                n_theta_jk) = 
+              moment_gradient_i.block(
+                n_response, n_theta_sum + n_theta_j,
+                (n_moment - n_response), n_theta_jk) = 
                   slice_col(
                     (elimination_y * 
                       kroneckerProduct(
@@ -469,30 +456,37 @@ void lslxOptimizer::update_loss_value() {
 
 
 void lslxOptimizer::update_loss_gradient() {
-  Eigen::MatrixXd moment_residual = Eigen::MatrixXd::Zero(n_group * n_moment, 1);
+  loss_gradient = Eigen::MatrixXd::Zero(theta_name.size(), 1);
+  Eigen::MatrixXd moment_residual_i = Eigen::MatrixXd::Zero(n_moment, 1);
   int i;
   for (i = 0; i < n_group; i++) {
     Eigen::Map<Eigen::MatrixXd> saturated_mean_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(saturated_mean[i]));
     Eigen::Map<Eigen::MatrixXd> saturated_cov_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(saturated_cov[i]));
     Eigen::Map<Eigen::MatrixXd> mu_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(mu[i]));
     Eigen::Map<Eigen::MatrixXd> sigma_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(sigma[i]));
-    moment_residual.block(
-      i * n_moment, 0, 
-      n_response, 1) = (saturated_mean_i - mu_i);
-    moment_residual.block(
-      i * n_moment + n_response, 0, 
-      (n_moment - n_response), 1) = 
+    Eigen::Map<Eigen::MatrixXd> weight_normal_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(weight_normal[i]));
+    Eigen::Map<Eigen::MatrixXd> moment_gradient_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(moment_gradient[i]));
+    moment_residual_i.block(
+      0, 0, n_response, 1) = (saturated_mean_i - mu_i);
+    moment_residual_i.block(
+      n_response, 0, (n_moment - n_response), 1) = 
         vech(saturated_cov_i + saturated_mean_i * saturated_mean_i.transpose() - 
         mu_i * saturated_mean_i.transpose() -
         saturated_mean_i * mu_i.transpose() + 
         mu_i * mu_i.transpose() - sigma_i);
+    loss_gradient += - moment_gradient_i.transpose() * weight_normal_i * moment_residual_i;
   }
-  loss_gradient = - moment_gradient.transpose() * weight_normal * moment_residual;
 }
 
 
 void lslxOptimizer::update_loss_expected_hessian() {
-  loss_expected_hessian = moment_gradient.transpose() * weight_normal * moment_gradient;
+  loss_expected_hessian = Eigen::MatrixXd::Zero(theta_name.size(), theta_name.size());
+  int i;
+  for (i = 0; i < n_group; i++) {
+    Eigen::Map<Eigen::MatrixXd> weight_normal_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(weight_normal[i]));
+    Eigen::Map<Eigen::MatrixXd> moment_gradient_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(moment_gradient[i]));
+    loss_expected_hessian += moment_gradient_i.transpose() * weight_normal_i * moment_gradient_i;
+  }
 }
 
 void lslxOptimizer::update_regularizer_value() {
@@ -1094,17 +1088,26 @@ Rcpp::NumericMatrix compute_weight_normal_cpp(
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Eigen::MatrixXd weight_normal;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
                           supplied_result);
+  Eigen::MatrixXd weight_normal = 
+    Eigen::MatrixXd::Zero(optimizer.n_group * optimizer.n_moment, 
+                          optimizer.n_group * optimizer.n_moment);
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
-  
   optimizer.update_weight_normal();
-  weight_normal = 0.5 * optimizer.weight_normal;
+  int i;
+  for (i = 0; i < optimizer.n_group; i++) {
+    Eigen::Map<Eigen::MatrixXd> weight_normal_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(optimizer.weight_normal[i]));
+    weight_normal.block(
+      i * optimizer.n_moment, 
+      i * optimizer.n_moment,
+      optimizer.n_moment,
+      optimizer.n_moment) = 0.5 * weight_normal_i;
+  }
   return Rcpp::wrap(weight_normal);
 }
 
@@ -1117,18 +1120,24 @@ Rcpp::NumericMatrix compute_moment_gradient_cpp(
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Eigen::MatrixXd moment_gradient;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
                           supplied_result);
+  Eigen::MatrixXd moment_gradient = 
+    Eigen::MatrixXd::Zero(optimizer.n_group * optimizer.n_moment, 
+                          optimizer.theta_name.size());
   optimizer.set_theta_value(theta_value);
-
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
   optimizer.update_moment_gradient();
-
-  moment_gradient = optimizer.moment_gradient;
+  int i;
+  for (i = 0; i < optimizer.n_group; i++) {
+    Eigen::Map<Eigen::MatrixXd> moment_gradient_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(optimizer.moment_gradient[i]));
+    moment_gradient.block(
+      i * optimizer.n_moment, 0,
+      optimizer.n_moment, optimizer.theta_name.size()) = moment_gradient_i;
+  }
   return Rcpp::wrap(moment_gradient);
 }
 
@@ -1164,20 +1173,28 @@ Rcpp::NumericMatrix compute_score_acov_cpp(
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Eigen::MatrixXd score_acov;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
                           supplied_result);
+  Eigen::MatrixXd score_acov = 
+    Eigen::MatrixXd::Zero(optimizer.theta_name.size(), 
+                          optimizer.theta_name.size());
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
-  
   optimizer.update_weight_normal();
   optimizer.update_moment_gradient();
-  score_acov = 0.25 *
-    optimizer.moment_gradient.transpose() * optimizer.weight_normal * 
-    optimizer.saturated_moment_acov * optimizer.weight_normal * optimizer.moment_gradient;
+  
+  int i;
+  for (i = 0; i < optimizer.n_group; i++) {
+    Eigen::Map<Eigen::MatrixXd> moment_gradient_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(optimizer.moment_gradient[i]));
+    Eigen::Map<Eigen::MatrixXd> weight_normal_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(optimizer.weight_normal[i]));
+    Eigen::Map<Eigen::MatrixXd> saturated_moment_acov_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(optimizer.saturated_moment_acov[i]));
+    score_acov += 0.25 *
+      moment_gradient_i.transpose() * weight_normal_i * 
+      saturated_moment_acov_i * weight_normal_i * moment_gradient_i;
+  }
   return Rcpp::wrap(score_acov);
 }
 
@@ -1389,7 +1406,7 @@ void compute_saturated_moment_acov_cpp(
     hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
 
     duplication_i = create_duplication(n_response_i);
-    if (y_obs_i.size() == 1 | (Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i) {
+    if (y_obs_i.size() == 1 & (Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i) {
       y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[0]);
       w_ij = Rcpp::as<Eigen::VectorXd>(w_i[0]);
       sample_size_ij = y_obs_ij.rows();
@@ -1412,10 +1429,8 @@ void compute_saturated_moment_acov_cpp(
       duplication_ij = create_duplication(n_response_ij);
       
       score_ij.resize(sample_size_ij, n_moment_i);
-      score_ij.leftCols(n_response_i) = yc_obs_ij * saturated_cov_ij_inv;
-      score_ij.rightCols((n_moment_i - n_response_i)) = 
-        0.5 * yc2c_obs_ij * duplication_ij.transpose() *
-        Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij;
+      score_ij.leftCols(n_response_i) = yc_obs_ij;
+      score_ij.rightCols((n_moment_i - n_response_i)) = yc2c_obs_ij;
       
       score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
       score2_sum_i += score_ij_w.transpose() * score_ij;
