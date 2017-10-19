@@ -173,7 +173,7 @@ lslx$set("public",
                   })
            if (any(idc_problem)) {
              cat("WARNING: The optimization algorithm may not converge under some penalty level. ")
-             cat("Please try larger value of 'iter_out_max' or specify better starting values.")
+             cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
            } else {
              if (verbose) {
                cat("CONGRATS: The optimization algorithm converged under all specified penalty levels. \n")
