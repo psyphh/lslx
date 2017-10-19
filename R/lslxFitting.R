@@ -805,6 +805,8 @@ lslxFitting$set("private",
                     }
                   } else {
                   }
+                  names(self$supplied_result$fitted_start) <- 
+                    self$reduced_model$theta_name
                 })
 
 

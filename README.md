@@ -41,11 +41,5 @@ Of course, help file is also available.
 ?lslx
 ```
 
-# On Going Jobs
-The current beta version only provides limited functionality. 
-The road map for major updating is
-1. Implementing valid post model selection inference methods.
-2. Implementing pairwise likelihood approach for ordinal data.
-
 # Bug Reporting
 If you find any bug, please mail psyphh@gmail.com.
