@@ -65,6 +65,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_implied_moment_cpp
+Rcpp::NumericMatrix compute_implied_moment_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_implied_moment_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_implied_moment_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_weight_normal_cpp
 Rcpp::NumericMatrix compute_weight_normal_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
 RcppExport SEXP _lslx_compute_weight_normal_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
@@ -107,6 +122,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
     rcpp_result_gen = Rcpp::wrap(compute_expected_fisher_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_observed_fisher_cpp
+Rcpp::NumericMatrix compute_observed_fisher_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_observed_fisher_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_observed_fisher_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -227,9 +257,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lslx_compute_coefficient_matrice_cpp", (DL_FUNC) &_lslx_compute_coefficient_matrice_cpp, 5},
     {"_lslx_compute_implied_cov_cpp", (DL_FUNC) &_lslx_compute_implied_cov_cpp, 5},
     {"_lslx_compute_implied_mean_cpp", (DL_FUNC) &_lslx_compute_implied_mean_cpp, 5},
+    {"_lslx_compute_implied_moment_cpp", (DL_FUNC) &_lslx_compute_implied_moment_cpp, 5},
     {"_lslx_compute_weight_normal_cpp", (DL_FUNC) &_lslx_compute_weight_normal_cpp, 5},
     {"_lslx_compute_moment_gradient_cpp", (DL_FUNC) &_lslx_compute_moment_gradient_cpp, 5},
     {"_lslx_compute_expected_fisher_cpp", (DL_FUNC) &_lslx_compute_expected_fisher_cpp, 5},
+    {"_lslx_compute_observed_fisher_cpp", (DL_FUNC) &_lslx_compute_observed_fisher_cpp, 5},
     {"_lslx_compute_score_acov_cpp", (DL_FUNC) &_lslx_compute_score_acov_cpp, 5},
     {"_lslx_compute_loss_value_cpp", (DL_FUNC) &_lslx_compute_loss_value_cpp, 5},
     {"_lslx_compute_loss_gradient_cpp", (DL_FUNC) &_lslx_compute_loss_gradient_cpp, 5},

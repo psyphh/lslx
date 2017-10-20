@@ -27,18 +27,19 @@ lslx$set("public",
                   gamma_grid = Inf,
                   missing_method = "default",
                   start_method = "default",
-                  positive_diag = TRUE,
                   iter_out_max = 100L,
                   iter_in_max = 30L,
                   iter_other_max = 500L,
                   iter_armijo_max = 100L,
                   tol_out = 1e-3,
                   tol_in = 1e-3,
-                  tol_other = 1e-4,
+                  tol_other = 1e-7,
                   step_size = 0.5,
                   armijo = 1e-5,
                   ridge_cov = 1e-4,
                   ridge_hessian = 1e-4,
+                  positive_diag = TRUE,
+                  analytic = TRUE,
                   verbose = TRUE) {
            proc_time_start <- proc.time()
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
@@ -75,10 +76,6 @@ lslx$set("public",
            if (!(start_method %in% c("default", "MH", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'MH', or 'heuristic'.")
            }
-           if (!(is.logical(positive_diag) &
-                 (length(positive_diag) = 1))) {
-             stop("Argument 'positive_diag' must be a numeric vector with length one.")
-           }
            if (!(is.numeric(iter_out_max) &
                  (length(iter_out_max) = 1))) {
              stop("Argument 'iter_out_max' must be a numeric vector with length one.")
@@ -110,6 +107,14 @@ lslx$set("public",
                  (length(ridge_hessian) = 1))) {
              stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
            }
+           if (!(is.logical(positive_diag) &
+                 (length(positive_diag) = 1))) {
+             stop("Argument 'positive_diag' must be a numeric vector with length one.")
+           }
+           if (!(is.logical(analytic) &
+                 (length(analytic) = 1))) {
+             stop("Argument 'analytic' must be a numeric vector with length one.")
+           }
            control <-
              list(
                penalty_method = penalty_method,
@@ -117,7 +122,6 @@ lslx$set("public",
                gamma_grid = gamma_grid,
                missing_method = missing_method,
                start_method = start_method,
-               positive_diag = positive_diag,
                iter_out_max = iter_out_max,
                iter_in_max = iter_in_max,
                iter_other_max = iter_other_max,
@@ -128,7 +132,9 @@ lslx$set("public",
                step_size = step_size,
                armijo = armijo,
                ridge_cov = ridge_cov,
-               ridge_hessian = ridge_hessian
+               ridge_hessian = ridge_hessian,
+               positive_diag = positive_diag,
+               analytic = analytic
              )
            private$fitting <-
              lslxFitting$new(model = private$model,

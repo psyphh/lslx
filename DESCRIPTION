@@ -15,7 +15,6 @@ Imports: Rcpp,
     RcppEigen,
     R6,
     Matrix,
-    numDeriv,
     ggplot2
 Suggests: lavaan,
     knitr,

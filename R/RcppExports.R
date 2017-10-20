@@ -17,6 +17,10 @@ compute_implied_mean_cpp <- function(theta_value, reduced_data, reduced_model, c
     .Call('_lslx_compute_implied_mean_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
+compute_implied_moment_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_implied_moment_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+}
+
 compute_weight_normal_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_weight_normal_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
@@ -27,6 +31,10 @@ compute_moment_gradient_cpp <- function(theta_value, reduced_data, reduced_model
 
 compute_expected_fisher_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_expected_fisher_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+}
+
+compute_observed_fisher_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_observed_fisher_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
 compute_score_acov_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {

@@ -231,6 +231,26 @@ lslx$set("public",
            return(implied_mean)
          })
 
+lslx$set("public",
+         "extract_implied_moment",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           implied_moment <-
+             compute_implied_moment_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           return(implied_moment)
+         })
+
 
 lslx$set("public",
          "extract_residual_cov",
@@ -428,8 +448,6 @@ lslx$set("public",
            return(expected_fisher)
          })
 
-
-
 lslx$set("public",
          "extract_observed_fisher",
          function(selector,
@@ -440,12 +458,8 @@ lslx$set("public",
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            observed_fisher <-
-             0.5 * numDeriv::jacobian(
-               func = compute_loss_gradient_cpp,
-               x = coefficient,
-               method = "simple",
-               method.args = list(eps=1e-3),
-               side = NULL,
+             compute_observed_fisher_cpp(
+               theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
