@@ -39,7 +39,6 @@ lslx$set("public",
                   ridge_cov = 1e-4,
                   ridge_hessian = 1e-4,
                   positive_diag = TRUE,
-                  analytic = TRUE,
                   verbose = TRUE) {
            proc_time_start <- proc.time()
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
@@ -111,10 +110,7 @@ lslx$set("public",
                  (length(positive_diag) = 1))) {
              stop("Argument 'positive_diag' must be a numeric vector with length one.")
            }
-           if (!(is.logical(analytic) &
-                 (length(analytic) = 1))) {
-             stop("Argument 'analytic' must be a numeric vector with length one.")
-           }
+
            control <-
              list(
                penalty_method = penalty_method,
@@ -133,8 +129,7 @@ lslx$set("public",
                armijo = armijo,
                ridge_cov = ridge_cov,
                ridge_hessian = ridge_hessian,
-               positive_diag = positive_diag,
-               analytic = analytic
+               positive_diag = positive_diag
              )
            private$fitting <-
              lslxFitting$new(model = private$model,

@@ -231,26 +231,6 @@ lslx$set("public",
            return(implied_mean)
          })
 
-lslx$set("public",
-         "extract_implied_moment",
-         function(selector,
-                  exclude_improper = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        exclude_improper = exclude_improper)
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           implied_moment <-
-             compute_implied_moment_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           return(implied_moment)
-         })
-
 
 lslx$set("public",
          "extract_residual_cov",
@@ -403,7 +383,7 @@ lslx$set("public",
 
 
 lslx$set("public",
-         "extract_weight_normal",
+         "extract_loss_saturated_hessian",
          function(selector,
                   exclude_improper = TRUE) {
            penalty_level <-
@@ -411,15 +391,15 @@ lslx$set("public",
                                         exclude_improper = exclude_improper)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           weight_normal <-
-             compute_weight_normal_cpp(
+           loss_saturated_hessian <-
+             compute_loss_saturated_hessian_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
                supplied_result = private$fitting$supplied_result
              )
-           return(weight_normal)
+           return(loss_saturated_hessian)
          })
 
 
@@ -447,6 +427,7 @@ lslx$set("public",
              rownames(private$model$specification)
            return(expected_fisher)
          })
+
 
 lslx$set("public",
          "extract_observed_fisher",

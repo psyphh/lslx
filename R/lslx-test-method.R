@@ -29,8 +29,8 @@ lslx$set("public",
                   coefficient != 0)
              saturated_moment_acov <-
                as.matrix(Matrix::bdiag(self$extract_saturated_moment_acov()))
-             weight_normal <-
-               self$extract_weight_normal(selector = selector,
+             loss_saturated_hessian <-
+               self$extract_loss_saturated_hessian(selector = selector,
                                           exclude_improper = exclude_improper)
              moment_gradient <-
                self$extract_moment_gradient(selector = selector,
@@ -43,9 +43,9 @@ lslx$set("public",
                    private$fitting$reduced_data$n_observation *
                      saturated_moment_acov %*%
                      (
-                       weight_normal - (weight_normal %*% moment_gradient) %*%
-                         solve(t(moment_gradient) %*% weight_normal %*% moment_gradient) %*%
-                         t(moment_gradient) %*% weight_normal
+                       loss_saturated_hessian - (loss_saturated_hessian %*% moment_gradient) %*%
+                         solve(t(moment_gradient) %*% loss_saturated_hessian %*% moment_gradient) %*%
+                         t(moment_gradient) %*% loss_saturated_hessian
                      )
                  )
                ) / numerical_condition[["degree_of_freedom"]]
