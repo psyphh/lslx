@@ -270,7 +270,7 @@ lslx$set("private",
                  paste0(private$model$reference_group, ".\n")
                )
              cat(
-               "NOTE: Please check whether the starting value for the increment represents a difference."
+               "NOTE: Please check whether the starting value for the increment represents a difference. \n"
              )
            }
 

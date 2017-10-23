@@ -25,6 +25,7 @@ lslx$set("public",
          function(penalty_method = "none",
                   lambda_grid = 0,
                   gamma_grid = Inf,
+                  algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
                   iter_out_max = 100L,
@@ -75,6 +76,9 @@ lslx$set("public",
            if (!(start_method %in% c("default", "MH", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'MH', or 'heuristic'.")
            }
+           if (!(algorithm %in% c("default", "BFGS", "fisher"))) {
+             stop("Argument 'algorithm' can be only 'default', 'BFGS', or 'fisher'.")
+           }
            if (!(is.numeric(iter_out_max) &
                  (length(iter_out_max) = 1))) {
              stop("Argument 'iter_out_max' must be a numeric vector with length one.")
@@ -118,6 +122,7 @@ lslx$set("public",
                gamma_grid = gamma_grid,
                missing_method = missing_method,
                start_method = start_method,
+               algorithm = algorithm,
                iter_out_max = iter_out_max,
                iter_in_max = iter_in_max,
                iter_other_max = iter_other_max,

@@ -19,36 +19,8 @@ lslx$set("public",
            lr_test["unadjusted", "p_value"] <-
              1 - pchisq(lr_test["unadjusted", "statistic"],
                         lr_test["unadjusted", "df"])
-           if (private$fitting$control$raw) {
-             coefficient <-
-               self$extract_coefficient(selector = selector,
-                                        exclude_improper = exclude_improper)
-             idc_effective <-
-               private$fitting$reduced_model$theta_is_free |
-               (private$fitting$reduced_model$theta_is_pen &
-                  coefficient != 0)
-             saturated_moment_acov <-
-               as.matrix(Matrix::bdiag(self$extract_saturated_moment_acov()))
-             loss_saturated_hessian <-
-               self$extract_loss_saturated_hessian(selector = selector,
-                                          exclude_improper = exclude_improper)
-             moment_gradient <-
-               self$extract_moment_gradient(selector = selector,
-                                            exclude_improper = exclude_improper)
-             moment_gradient <-
-               moment_gradient[, idc_effective, drop = FALSE]
-             scaling_factor <-
-               sum(
-                 diag(
-                   private$fitting$reduced_data$n_observation *
-                     saturated_moment_acov %*%
-                     (
-                       loss_saturated_hessian - (loss_saturated_hessian %*% moment_gradient) %*%
-                         solve(t(moment_gradient) %*% loss_saturated_hessian %*% moment_gradient) %*%
-                         t(moment_gradient) %*% loss_saturated_hessian
-                     )
-                 )
-               ) / numerical_condition[["degree_of_freedom"]]
+           if (private$fitting$control$response) {
+             scaling_factor <- numerical_condition[["scaling_factor"]]
              lr_test["mean-adjusted", "statistic"] <-
                numerical_condition[["loss_value"]] * private$fitting$reduced_data$n_observation /
                scaling_factor
@@ -58,9 +30,8 @@ lslx$set("public",
                1 - pchisq(lr_test["mean-adjusted", "statistic"],
                           lr_test["mean-adjusted", "df"])
            } else {
-             scaling_factor <- NA
+             
            }
-           attr(lr_test, "scaling_factor") <- scaling_factor
            return(lr_test)
          })
 
@@ -89,13 +60,14 @@ lslx$set("public",
              )
            for (row_name_i in row.names(rmsea_test)) {
              if ((row_name_i == "unadjusted") |
-                 (private$fitting$control$raw)) {
+                 (private$fitting$control$response)) {
                lr_statistic <-
                  lr_test[row_name_i, "statistic"]
                lr_df <- lr_test[row_name_i, "df"]
                lower_ncp <- 0
                if (pchisq(lr_statistic,
                           lr_df, lower_ncp) < (1 - alpha_level / 2)) {
+                 
                } else {
                  lower_ncp_1 <- lower_ncp
                  lower_ncp_2 <- 0
@@ -149,7 +121,7 @@ lslx$set("public",
                if (row_name_i == "unadjusted") {
                  scaling_factor <- 1
                } else {
-                 scaling_factor <- attr(lr_test, which = "scaling_factor")
+                 scaling_factor <- numerical_condition[["scaling_factor"]]
                }
                rmsea_test[row_name_i, "estimate"] <-
                  sqrt(max(
@@ -190,7 +162,7 @@ lslx$set("public",
              )
            }
            if (standard_error == "default") {
-             if (private$fitting$control$raw) {
+             if (private$fitting$control$response) {
                standard_error <- "sandwich"
              } else {
                standard_error <- "observed_fisher"
@@ -206,18 +178,17 @@ lslx$set("public",
                exclude_improper = exclude_improper
              )
            coefficient_test <-
-             data.frame(
-               estimate = coefficient,
-               standard_error = sqrt(diag(coefficient_acov))
-             )
-           coefficient_test$z_value <- 
+             data.frame(estimate = coefficient,
+                        standard_error = sqrt(diag(coefficient_acov)))
+           coefficient_test$z_value <-
              coefficient_test$estimate / coefficient_test$standard_error
            coefficient_test$p_value <-
              pnorm(-abs(coefficient_test$z_value))
-           coefficient_test$lower <- 
-           coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
-           coefficient_test$upper <- 
-           coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
-           attr(coefficient_test, "standard_error") <- standard_error
+           coefficient_test$lower <-
+             coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
+           coefficient_test$upper <-
+             coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
+           attr(coefficient_test, "standard_error") <-
+             standard_error
            return(coefficient_test)
          })

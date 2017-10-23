@@ -36,12 +36,24 @@ lslxFitting$set("private",
                   self$control$gamma_grid <-
                     sort(self$control$gamma_grid, decreasing = TRUE)
                   if (length(data$response) > 0) {
-                    self$control$raw <- TRUE
+                    self$control$response <- TRUE
                   } else {
-                    self$control$raw <- FALSE
+                    self$control$response <- FALSE
                   }
+                  if (self$control$penalty_method %in% c("mcp", "lasso")) {
+                    self$control$regularizer <- TRUE
+                  } else {
+                    self$control$regularizer <- FALSE
+                  }
+                  if (self$control$regularizer) {
+                    if (self$control$penalty_method == "none") {
+                      self$control$algorithm <- "BFGS"
+                    } else {
+                      self$control$algorithm <- "fisher"
+                    }
+                  } 
                   if (self$control$missing_method == "default") {
-                    if (self$control$raw) {
+                    if (self$control$response) {
                       self$control$missing_method <- "two_stage"
                     } else {
                       self$control$missing_method <- "listwise_deletion"
@@ -117,8 +129,6 @@ lslxFitting$set("private",
                         ),
                       
                       theta_start = model$specification$start,
-                      identity_y = matrix(),
-                      identity_eta = matrix(),
                       identity_y2 = Matrix::Matrix(),
                       duplication_y = Matrix::Matrix(),
                       elimination_y = Matrix::Matrix(),
@@ -147,10 +157,6 @@ lslxFitting$set("private",
                         )
                       )
                     )
-                  self$reduced_model$identity_y <-
-                    diag(1, self$reduced_model$n_response)
-                  self$reduced_model$identity_eta <-
-                    diag(1, self$reduced_model$n_eta)
                   self$reduced_model$identity_y2 <-
                     as(
                       diag(
@@ -225,7 +231,7 @@ lslxFitting$set("private",
                       saturated_mean = list(),
                       saturated_moment_acov = list()
                     )
-                  if (self$control$raw) {
+                  if (self$control$response) {
                     idc_use <-
                       lapply(
                         X = data$pattern,

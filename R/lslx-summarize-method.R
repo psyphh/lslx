@@ -6,7 +6,7 @@ lslx$set("public",
                   digit = 3,
                   exclude_improper = TRUE) {
            if (standard_error == "default") {
-             if (private$fitting$control$raw) {
+             if (private$fitting$control$response) {
                standard_error <- "sandwich"
              } else {
                standard_error <- "observed_fisher"
@@ -61,19 +61,26 @@ lslx$set("public",
                      sep = " - "
                    )
                  ),
-                 sub(pattern = "_", replacement = " ", 
-                     x = private$fitting$control$missing_method),
+                 private$fitting$control$algorithm,
+                 sub(
+                   pattern = "_",
+                   replacement = " ",
+                   x = private$fitting$control$missing_method
+                 ),
                  private$fitting$control$tol_out
                ),
                digits = digit,
                format = "f"
              )
            names(fitting_information) <-
-             c("penalty method",
+             c(
+               "penalty method",
                "lambda grid",
                "gamma grid",
+               "algorithm",
                "missing method",
-               "tolerance for convergence")
+               "tolerance for convergence"
+             )
            saturated_model_information <-
              formatC(
                x = private$fitting$supplied_result$saturated_model,
@@ -111,7 +118,8 @@ lslx$set("public",
                "number of iteration",
                "loss value",
                "number of non-zero coefficient",
-               "degree of freedom"
+               "degree of freedom",
+               "scaling factor"
              )
            information_criterion <-
              formatC(
@@ -124,6 +132,7 @@ lslx$set("public",
              c(
                "Akaike information criterion (aic)",
                "Akaike information criterion with penalty being 3 (aic3)",
+               "Takeuchi information criterion (tic)",
                "consistent Akaike information criterion (caic)",
                "Bayesian information criterion (bic))",
                "adjusted Bayesian information criterion (abic)",
@@ -184,59 +193,67 @@ lslx$set("public",
            }
            
            ## printing likelihood ratio test
-           
+           lr_test <-
+             self$test_lr(selector = selector,
+                          exclude_improper = exclude_improper)
            lr_test_rounded <-
-             sapply(self$test_lr(selector = selector), function(i_list) {
-               lr_test_single_column <-
-                 formatC(i_list, digits = digit, format = "f")
-               lr_test_single_column[grepl("NA", lr_test_single_column)] <-
-                 "  -  "
-               return(lr_test_single_column)
-             })
-           lr_test_rounded <- data.frame(lr_test_rounded)
+             data.frame(sapply(
+               X = lr_test,
+               FUN = function(lr_test_i) {
+                 lr_test_rounded_i <-
+                   formatC(lr_test_i, digits = digit, format = "f")
+                 lr_test_rounded_i[grepl("NA", lr_test_rounded_i)] <-
+                   "  -  "
+                 return(lr_test_rounded_i)
+               }
+             ))
            colnames(lr_test_rounded) <-
              format(c("statistic", "df", "p-value"),
                     width = 10,
                     justify = "right")
            rownames(lr_test_rounded) <-
-             paste0("   ", rownames(self$test_lr(selector = selector)), "  ")
+             paste0("   ", rownames(lr_test), "  ")
            
            cat("Likelihood Ratio Test\n")
            print(lr_test_rounded)
            cat("\n")
            
            ## printing root mean square error of approximation test
-           
+           rmsea_test <-
+             self$test_rmsea(
+               selector = selector,
+               alpha_level = alpha_level,
+               exclude_improper = exclude_improper
+             )
            rmsea_test_rounded <-
-             sapply(self$test_rmsea(selector = selector), function(i_list) {
-               rmsea_test_single_column <-
-                 formatC(i_list, digits = digit, format = "f")
-               rmsea_test_single_column[grepl("NA", rmsea_test_single_column)] <-
-                 "  -  "
-               return(rmsea_test_single_column)
-             })
-           rmsea_test_rounded <- data.frame(rmsea_test_rounded)
+             data.frame(sapply(
+               X = rmsea_test,
+               FUN = function(rmsea_test_i) {
+                 rmsea_test_rounded_i <-
+                   formatC(rmsea_test_i, digits = digit, format = "f")
+                 rmsea_test_rounded_i[grepl("NA", rmsea_test_rounded_i)] <-
+                   "  -  "
+                 return(rmsea_test_rounded_i)
+               }
+             ))
            colnames(rmsea_test_rounded) <-
-             format(colnames(self$test_rmsea(selector = selector)),
+             format(colnames(rmsea_test),
                     width = 10,
                     justify = "right")
            rownames(rmsea_test_rounded) <-
-             paste0("   ", rownames(self$test_rmsea(selector = selector)), "  ")
-           
+             paste0("   ", rownames(rmsea_test), "  ")
            cat("Root Mean Square Error of Approximation Test\n")
            print(rmsea_test_rounded)
            cat("\n")
-           
-           
-           
+ 
            ## printing coefficient
-           
-           coefficient <- self$test_coefficient(
-             selector = selector,
-             standard_error = standard_error,
-             exclude_improper = exclude_improper
-           )
-           
+           coefficient_test <-
+             self$test_coefficient(
+               selector = selector,
+               standard_error = standard_error,
+               alpha_level = alpha_level,
+               exclude_improper = exclude_improper
+             )
            relation_as_groupname <-
              format(
                private$model$specification$relation,
@@ -249,61 +266,67 @@ lslx$set("public",
                "Covariance",
                "Variance",
                "Intercept")
+           coefficient_test_rounded <-
+             lapply(
+               X = coefficient_test,
+               FUN = function(coefficient_test_i) {
+                 coefficient_test_rounded_i <-
+                   formatC(coefficient_test_i,
+                           digits = digit,
+                           format = "f")
+                 coefficient_test_rounded_i[grepl("NA", coefficient_test_rounded_i)] <-
+                   "  -  "
+                 return(coefficient_test_rounded_i)
+               }
+             )
            
-           coefficient_rounded <-
-             lapply(coefficient, function(i_list) {
-               data_single_column <- formatC(i_list, digits = digit, format = "f")
-               data_single_column[grepl("NA", data_single_column)] <-
-                 "  -  "
-               return(data_single_column)
-             })
-           
-           coefficient_rounded$block <-
+           coefficient_test_rounded$block <-
              private$model$specification$block
-           coefficient_rounded$block_type <-
+           coefficient_test_rounded$block_type <-
              rep(NA, nrow(private$model$specification))
-           coefficient_rounded$type <-
+           coefficient_test_rounded$type <-
              format(private$model$specification$type,
                     width = 6,
                     justify = "right")
-           coefficient_rounded$group <-
+           coefficient_test_rounded$group <-
              private$model$specification$group
-           coefficient_rounded$left <-
+           coefficient_test_rounded$left <-
              private$model$specification$left
-           coefficient_rounded$right <-
+           coefficient_test_rounded$right <-
              private$model$specification$right
            
-           coefficient_rounded$block_type[coefficient_rounded$block == "y<-1"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "y<-1"] <-
              "Intercept"
-           coefficient_rounded$block_type[coefficient_rounded$block == "f<-1"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "f<-1"] <-
              "Intercept"
-           coefficient_rounded$block_type[coefficient_rounded$block == "y<-f"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "y<-f"] <-
              "Factor Loading"
-           coefficient_rounded$block_type[coefficient_rounded$block == "y<-y"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "y<-y"] <-
              "Regression"
-           coefficient_rounded$block_type[coefficient_rounded$block == "f<-y"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "f<-y"] <-
              "Regression"
-           coefficient_rounded$block_type[coefficient_rounded$block == "f<-f"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "f<-f"] <-
              "Regression"
-           coefficient_rounded$block_type[coefficient_rounded$block == "y<->f"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "y<->f"] <-
              "Covariance"
-           coefficient_rounded$block_type[coefficient_rounded$block == "f<->y"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "f<->y"] <-
              "Covariance"
-           coefficient_rounded$block_type[coefficient_rounded$block == "y<->y"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "y<->y"] <-
              "Covariance"
-           coefficient_rounded$block_type[coefficient_rounded$block == "f<->f"] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$block == "f<->f"] <-
              "Covariance"
-           coefficient_rounded$block_type[coefficient_rounded$left == coefficient_rounded$right] <-
+           coefficient_test_rounded$block_type[coefficient_test_rounded$left == coefficient_test_rounded$right] <-
              "Variance"
            
-           coefficient_rounded <-
-             data.frame(coefficient_rounded[c(1:10)])
+           coefficient_test_rounded <-
+             data.frame(coefficient_test_rounded[c(1:10)])
            
            ## print by different groups
            if (!is.na(private$model$reference_group)) {
              reference_group_order <-
                which(private$model$name_group %in% private$model$reference_group)
-             group_by_order <- c(reference_group_order,
+             group_by_order <- 
+               c(reference_group_order,
                                  c(1:(length(
                                    private$model$name_group
                                  )))[!(c(1:(length(
@@ -312,29 +335,26 @@ lslx$set("public",
            } else {
              group_by_order <- 1:length(private$model$name_group)
            }
-           
            for (i_group in group_by_order) {
-             selected_rows <-
-               coefficient_rounded$group == private$model$name_group[i_group]
-             
+             idc_group <-
+               coefficient_test_rounded$group == private$model$name_group[i_group]
              data_single_group <-
-               coefficient_rounded[selected_rows, ]
-             
+               coefficient_test_rounded[idc_group, ]
              rownames(data_single_group) <-
-               paste0(relation_as_groupname[selected_rows], "  ")
-             
-             colnames(data_single_group) <- c(
-               "estimate",
-               "std.error",
-               "z-value",
-               "p-value",
-               "lower",
-               "upper",
-               "block",
-               "block_type",
-               "type",
-               "group"
-             )
+               paste0(relation_as_groupname[idc_group], "  ")
+             colnames(data_single_group) <-
+               c(
+                 "estimate",
+                 "std.error",
+                 "z-value",
+                 "p-value",
+                 "lower",
+                 "upper",
+                 "block",
+                 "block_type",
+                 "type",
+                 "group"
+               )
              if (length(private$model$name_group) != 1) {
                cat(
                  paste0(
@@ -368,14 +388,19 @@ lslx$set("public",
                if (sum(data_single_group$block_type == i_block_type) > 0L) {
                  cat(" ", i_block_type)
                  # if 'single group' or 'reference group not specified', print nothing.
-                 if ((length(group_by_order)==1)|is.na(private$model$reference_group)) {
-                   cat("\n")} else if (i_group == group_by_order[1]){
-                     cat(" (reference component)\n")} else {
-                       cat(" (increment component)\n")
-                     }
-                 dta_single_group <- data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
-                 colnames(dta_single_group) <- paste0(" ",colnames(dta_single_group))
-                 print(dta_single_group)
+                 if ((length(group_by_order) == 1) |
+                     is.na(private$model$reference_group)) {
+                   cat("\n")
+                 } else if (i_group == group_by_order[1]) {
+                   cat(" (reference component)\n")
+                 } else {
+                   cat(" (increment component)\n")
+                 }
+                 data_single_group_block <-
+                   data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
+                 colnames(data_single_group_block) <-
+                   paste0(" ", colnames(data_single_group_block))
+                 print(data_single_group_block)
                  cat("\n")
                }
              }

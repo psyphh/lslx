@@ -360,7 +360,7 @@ lslx$set("public",
 
 
 lslx$set("public",
-         "extract_moment_gradient",
+         "extract_moment_jacobian",
          function(selector,
                   exclude_improper = TRUE) {
            penalty_level <-
@@ -368,38 +368,17 @@ lslx$set("public",
                                         exclude_improper = exclude_improper)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           moment_gradient <-
-             compute_moment_gradient_cpp(
+           moment_jacobian <-
+             compute_moment_jacobian_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
                supplied_result = private$fitting$supplied_result
              )
-           colnames(moment_gradient) <-
+           colnames(moment_jacobian) <-
              rownames(private$model$specification)
-           return(moment_gradient)
-         })
-
-
-lslx$set("public",
-         "extract_loss_saturated_hessian",
-         function(selector,
-                  exclude_improper = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        exclude_improper = exclude_improper)
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           loss_saturated_hessian <-
-             compute_loss_saturated_hessian_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           return(loss_saturated_hessian)
+           return(moment_jacobian)
          })
 
 
@@ -492,7 +471,7 @@ lslx$set("public",
              )
            }
            if (standard_error == "default") {
-             if (private$fitting$control$raw) {
+             if (private$fitting$control$response) {
                standard_error <- "sandwich"
              } else {
                standard_error <- "observed_fisher"
@@ -568,6 +547,30 @@ lslx$set("public",
              rownames(private$model$specification)
            return(loss_gradient)
          })
+
+
+lslx$set("public",
+         "extract_loss_gradient_direct",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           loss_gradient <-
+             compute_loss_gradient_direct_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           rownames(loss_gradient) <-
+             rownames(private$model$specification)
+           return(loss_gradient)
+         })
+
 
 lslx$set("public",
          "extract_regularizer_gradient",

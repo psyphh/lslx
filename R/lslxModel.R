@@ -459,18 +459,24 @@ lslxModel$set("private",
                             X = self$name_group,
                             FUN = function(name_group_i) {
                               if (any(self$specification$matrice[self$specification$group == name_group_i] == "alpha")) {
-                                relation_alpha_i <-
-                                  setdiff(
-                                    x = paste(
-                                      intersect(
-                                        x = self$name_response,
-                                        y = self$name_exogenous
+                                if (length(intersect(
+                                  x = self$name_response, 
+                                  y = self$name_exogenous)) > 0) {
+                                  relation_alpha_i <-
+                                    setdiff(
+                                      x = paste(
+                                        intersect(
+                                          x = self$name_response,
+                                          y = self$name_exogenous
+                                        ),
+                                        "1",
+                                        sep = "<-"
                                       ),
-                                      "1",
-                                      sep = "<-"
-                                    ),
-                                    y = self$specification$relation[self$specification$group == name_group_i]
-                                  )
+                                      y = self$specification$relation[self$specification$group == name_group_i]
+                                    )
+                                } else {
+                                  relation_alpha_i <- character()
+                                }
                               } else {
                                 relation_alpha_i <-
                                   setdiff(
@@ -480,32 +486,36 @@ lslxModel$set("private",
                                     y = self$specification$relation[self$specification$group == name_group_i]
                                   )
                               }
-                              specification_alpha_i <- data.frame(
-                                relation = relation_alpha_i,
-                                left = substr(
-                                  relation_alpha_i,
-                                  start = 1,
-                                  stop = regexpr("<-", relation_alpha_i) - 1
-                                ),
-                                right = "1",
-                                group = name_group_i,
-                                reference = ifelse(
-                                  is.na(self$reference_group),
-                                  FALSE,
-                                  ifelse(name_group_i == self$reference_group,
-                                         TRUE,
-                                         FALSE)
-                                ),
-                                matrice = "alpha",
-                                block = "y<-1",
-                                type = "free",
-                                start = NA_real_,
-                                stringsAsFactors = FALSE
-                              )
-                              rownames(specification_alpha_i) <-
-                                paste0(specification_alpha_i$relation,
-                                       "|",
-                                       specification_alpha_i$group)
+                              if (length(relation_alpha_i) > 0) {
+                                specification_alpha_i <- data.frame(
+                                  relation = relation_alpha_i,
+                                  left = substr(
+                                    relation_alpha_i,
+                                    start = 1,
+                                    stop = regexpr("<-", relation_alpha_i) - 1
+                                  ),
+                                  right = "1",
+                                  group = name_group_i,
+                                  reference = ifelse(
+                                    is.na(self$reference_group),
+                                    FALSE,
+                                    ifelse(name_group_i == self$reference_group,
+                                           TRUE,
+                                           FALSE)
+                                  ),
+                                  matrice = "alpha",
+                                  block = "y<-1",
+                                  type = "free",
+                                  start = NA_real_,
+                                  stringsAsFactors = FALSE
+                                )
+                                rownames(specification_alpha_i) <-
+                                  paste0(specification_alpha_i$relation,
+                                         "|",
+                                         specification_alpha_i$group)
+                              } else {
+                                specification_alpha_i = data.frame()
+                              }
                               return(specification_alpha_i)
                             }
                           ))

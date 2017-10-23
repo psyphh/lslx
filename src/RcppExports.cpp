@@ -65,9 +65,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_loss_saturated_hessian_cpp
-Rcpp::NumericMatrix compute_loss_saturated_hessian_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
-RcppExport SEXP _lslx_compute_loss_saturated_hessian_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+// compute_moment_jacobian_cpp
+Rcpp::NumericMatrix compute_moment_jacobian_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_moment_jacobian_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,22 +76,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_loss_saturated_hessian_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_moment_gradient_cpp
-Rcpp::NumericMatrix compute_moment_gradient_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
-RcppExport SEXP _lslx_compute_moment_gradient_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_moment_gradient_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
+    rcpp_result_gen = Rcpp::wrap(compute_moment_jacobian_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -170,6 +155,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_loss_gradient_direct_cpp
+Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_loss_gradient_direct_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_loss_gradient_direct_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_regularizer_gradient_cpp
 Rcpp::NumericMatrix compute_regularizer_gradient_cpp(Rcpp::NumericVector theta_value, double lambda, double gamma, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
 RcppExport SEXP _lslx_compute_regularizer_gradient_cpp(SEXP theta_valueSEXP, SEXP lambdaSEXP, SEXP gammaSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
@@ -242,13 +242,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lslx_compute_coefficient_matrice_cpp", (DL_FUNC) &_lslx_compute_coefficient_matrice_cpp, 5},
     {"_lslx_compute_implied_cov_cpp", (DL_FUNC) &_lslx_compute_implied_cov_cpp, 5},
     {"_lslx_compute_implied_mean_cpp", (DL_FUNC) &_lslx_compute_implied_mean_cpp, 5},
-    {"_lslx_compute_loss_saturated_hessian_cpp", (DL_FUNC) &_lslx_compute_loss_saturated_hessian_cpp, 5},
-    {"_lslx_compute_moment_gradient_cpp", (DL_FUNC) &_lslx_compute_moment_gradient_cpp, 5},
+    {"_lslx_compute_moment_jacobian_cpp", (DL_FUNC) &_lslx_compute_moment_jacobian_cpp, 5},
     {"_lslx_compute_expected_fisher_cpp", (DL_FUNC) &_lslx_compute_expected_fisher_cpp, 5},
     {"_lslx_compute_observed_fisher_cpp", (DL_FUNC) &_lslx_compute_observed_fisher_cpp, 5},
     {"_lslx_compute_score_acov_cpp", (DL_FUNC) &_lslx_compute_score_acov_cpp, 5},
     {"_lslx_compute_loss_value_cpp", (DL_FUNC) &_lslx_compute_loss_value_cpp, 5},
     {"_lslx_compute_loss_gradient_cpp", (DL_FUNC) &_lslx_compute_loss_gradient_cpp, 5},
+    {"_lslx_compute_loss_gradient_direct_cpp", (DL_FUNC) &_lslx_compute_loss_gradient_direct_cpp, 5},
     {"_lslx_compute_regularizer_gradient_cpp", (DL_FUNC) &_lslx_compute_regularizer_gradient_cpp, 7},
     {"_lslx_compute_objective_gradient_cpp", (DL_FUNC) &_lslx_compute_objective_gradient_cpp, 7},
     {"_lslx_compute_saturated_moment_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_cpp, 7},

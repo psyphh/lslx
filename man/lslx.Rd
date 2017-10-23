@@ -372,12 +372,13 @@ Penalty level selection in \pkg{lslx} is based on optimizing the value of some i
 Many information criteria are available for this task.
 In the current version, available information criteria are 
   \tabular{lll}{
-    \code{aic} \tab Akaike information criterion (Akaike, 1974) \tab \eqn{loss(\theta) + (2 / N) * #(\theta) } \cr
-    \code{aic3} \tab Akaike information criterion with penalty being 3 (Sclove, 1987) \tab \eqn{loss(\theta) + (3 / N) * #(\theta) } \cr
-    \code{caic} \tab consistent Akaike information criterion (Bozdogan, 1987) \tab \eqn{loss(\theta) + ((log(N) + 1) / N) * #(\theta) } \cr
-    \code{bic} \tab Bayesian information criterion (Schwarz, 1978) \tab \eqn{loss(\theta) + (log(N) / N) * #(\theta) }  \cr
-    \code{abic} \tab adjusted Bayesian information criterion (Sclove, 1987) \tab \eqn{loss(\theta) + (log((N + 2) / 24 ) / N) * #(\theta) }  \cr
-    \code{hbic} \tab Haughton Bayesian information criterion (Haughton, 1997) \tab \eqn{loss(\theta) + (log(N / \pi ) / N) * #(\theta) }  \cr
+    \code{aic} \tab Akaike information criterion (Akaike, 1974) \tab \eqn{loss(\theta) - (2 / N) * df(\theta) } \cr
+    \code{aic3} \tab Akaike information criterion with penalty being 3 (Sclove, 1987) \tab \eqn{loss(\theta) - (3 / N) * df(\theta) } \cr
+    \code{tic} \tab Akaike information criterion (Takeuchi, 1976) \tab \eqn{loss(\theta) - (2 / N) * df_adj(\theta) } \cr
+    \code{caic} \tab consistent Akaike information criterion (Bozdogan, 1987) \tab \eqn{loss(\theta) - ((log(N) + 1) / N) * df(\theta) } \cr
+    \code{bic} \tab Bayesian information criterion (Schwarz, 1978) \tab \eqn{loss(\theta) - (log(N) / N) * df(\theta) }  \cr
+    \code{abic} \tab adjusted Bayesian information criterion (Sclove, 1987) \tab \eqn{loss(\theta) - (log((N + 2) / 24 ) / N) * df(\theta) }  \cr
+    \code{hbic} \tab Haughton Bayesian information criterion (Haughton, 1997) \tab \eqn{loss(\theta) - (log(N / \pi ) / N) * df(\theta) }  \cr
     \cr
     }
 
@@ -393,7 +394,10 @@ where
 \eqn{loss(\theta)}: the loss value under estimate \eqn{\theta}
 }
 \item{
-\eqn{#(\theta)}: the number of non-zero elements in \eqn{\theta}
+\eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - #(\theta)}
+}
+\item{
+\eqn{df_adj(\theta)}: the adjusted degree of freedom by considering model misspecification
 }
 }
 Huang, Chen, and Weng (2017) have study the asymptotic behaviors of \code{aic} and \code{bic}.
@@ -1014,6 +1018,8 @@ Bentler, P. M. (1995). EQS structural equations program manual. Encino, CA: Mult
 Bentler, P. (1990). Comparative fit indices in structural models. Psychological Bulletin, 107(2), 238–246.
 
 Bozdogan, H. (1987). Model selection and Akaike’s Information Criterion (AIC): The general theory and its analytical extensions. Psychometrika, 52(3), 345–370.
+
+Browne, M. W. (1984). Asymptotic distribution-free methods for the analysis of covariance structures. British Journal of Mathematical and Statistical Psychology, 37(1), 62–83.
 
 Chang, W. (2017). R6: Classes with Reference Semantics.
 
