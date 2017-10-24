@@ -951,7 +951,7 @@
 #' \cr
 #' @examples
 #' ## Example 1: Regression Model with Lasso Penalty ##
-#' # run `vignette("lslx-example-1")` to see the vignette
+#' # run `vignette("regression")` to see the vignette
 #' # generate data for regression analysis
 #' set.seed(9487)
 #' x <- matrix(rnorm(2000), 200, 10)
@@ -979,7 +979,7 @@
 #'
 #'
 #' ## Example 2: Semi-Confirmatory Factor Analysis ##
-#' # run `vignette("lslx-example-2")` to see the vignette
+#' # run `vignette("factor-analysis")` to see the vignette
 #' model2 <-
 #' '
 #' visual  :=> x1 + x2 + x3
@@ -1004,7 +1004,7 @@
 #'
 #'
 #' ## Example 3: Semi-Confirmatory Structural Equation Modeling ##
-#' # run `vignette("lslx-example-3")` to see the vignette
+#' # run `vignette("structural-equation-modeling")` to see the vignette
 #' model3 <-
 #' '
 #' fix(1) * x1 + x2 + x3      <=: ind60
@@ -1034,7 +1034,7 @@
 #'
 #'
 #' ## Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis ##
-#' # run `vignette("lslx-example-4")` to see the vignette
+#' # run `vignette("multigroup-factor-analysis")` to see the vignette
 #' # multiple-group analysis with Pasteur specified as reference
 #' model4 <-
 #' '
