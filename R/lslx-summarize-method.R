@@ -123,6 +123,7 @@ lslx$set("public",
                "loss value",
                "number of non-zero coefficient",
                "degree of freedom",
+               "degree of freedom adjusted",
                "scaling factor"
              )
            information_criterion <-

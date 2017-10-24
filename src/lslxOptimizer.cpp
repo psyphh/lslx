@@ -67,7 +67,7 @@ public:
   
   double objective_gradient_abs_max, objective_hessian_convexity;
   int n_iter_out, n_nonzero_coefficient, degree_of_freedom;
-  double scaling_factor;
+  double degree_of_freedom_adj, scaling_factor;
   
   double aic, aic3, tic, caic;
   double bic, abic, hbic;
@@ -926,11 +926,15 @@ void lslxOptimizer::update_numerical_condition() {
           n_moment, theta_name.size()) = moment_jacobian_i;
       }
       moment_jacobian_matrix = slice_col(moment_jacobian_matrix, idx_is_effective);
-      scaling_factor = (saturated_moment_acov_matrix * 
+      degree_of_freedom_adj = 0.5 * double(n_observation) * (saturated_moment_acov_matrix * 
         (residual_weight_matrix - (residual_weight_matrix * moment_jacobian_matrix) *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix * moment_jacobian_matrix).inverse() *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix))).diagonal().sum();
-      scaling_factor = 0.5 * double(n_observation) * scaling_factor / degree_of_freedom;
+      if (degree_of_freedom > 0) {
+        scaling_factor = degree_of_freedom_adj / degree_of_freedom;
+      } else {
+        scaling_factor = NAN;
+      }
     } else {
       scaling_factor = NAN;      
     }
@@ -945,7 +949,7 @@ void lslxOptimizer::update_numerical_condition() {
 void lslxOptimizer::update_information_criterion() {
   aic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom);
   aic3 = loss_value - (3.0 / double(n_observation)) * double(degree_of_freedom);
-  tic = loss_value - (2.0 / double(n_observation)) * scaling_factor * double(degree_of_freedom);
+  tic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom_adj);
   caic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(degree_of_freedom);
   
   bic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(degree_of_freedom);
@@ -955,10 +959,10 @@ void lslxOptimizer::update_information_criterion() {
 
 
 void lslxOptimizer::update_fit_indice() {
-  if ((degree_of_freedom == 0) & (std::fabs(loss_value) > DBL_EPSILON)) {
+  if ((degree_of_freedom == 0) & (loss_value > std::sqrt(DBL_EPSILON))) {
     rmsea = NAN;
   } else {
-    if (std::fabs(loss_value) < DBL_EPSILON) {
+    if (loss_value < std::sqrt(DBL_EPSILON)) {
       rmsea = 0;
     } else {
       rmsea = std::sqrt(n_group * std::max(((loss_value / double(degree_of_freedom)) - 
@@ -969,7 +973,7 @@ void lslxOptimizer::update_fit_indice() {
   double cfi_num = std::max((double(n_observation) * loss_value - double(degree_of_freedom)), 0.0);
   double cfi_den = std::max(std::max(double(n_observation) * loss_value - double(degree_of_freedom),
                                      double(n_observation) * baseline_loss_value - double(baseline_degree_of_freedom)), 0.0);
-  if ((cfi_num < DBL_EPSILON) & (cfi_den < DBL_EPSILON)) {
+  if ((cfi_num < std::sqrt(DBL_EPSILON)) & (cfi_den < std::sqrt(DBL_EPSILON))) {
     cfi = NAN;
   } else {
     if (cfi_num < DBL_EPSILON) {
@@ -978,11 +982,19 @@ void lslxOptimizer::update_fit_indice() {
       cfi = 1 - cfi_num / cfi_den;
     }
   }
-  
-  double nnfi_num = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom) -
-    (double(n_observation) * loss_value) / double(degree_of_freedom);
-  double nnfi_den = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom) - 1;
-  nnfi = nnfi_num / nnfi_den;
+  double nnfi_0 = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom);
+  double nnfi_1;
+  if ((loss_value > std::sqrt(DBL_EPSILON)) & (degree_of_freedom == 0)) {
+    nnfi = NAN;
+  } else {
+    if (loss_value < std::sqrt(DBL_EPSILON)) {
+      nnfi_1 = 0;
+    } else {
+      nnfi_1 = (double(n_observation) * loss_value) / double(degree_of_freedom);
+    }
+    nnfi = (nnfi_0 - nnfi_1) / (nnfi_0 - 1.0);
+    nnfi = std::min(nnfi, 1.0);
+  }
   
   srmr = 0;
   int i, j, k;
@@ -1019,6 +1031,7 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
       _["loss_value"] = loss_value,
       _["n_nonzero_coefficient"] = n_nonzero_coefficient,
       _["degree_of_freedom"] = degree_of_freedom,
+      _["degree_of_freedom_adj"] = degree_of_freedom_adj,
       _["scaling_factor"] = scaling_factor);
   return Rcpp::clone(numerical_condition);
 }

@@ -21,14 +21,16 @@ lslx$set("public",
                         lr_test["unadjusted", "df"])
            if (private$fitting$control$response) {
              scaling_factor <- numerical_condition[["scaling_factor"]]
-             lr_test["mean-adjusted", "statistic"] <-
-               numerical_condition[["loss_value"]] * private$fitting$reduced_data$n_observation /
-               scaling_factor
-             lr_test["mean-adjusted", "df"] <-
-               numerical_condition[["degree_of_freedom"]]
-             lr_test["mean-adjusted", "p_value"] <-
-               1 - pchisq(lr_test["mean-adjusted", "statistic"],
-                          lr_test["mean-adjusted", "df"])
+             if (!is.na(scaling_factor)) {
+               lr_test["mean-adjusted", "statistic"] <-
+                 numerical_condition[["loss_value"]] * private$fitting$reduced_data$n_observation /
+                 scaling_factor
+               lr_test["mean-adjusted", "df"] <-
+                 numerical_condition[["degree_of_freedom"]]
+               lr_test["mean-adjusted", "p_value"] <-
+                 1 - pchisq(lr_test["mean-adjusted", "statistic"],
+                            lr_test["mean-adjusted", "df"])
+             }
            } else {
              
            }
@@ -64,83 +66,97 @@ lslx$set("public",
                lr_statistic <-
                  lr_test[row_name_i, "statistic"]
                lr_df <- lr_test[row_name_i, "df"]
-               lower_ncp <- 0
-               if (pchisq(lr_statistic,
-                          lr_df, lower_ncp) < (1 - alpha_level / 2)) {
-                 
+               if (is.na(lr_statistic) | is.na(lr_df)) {
+                 rmsea_test[row_name_i, "estimate"] <- NA
+                 rmsea_test[row_name_i, "lower"] <- NA
+                 rmsea_test[row_name_i, "upper"] <- NA
+               } else if ((lr_df == 0) & (lr_statistic > sqrt(.Machine$double.eps)) ) {
+                 rmsea_test[row_name_i, "estimate"] <- NA
+                 rmsea_test[row_name_i, "lower"] <- NA
+                 rmsea_test[row_name_i, "upper"] <- NA
+               } else if (lr_statistic < sqrt(.Machine$double.eps)) {
+                 rmsea_test[row_name_i, "estimate"] <- 0
+                 rmsea_test[row_name_i, "lower"] <- 0
+                 rmsea_test[row_name_i, "upper"] <- 0
                } else {
-                 lower_ncp_1 <- lower_ncp
-                 lower_ncp_2 <- 0
-                 while (pchisq(lr_statistic,
-                               lr_df,
-                               lower_ncp_2) > (1 - alpha_level / 2)) {
-                   lower_ncp_2 <- lower_ncp_2 + lr_df
-                 }
-                 lower_ncp <- (lower_ncp_1 + lower_ncp_2) / 2
-                 while (abs(pchisq(lr_statistic,
-                                   lr_df, lower_ncp) -
-                            (1 - alpha_level / 2)) > private$fitting$control$tol_other) {
-                   if (pchisq(lr_statistic,
-                              lr_df,
-                              lower_ncp) < (1 - alpha_level / 2)) {
-                     lower_ncp_2 <- lower_ncp
-                     lower_ncp <- (lower_ncp + lower_ncp_1) / 2
-                   } else {
-                     lower_ncp_1 <- lower_ncp
-                     lower_ncp <- (lower_ncp + lower_ncp_2) / 2
+                 lower_ncp <- 0
+                 if (pchisq(lr_statistic,
+                            lr_df, lower_ncp) < (1 - alpha_level / 2)) {
+                 } else {
+                   lower_ncp_1 <- lower_ncp
+                   lower_ncp_2 <- 0
+                   while (pchisq(lr_statistic,
+                                 lr_df,
+                                 lower_ncp_2) > (1 - alpha_level / 2)) {
+                     lower_ncp_2 <- lower_ncp_2 + lr_df
+                   }
+                   lower_ncp <- (lower_ncp_1 + lower_ncp_2) / 2
+                   while (abs(pchisq(lr_statistic,
+                                     lr_df, lower_ncp) -
+                              (1 - alpha_level / 2)) > private$fitting$control$tol_other) {
+                     if (pchisq(lr_statistic,
+                                lr_df,
+                                lower_ncp) < (1 - alpha_level / 2)) {
+                       lower_ncp_2 <- lower_ncp
+                       lower_ncp <- (lower_ncp + lower_ncp_1) / 2
+                     } else {
+                       lower_ncp_1 <- lower_ncp
+                       lower_ncp <- (lower_ncp + lower_ncp_2) / 2
+                     }
                    }
                  }
-               }
-               upper_ncp <- 0
-               if (pchisq(lr_statistic,
-                          lr_df, upper_ncp) < (alpha_level / 2)) {
                  upper_ncp <- 0
-               } else {
-                 upper_ncp_1 <- upper_ncp
-                 upper_ncp_2 <- 0
-                 while (pchisq(lr_statistic,
-                               lr_df,
-                               upper_ncp_2) > (alpha_level / 2)) {
-                   upper_ncp_2 <- upper_ncp_2 + lr_df
-                 }
-                 upper_ncp <- (upper_ncp_1 + upper_ncp_2) / 2
-                 while (abs(pchisq(lr_statistic,
-                                   lr_df, upper_ncp) -
-                            (alpha_level / 2)) > private$fitting$control$tol_other) {
-                   if (pchisq(lr_statistic,
-                              lr_df,
-                              upper_ncp) < (alpha_level / 2)) {
-                     upper_ncp_2 <- upper_ncp
-                     upper_ncp <- (upper_ncp + upper_ncp_1) / 2
-                   } else {
-                     upper_ncp_1 <- upper_ncp
-                     upper_ncp <- (upper_ncp + upper_ncp_2) / 2
+                 if (pchisq(lr_statistic,
+                            lr_df, upper_ncp) < (alpha_level / 2)) {
+                 } else {
+                   upper_ncp_1 <- upper_ncp
+                   upper_ncp_2 <- 0
+                   while (pchisq(lr_statistic,
+                                 lr_df,
+                                 upper_ncp_2) > (alpha_level / 2)) {
+                     upper_ncp_2 <- upper_ncp_2 + lr_df
+                   }
+                   upper_ncp <- (upper_ncp_1 + upper_ncp_2) / 2
+                   while (abs(pchisq(lr_statistic,
+                                     lr_df, upper_ncp) -
+                              (alpha_level / 2)) > private$fitting$control$tol_other) {
+                     if (pchisq(lr_statistic,
+                                lr_df,
+                                upper_ncp) < (alpha_level / 2)) {
+                       upper_ncp_2 <- upper_ncp
+                       upper_ncp <- (upper_ncp + upper_ncp_1) / 2
+                     } else {
+                       upper_ncp_1 <- upper_ncp
+                       upper_ncp <- (upper_ncp + upper_ncp_2) / 2
+                     }
                    }
                  }
+                 if (row_name_i == "unadjusted") {
+                   scaling_factor <- 1
+                 } else {
+                   scaling_factor <- numerical_condition[["scaling_factor"]]
+                 }
+                 if (!is.na(scaling_factor)) {
+                   rmsea_test[row_name_i, "estimate"] <-
+                     sqrt(max(
+                       0,
+                       scaling_factor * private$fitting$reduced_model$n_group * (lr_statistic - lr_df) /
+                         (private$fitting$reduced_data$n_observation * lr_df)
+                     ))
+                   rmsea_test[row_name_i, "lower"]  <-
+                     sqrt(max(
+                       0,
+                       scaling_factor * private$fitting$reduced_model$n_group * lower_ncp /
+                         (private$fitting$reduced_data$n_observation * lr_df)
+                     ))
+                   rmsea_test[row_name_i, "upper"]  <-
+                     sqrt(max(
+                       0,
+                       scaling_factor * private$fitting$reduced_model$n_group * upper_ncp /
+                         (private$fitting$reduced_data$n_observation * lr_df)
+                     ))
+                 }
                }
-               if (row_name_i == "unadjusted") {
-                 scaling_factor <- 1
-               } else {
-                 scaling_factor <- numerical_condition[["scaling_factor"]]
-               }
-               rmsea_test[row_name_i, "estimate"] <-
-                 sqrt(max(
-                   0,
-                   scaling_factor * private$fitting$reduced_model$n_group * (lr_statistic - lr_df) /
-                     (private$fitting$reduced_data$n_observation * lr_df)
-                 ))
-               rmsea_test[row_name_i, "lower"]  <-
-                 sqrt(max(
-                   0,
-                   scaling_factor * private$fitting$reduced_model$n_group * lower_ncp /
-                     (private$fitting$reduced_data$n_observation * lr_df)
-                 ))
-               rmsea_test[row_name_i, "upper"]  <-
-                 sqrt(max(
-                   0,
-                   scaling_factor * private$fitting$reduced_model$n_group * upper_ncp /
-                     (private$fitting$reduced_data$n_observation * lr_df)
-                 ))
              }
            }
            return(rmsea_test)

@@ -1,5 +1,5 @@
 ---
-title: "Example 3: Semi-Confirmatory Structural Equation Modeling"
+title: "Semi-Confirmatory Structural Equation Modeling"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
@@ -18,7 +18,7 @@ Hence, `lavaan` must be installed.
 ## Model Sepcification
 In the following specification, `x1` - `x3` and `y1` - `y8` is assumed to be measurements of 3 latent factors: `ind60`, `dem60`, and `dem65`.
 ```{r comment = "", message = FALSE}
-model3 <-
+model <-
 '
 fix(1) * x1 + x2 + x3      <=: ind60
 fix(1) * y1 + y2 + y3 + y4 <=: dem60
@@ -37,12 +37,12 @@ Details of model syntax can be found in the section of Model Syntax via `?lslx`.
 ## Object Initialization
 `lslx` is written as an `R6` class.
 Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
-The following code initializes an `lslx` object named `r6_lslx3`.
+The following code initializes an `lslx` object named `r6_lslx`.
 ```{r comment = "", message = FALSE}
 library(lslx)
-r6_lslx3 <- lslx$new(model = model3,
-                     sample_cov = cov(lavaan::PoliticalDemocracy),
-                     sample_size = nrow(lavaan::PoliticalDemocracy))
+r6_lslx <- lslx$new(model = model,
+                    sample_cov = cov(lavaan::PoliticalDemocracy),
+                    sample_size = nrow(lavaan::PoliticalDemocracy))
 ```
 Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
 The initialization of `lslx` requires users to specify a model for model specification (argument `model`) and a sample moments to be fitted (argument `sample_cov` and `sample_size`).
@@ -53,12 +53,12 @@ The sample moment must contains all the observed variables specified in the give
 After an `lslx` object is initialized, model can be respecified by `free_coefficent`, `fix_coefficent`, and `penalize_coefficent` methods.
 The following code sets `y1<->y5`, `y2<->y4`, `y2<->y6`, `y3<->y7`, `y4<->y8`, and `y6<->y8` as penalized parameters.
 ```{r comment = "", message = FALSE}
-r6_lslx3$penalize_coefficient(name = c("y1<->y5",
-                                       "y2<->y4",
-                                       "y2<->y6",
-                                       "y3<->y7",
-                                       "y4<->y8",
-                                       "y6<->y8"))
+r6_lslx$penalize_coefficient(name = c("y1<->y5",
+                                      "y2<->y4",
+                                      "y2<->y6",
+                                      "y3<->y7",
+                                      "y4<->y8",
+                                      "y6<->y8"))
 ```
 To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
 
@@ -66,22 +66,22 @@ To see more methods for respecifying model, please check the section of Set-Rela
 ## Model Fitting
 After an `lslx` object is initialized, method `fit_mcp` can be used to fit the specified model into the given data with mcp penalty funtion.
 ```{r comment = "", message = FALSE}
-r6_lslx3$fit_mcp(lambda_grid = seq(.00, .30, .05),
+r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
                  gamma_grid = Inf)
 ```
 The `fit_mcp` requires users to specify the considerd penalty levels (argument `lambda_grid` and `gamma_grid`).
-In this example, the lambda grid is `c(.00, .05, .10, .15, .20, .25, .30)` and the gamma grid is `Inf`.
+In this example, the lambda grid is `seq(.02, .30, .02)` and the gamma grid is `Inf`.
 Note that in this example `gamma = Inf` makes mcp to be equivalent to the lasso panalty.
-All the fitting result will be stored in the `fitting` field of `r6_lslx3`.
+All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 
 
 ## Model Summarizing
 Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
 To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
 Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
-The following code summarize the fitting result under the penalty level selected by Bayesian information criterion.
+The following code summarize the fitting result under the penalty level selected by Akaike information criterion (AIC).
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
-r6_lslx3$summarize(selector = "bic")
+r6_lslx$summarize(selector = "aic")
 ```
 In this example, we can see that the PL estimate under the selected penalty level doesn't contain any zero value, which indicates that all of the covariance of measurements are relevant.
 The `summarize` method also shows the result of significance tests for the coefficients.
@@ -90,40 +90,14 @@ In this example, because raw data is not used for `lslx` object initialization, 
 It may not be valid when the model is misspecified and the data are not normal.
 Also, it is generally invalid after choosing a penalty level.
 
-## Visualization
-`lslx` provides four methods for visualizing the fitting results.
-The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
-The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
-The plot can be used to evaluate the quality of numerical optimization.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx3$plot_numerical_condition()
-```
-
-
-The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx3$plot_information_criterion()
-```
-
-The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx3$plot_fit_indice()
-```
-
-The method `plot_coefficient` shows the solution path of coefficients in the given block.
-The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the variance/covariance between observed variables.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx3$plot_coefficient(block = "y<->y")
-```
-
 
 ## Objects Extraction
 In `lslx`, many quantities related to SEM can be extracted by extract-related method.
 For example, the coefficient estimate and its asymptotic variance can be obtained by
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx3$extract_coefficient(selector = "bic")
+r6_lslx$extract_coefficient(selector = "bic")
 ```
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-diag(r6_lslx3$extract_coefficient_acov(selector = "bic"))
+diag(r6_lslx$extract_coefficient_acov(selector = "bic"))
 ```
 The `NA` standard errors mean that the corresponding coefficients are fixed or identified as zero by penalty.

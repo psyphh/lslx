@@ -1,5 +1,5 @@
 ---
-title: "Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis"
+title: "Semi-Confirmatory Multigroup Factor Analysis"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
@@ -18,7 +18,7 @@ Hence, `lavaan` must be installed.
 ## Model Sepcification
 In the following specification, `x1` - `x9` is assumed to be measurements of 3 latent factors: `visual`, `textual`, and `speed`.
 ```{r comment = "", message = FALSE}
-model4 <-
+model <-
 '
 visual  :=> fix(1) * x1 + x2 + x3 
 textual :=> fix(1) * x4 + x5 + x6 
@@ -34,10 +34,10 @@ Details of model syntax can be found in the section of Model Syntax via `?lslx`.
 ## Object Initialization
 `lslx` is written as an `R6` class.
 Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
-The following code initializes an `lslx` object named `r6_lslx4`.
+The following code initializes an `lslx` object named `r6_lslx`.
 ```{r comment = "", message = FALSE}
 library(lslx)
-r6_lslx4 <- lslx$new(model = model4,
+r6_lslx <- lslx$new(model = model,
                      data = lavaan::HolzingerSwineford1939,
                      group_variable = "school",
                      reference_group = "Pasteur")
@@ -60,7 +60,7 @@ After an `lslx` object is initialized, model can be respecified by `free_heterog
 The following code sets `x2<-visual`, `x3<-visual`, `x5<-textual`, `x6<-textual`, `x8<-speed`, and `x9<-speed` in `Grant-White` as penalized parameters.
 Note that parameters in `Grant-White` now reflect differences since `Pasteur` is set as reference.
 ```{r comment = "", message = FALSE}
-r6_lslx4$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
+r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
 ```
 To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
 
@@ -68,52 +68,23 @@ To see more methods for respecifying model, please check the section of Set-Rela
 ## Model Fitting
 After an `lslx` object is initialized, method `fit_lasso` can be used to fit the specified model into the given data with lasso penalty funtion.
 ```{r comment = "", message = FALSE}
-r6_lslx4$fit_lasso(lambda_grid = seq(.00, .30, .05))
+r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
 ```
 The `fit_lasso` requires users to specify the considerd penalty levels (argument `lambda_grid`).
-In this example, the lambda grid is `c(.00, .05, .10, .15, .20, .25, .30)`.
-All the fitting result will be stored in the `fitting` field of `r6_lslx4`.
+In this example, the lambda grid is `seq(.02, .30, .02)`.
+All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 
 
 ## Model Summarizing
 Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
 To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
 Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
-The following code summarize the fitting result under the penalty level selected by Akaike information criterion (AIC).
+The following code summarize the fitting result under the penalty level selected by Bayesian information criterion (BIC).
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
-r6_lslx4$summarize(selector = "aic")
+r6_lslx$summarize(selector = "bic")
 ```
-In this example, we can see that measurements for `visual` and `speed` are invariant across the two populations.
-However, loadings of `x5` and `x6` seem to be heterogeneous across the two groups.
+In this example, we can see that all of the loadings are invariant across the two groups.
 The `summarize` method also shows the result of significance tests for the coefficients.
 In `lslx`, the default standard errors are calculated based on sandwich formula whenever raw data is available.
 It is generally valid even when the model is misspecified and the data is not normal.
 However, it may not be valid after selecting an optimal penalty level.
-
-
-## Visualization
-`lslx` provides four methods for visualizing the fitting results.
-The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
-The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
-The plot can be used to evaluate the quality of numerical optimization.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx4$plot_numerical_condition()
-```
-
-
-The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx4$plot_information_criterion()
-```
-
-The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx4$plot_fit_indice()
-```
-
-
-The method `plot_coefficient` shows the solution path of coefficients in the given block.
-The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the variance/covariance between observed variables.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx4$plot_coefficient(block = "y<-f")
-```

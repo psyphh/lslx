@@ -913,37 +913,37 @@ The method returns a \code{matrix} of the gradient of objective (or penalized di
 }
 
 \examples{
-## Example 1: Regression Model with Lasso Penalty ##
-# run `vignette("lslx-example-1")` to see the vignette
+## Regression Analysis with Lasso Penalty ##
+# run `vignette("regression-analysis")` to see the vignette
 # generate data for regression analysis
 set.seed(9487)
 x <- matrix(rnorm(2000), 200, 10)
 colnames(x) <- paste0("x", 1:10)
 y <- matrix(rnorm(200), 200, 1)
-df_reg <- data.frame(y, x)
+data <- data.frame(y, x)
 
 # specify a model for model specification
-model1 <-
+model <-
 '
 y <= x1 + x2 + x3 + x4
 y <~ x5 + x6 + x7 + x8 + x9 + x10
 '
 
 # create an lslx object via specified model and raw data
-r6_lslx1 <- lslx$new(model = model1,
-                     data = df_reg)
+r6_lslx <- lslx$new(model = model,
+                    data = data)
 
 # fit the specified model to data under specified penalty levels
-r6_lslx1$fit(penalty_method = "lasso",
-             lambda_grid = seq(.00, .30, .05))
+r6_lslx$fit(penalty_method = "lasso",
+            lambda_grid = seq(.00, .30, .01))
 
 # summarize fitting result under the penalty level selected by 'bic'
-r6_lslx1$summarize(selector = "aic")
+r6_lslx$summarize(selector = "aic")
 
 
-## Example 2: Semi-Confirmatory Factor Analysis ##
-# run `vignette("lslx-example-2")` to see the vignette
-model2 <-
+## Semi-Confirmatory Factor Analysis ##
+# run `vignette("factor-analysis")` to see the vignette
+model <-
 '
 visual  :=> x1 + x2 + x3
 textual :=> x4 + x5 + x6
@@ -956,19 +956,19 @@ textual <=> fix(1)* textual
 speed <=> fix(1)* speed
 '
 
-r6_lslx2 <- lslx$new(model = model2,
-                     data = lavaan::HolzingerSwineford1939)
+r6_lslx <- lslx$new(model = model,
+                    data = lavaan::HolzingerSwineford1939)
 
-r6_lslx2$fit(penalty_method = "mcp",
-             lambda_grid = seq(.05, .30, .05),
-             gamma_grid = c(5, 10))
+r6_lslx$fit(penalty_method = "mcp",
+            lambda_grid = seq(.02, .30, .02),
+            gamma_grid = c(5, 10))
 
-r6_lslx2$summarize(selector = "bic")
+r6_lslx$summarize(selector = "bic")
 
 
-## Example 3: Semi-Confirmatory Structural Equation Modeling ##
-# run `vignette("lslx-example-3")` to see the vignette
-model3 <-
+## Semi-Confirmatory Structural Equation Modeling ##
+# run `vignette("structural-equation-modeling")` to see the vignette
+model <-
 '
 fix(1) * x1 + x2 + x3      <=: ind60
 fix(1) * y1 + y2 + y3 + y4 <=: dem60
@@ -978,44 +978,44 @@ dem65 <= ind60 + dem60
 '
 
 # create an lslx object via specified model and sample covariance matrix
-r6_lslx3 <- lslx$new(model = model3,
-                     sample_cov = cov(lavaan::PoliticalDemocracy),
-                     sample_size = nrow(lavaan::PoliticalDemocracy))
+r6_lslx <- lslx$new(model = model,
+                    sample_cov = cov(lavaan::PoliticalDemocracy),
+                    sample_size = nrow(lavaan::PoliticalDemocracy))
 
 # set some covariances of errors as penalized parameters
-r6_lslx3$penalize_coefficient(name = c("y1<->y5",
-                                       "y2<->y4",
-                                       "y2<->y6",
-                                       "y3<->y7",
-                                       "y4<->y8",
-                                       "y6<->y8"))
+r6_lslx$penalize_coefficient(name = c("y1<->y5",
+                                      "y2<->y4",
+                                      "y2<->y6",
+                                      "y3<->y7",
+                                      "y4<->y8",
+                                      "y6<->y8"))
 
-r6_lslx3$fit_mcp(lambda_grid = seq(.00, .30, .05),
-                 gamma_grid = Inf)
+r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+                gamma_grid = Inf)
 
-r6_lslx3$summarize(selector = "bic")
+r6_lslx$summarize(selector = "aic")
 
 
-## Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis ##
-# run `vignette("lslx-example-4")` to see the vignette
-# multiple-group analysis with Pasteur specified as reference
-model4 <-
+## Semi-Confirmatory Multigroup Factor Analysis ##
+# run `vignette("multigroup-analysis")` to see the vignette
+# School Pasteur is specified as reference
+model <-
 '
 visual  :=> fix(1) * x1 + x2 + x3
 textual :=> fix(1) * x4 + x5 + x6
 speed   :=> fix(1) * x7 + x8 + x9
 '
-r6_lslx4 <- lslx$new(model = model4,
-                     data = lavaan::HolzingerSwineford1939,
-                     group_variable = "school",
-                     reference_group = "Pasteur")
+r6_lslx <- lslx$new(model = model,
+                    data = lavaan::HolzingerSwineford1939,
+                    group_variable = "school",
+                    reference_group = "Pasteur")
 
 # penalize increment components of loadings in 'Grant-White'
-r6_lslx4$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
+r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
 
-r6_lslx4$fit_lasso(lambda_grid = seq(.00, .30, .05))
+r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
 
-r6_lslx4$summarize(selector = "aic")
+r6_lslx$summarize(selector = "bic")
 }
 \references{
 Akaike, H. (1974). A new look at the statistical model identification. IEEE Transactionson Automatic Control, 19(6), 716–723.

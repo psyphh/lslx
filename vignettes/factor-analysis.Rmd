@@ -1,5 +1,5 @@
 ---
-title: "Example 2: Semi-Confirmatory Factor Analysis"
+title: "Semi-Confirmatory Factor Analysis"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
@@ -19,7 +19,7 @@ Hence, `lavaan` must be installed.
 ## Model Sepcification
 In the following specification, `x1` - `x9` is assumed to be measurements of 3 latent factors: `visual`, `textual`, and `speed`.
 ```{r comment = "", message = FALSE}
-model2 <-
+model <-
 '
 visual  :=> x1 + x2 + x3
 textual :=> x4 + x5 + x6
@@ -45,11 +45,11 @@ Details of model syntax can be found in the section of Model Syntax via `?lslx`.
 ## Object Initialization
 `lslx` is written as an `R6` class.
 Everytime we conduct analysis with `lslx`, an `lslx` object must be initialized.
-The following code initializes an `lslx` object named `r6_lslx2`.
+The following code initializes an `lslx` object named `r6_lslx`.
 ```{r comment = "", message = FALSE}
 library(lslx)
-r6_lslx2 <- lslx$new(model = model2,
-                     data = lavaan::HolzingerSwineford1939)
+r6_lslx <- lslx$new(model = model,
+                    data = lavaan::HolzingerSwineford1939)
 ```
 Here, `lslx` is the object generator for `lslx` object and `new` is the build-in method of `lslx` to generate a new `lslx` object.
 The initialization of `lslx` requires users to specify a model for model specification (argument `model`) and a data set to be fitted (argument `sample_data`).
@@ -58,7 +58,7 @@ In is also possible to initialize an `lslx` object via sample moments (see Examp
 
 It is possible to see the model specification via the `extract_specification` method.
 ```{r comment = "", message = FALSE}
-r6_lslx2$extract_specification()
+r6_lslx$extract_specification()
 ```
 The row names show the coefficient names. 
 The most two relevant columns are `type` which shows the type of the coefficient and `start` which shows the starting value.
@@ -68,14 +68,14 @@ For details, please see the the section of Extract-Related Methods via `?lslx`.
 ## Model Fitting
 After an `lslx` object is initialized, method `fit` can be used to fit the specified model into the given data.
 ```{r comment = "", message = FALSE}
-r6_lslx2$fit(penalty_method = "mcp",
-             lambda_grid = seq(.05, .30, .05),
+r6_lslx$fit(penalty_method = "mcp",
+             lambda_grid = seq(.02, .30, .02),
              gamma_grid = c(5, 10))
 ```
 The fitting process requires users to specify the penalty method (argument `penalty_method`) and the considerd penalty levels (argument `lambda_grid` and `gamma_grid`).
-In this example, the `mcp` penalty is implemented on the lambda grid `c(.05, .10, .15, .20, .25, .30)` and gamma grid `c(5, 10)`.
+In this example, the `mcp` penalty is implemented on the lambda grid `seq(.02, .30, .02)` and gamma grid `c(5, 10)`.
 Note that in this example `lambda = 0` is not considered because it may result in unidentified result.
-All the fitting result will be stored in the `fitting` field of `r6_lslx2`.
+All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 
 
 ## Model Summarizing
@@ -84,7 +84,7 @@ To summarize the fitting result, a selector to determine an optimal penalty leve
 Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
 The following code summarize the fitting result under the penalty level selected by Bayesian information criterion.
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
-r6_lslx2$summarize(selector = "bic")
+r6_lslx$summarize(selector = "bic")
 ```
 In ths example, we can see that most penalized parameters are zero under the selected penalty level except for `x9<-visual`, which shows the benefit of using the semi-confirmatory approach.
 The `summarize` method also shows the result of significance tests for the coefficients.
@@ -99,37 +99,37 @@ The method `plot_numerical_condition` shows the numerical condition under all th
 The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
 The plot can be used to evaluate the quality of numerical optimization.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_numerical_condition()
+r6_lslx$plot_numerical_condition()
 ```
 
 
 The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_information_criterion()
+r6_lslx$plot_information_criterion()
 ```
 
 The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_fit_indice()
+r6_lslx$plot_fit_indice()
 ```
 
 
 The method `plot_coefficient` shows the solution path of coefficients in the given block.
 The following code plots the solution paths of all coefficients in the block `y<-f`, which contains all the regression coeffcients from latent factors to observed variables (i.e., factor loadings).
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$plot_coefficient(block = "y<-f")
+r6_lslx$plot_coefficient(block = "y<-f")
 ```
 
 ## Objects Extraction
 In `lslx`, many quantities related to SEM can be extracted by extract-related method.
 For example, the loading matrix can be obtained by
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$extract_coefficient_matrice(selector = "bic", block = "y<-f")
+r6_lslx$extract_coefficient_matrice(selector = "bic", block = "y<-f")
 ```
 The model-implied covariance matrix and residual matrix can be obtained by 
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$extract_implied_cov(selector = "bic")
+r6_lslx$extract_implied_cov(selector = "bic")
 ```
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
-r6_lslx2$extract_residual_cov(selector = "bic")
+r6_lslx$extract_residual_cov(selector = "bic")
 ```
