@@ -18,7 +18,9 @@ lslx$set("public",
                x = c(
                  private$fitting$reduced_data$n_observation,
                  private$fitting$reduced_data$n_complete_observation,
-                 private$fitting$reduced_data$n_missing_pattern,
+                 ifelse(private$fitting$reduced_data$n_missing_pattern == 1,
+                        "none",
+                        private$fitting$reduced_data$n_missing_pattern),
                  private$fitting$reduced_model$n_group,
                  private$fitting$reduced_model$n_response,
                  private$fitting$reduced_model$n_factor,
@@ -62,11 +64,13 @@ lslx$set("public",
                    )
                  ),
                  private$fitting$control$algorithm,
-                 sub(
-                   pattern = "_",
-                   replacement = " ",
-                   x = private$fitting$control$missing_method
-                 ),
+                 ifelse(private$fitting$reduced_data$n_missing_pattern == 1,
+                        "none",
+                        sub(
+                          pattern = "_",
+                          replacement = " ",
+                          x = private$fitting$control$missing_method
+                        )),
                  private$fitting$control$tol_out
                ),
                digits = digit,
@@ -113,7 +117,7 @@ lslx$set("public",
                "lambda",
                "gamma",
                "objective value",
-               "objective gradient abs.maximum",
+               "objective gradient absolute maximum",
                "objective hessian convexity",
                "number of iteration",
                "loss value",

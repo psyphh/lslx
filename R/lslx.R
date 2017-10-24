@@ -326,6 +326,7 @@
 #' The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 #' The algorithm can be thought as a quasi-Newton method with inner loop and outer loop.
 #' The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
+#' To sve the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden–Fletcher–Goldfarb–Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
 #' The inner loop stops if the change of the derived direction is quite small.
 #' The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
 #' The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
@@ -349,7 +350,9 @@
 #' The two-stage method first calculates the saturated moments by minimizing the likelihoods based on all of the available observations and then use the obtained saturated moment estimates for further SEM analysis.
 #' Under the assumption of missing at random (MAR; Rubin, 1976), it has been shown that the two-stage method can yield a consistent estimate.
 #' In addition, the standard errors of coefficients can be also consistently estimated if a correct asumptotic covariance of saturated moments is used.
-#' Because the two-stage approach is generally valid and efficient compared to the listwise deletion method, \pkg{lslx} set the two-stage method as default for handling the missing data problem.
+#' Because the two-stage approach is generally valid and efficient compared to the listwise deletion method, 
+#' \pkg{lslx} set the two-stage method as default for handling the missing data problem.
+#' The current version also supports the use of auxiliary varialbes (see Savalei & Bentler, 2008).
 #' If the two-stage method is implemented, the standard error formula will be corrected for the presence of missing data (see Yuan & Lu, 2008 for technical details).
 #' \cr
 #' \cr
@@ -387,11 +390,15 @@
 #' \eqn{df_adj(\theta)}: the adjusted degree of freedom by considering model misspecification
 #' }
 #' }
-#' Huang, Chen, and Weng (2017) have study the asymptotic behaviors of \code{aic} and \code{bic}.
-#' They show that \code{aic} can select a model with minimum espected loss and \code{bic} can choose the most parsimous one from models that attain the minimum espected loss.
-#' By the order of penalty term, we may expect: (1) the large sample behavior of \code{aic3} will be similar to \code{aic}; 
+#' Note the the formula for calculating the information criteria in \pkg{lslx} are different to other softwares. 
+#' The loss function value is used to replaced the likelihood function value and hence the penalty term is also divided by sample size \eqn{N}.
+#' 
+#' Huang, Chen, and Weng (2017) have study the asymptotic behaviors of \code{aic} and \code{bic} under penalized estimation.
+#' They show that under suitable conditions, \code{aic} can select a model with minimum espected loss and \code{bic} can choose the most parsimous one from models that attain the minimum espected loss.
+#' By the order of penalty term, we may expect: (1) the large sample behaviors of \code{aic3} and \code{tic}  will be similar to \code{aic}; 
 #' and (2) the asymptotic behaviors of \code{caic}, \code{abic}, and \code{hbic} will be similar to \code{bic}.
 #' However, their small-sample performances require futher studies.
+#'\cr
 #'\cr
 #'
 #'@section Model Fit Evaluation:
@@ -490,12 +497,14 @@
 #'     \code{model} \tab A \code{character} with length one to represent the model specification. See the section of Model Syntax for more information. \cr
 #'     \code{data} \tab  A \code{data.frame} of raw data. 
 #'     It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).  \cr
-#'     \code{sample_cov} \tab A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.\cr
-#'     \code{sample_mean} \tab A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors. \cr
-#'     \code{sample_size} \tab A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes. \cr
 #'     \code{group_variable} \tab A \code{character} with length one to specify what variable is used for labeling group. \cr
 #'     \code{reference_group} \tab A \code{character} with length one to specify which group is set as reference. \cr
 #'     \code{weight_variable} \tab A \code{character} with length one to specify what variable is used for sampling weight. \cr
+#'     \code{auxiliary_variable} \tab A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments.
+#'     Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.  \cr
+#'     \code{sample_cov} \tab A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.\cr
+#'     \code{sample_mean} \tab A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors. \cr
+#'     \code{sample_size} \tab A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes. \cr
 #'     \code{verbose} \tab A \code{logical} to specify whether messages made by \code{lslx} should be printed. \cr
 #'     \cr
 #'     }
@@ -614,7 +623,6 @@
 #' }
 #'\cr
 #'
-#'
 #' @section Fit-Related Methods:
 #' Fit-related methods are used to obtain the fitting results based on the given \code{model} and \code{data}.
 #' When implementing fit-related methods, user should specify parameters for penalization and optimization.
@@ -623,10 +631,10 @@
 #'
 #' \describe{
 #'   \item{\code{fit(penalty_method = "none", lambda_grid = 0, gamma_grid = Inf, 
-#'   missing_method = "default", start_method = "default", positive_diag = TRUE,
+#'   algorithm = "default", missing_method = "default", start_method = "default",
 #'   iter_out_max = 100L, iter_in_max = 50L, iter_other_max = 500L, iter_armijo_max = 100L, 
-#'   tol_out = 1e-4, tol_in = 1e-4, tol_other = 1e-4,
-#'   step_size = 0.5, armijo = 1e-5, ridge_cov = 1e-4, ridge_hessian = 1e-4, verbose = TRUE)}}{
+#'   tol_out = 1e-4, tol_in = 1e-4, tol_other = 1e-4, step_size = 0.5, armijo = 1e-5, 
+#'   ridge_cov = 1e-4, ridge_hessian = 1e-4, positive_diag = TRUE, verbose = TRUE)}}{
 #'   The method fits the specified model to data by minimizing penalized ML loss function.
 #'   It is the most comprehensive method for fitting and hence many arguments can be specified.
 #'   \tabular{ll}{
@@ -634,6 +642,10 @@
 #'     The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.    \cr
 #'     \code{lambda_grid} \tab A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. \cr
 #'     \code{gamma_grid} \tab A \code{numeric} with values larger than one for specifying the non-convexity \code{"mcp"}. \cr
+#'     \code{algorithm} \tab A \code{character} to determine the method of optimization. 
+#'     The current version supports \code{"BFGS"} and \code{"fisher"}. 
+#'     If the argument is set as \code{"default"}, then (1) \code{"BFGS"} will be implemented if no penalty is considered; 
+#'     (2) \code{"fisher"} will be implemented if penalty is considered.  \cr
 #'     \code{missing_method} \tab A \code{character} to determine the method for handling missing data (or \code{NA}). 
 #'     The current version supports \code{"two_stage"} and \code{"listwise_deletion"}. 
 #'     If the argument is set as \code{"default"} and a raw data set is available, the \code{"two_stage"} will be implemented.
@@ -698,14 +710,14 @@
 #'     }
 #'   }
 #' }
-#' \cr
 #'
 #' @section Test-Related Methods:
 #' Test-related mthods are used to obtain the result of specific statistical test.
 #' So far, only tests for likelihood ratio (LR), RMSEA, and coefficients are available.
 #' For each test-related method, users should specify \code{selector} and \code{exclude_improper}.
 #' Argument \code{selector} is used to specify which model selection criterion should be used to choose an optimal penalty level.
-#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
+#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
+#' If no penalty is considered, \code{selector} can be omitted.
 #' Argument \code{exclude_improper} specifies whether non-convergence or non-convexity results should be removed for penalty level selection.
 #' A non-convergence result is determined by examine the maximal elements of absolute objective gradient and the number of iteration.
 #' A non-convexity result is determined by checking the minimum of univariate approximate hessian.
@@ -786,9 +798,10 @@
 #' Therefore, the extract-related methods not only extract objects but may possibly re-compute some of them.
 #' \cr
 #' \cr
-#' In extract-related methods, there are many common arguments that should be introduced first: \code{selector} and \code{exclude_improper}.
+#' In extract-related methods, two common arguments should be introduced first: \code{selector} and \code{exclude_improper}.
 #' Argument \code{selector} is used to specify which information criterion should be used to choose an optimal penalty level.
-#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
+#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
+#' If no penalty is considered, \code{selector} can be omitted.
 #' Argument \code{exclude_improper} specifies whether non-convergence results or non-convexity results should be removed for penalty level selection.
 #' A non-convergence result determined by examine the maximal elements of absolute objective gradient and the number of iteration.
 #' A non-convexity result is determined by checking the minimum of univariate approximate hessian.
@@ -911,6 +924,8 @@
 #' Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics and standard errors in covariance structure analysis. 
 #' In A. von Eye & C. C. Clogg (Eds.), Latent variable analysis: Applications to developmental research (pp. 399–419). Thousand Oaks, CA: Sage.
 #'
+#' Savalei, V. & Bentler, P. M. (2009). A Two-Stage Approach to Missing Data: Theory and Application to Auxiliary Variables, Structural Equation Modeling: A Multidisciplinary Journal, 16(3), 477-497.
+#'
 #' Schwarz, G. (1978). Estimating the dimension of a model. The Annals of Statistics, 6(2), 461–464.
 #'
 #' Sclove, S. L. (1987). Application of model-selection criteria to some problems in multivariate analysis. Psychometrika, 52(3), 333–343.
@@ -963,7 +978,6 @@
 #' r6_lslx1$summarize(selector = "aic")
 #'
 #'
-#'
 #' ## Example 2: Semi-Confirmatory Factor Analysis ##
 #' # run `vignette("lslx-example-2")` to see the vignette
 #' model2 <-
@@ -987,7 +1001,6 @@
 #'              gamma_grid = c(5, 10))
 #'
 #' r6_lslx2$summarize(selector = "bic")
-#'
 #'
 #'
 #' ## Example 3: Semi-Confirmatory Structural Equation Modeling ##
@@ -1020,7 +1033,6 @@
 #' r6_lslx3$summarize(selector = "bic")
 #'
 #'
-#'
 #' ## Example 4: Semi-Confirmatory Mutiple-Group Factor Analysis ##
 #' # run `vignette("lslx-example-4")` to see the vignette
 #' # multiple-group analysis with Pasteur specified as reference
@@ -1041,8 +1053,6 @@
 #' r6_lslx4$fit_lasso(lambda_grid = seq(.00, .30, .05))
 #'
 #' r6_lslx4$summarize(selector = "aic")
-#'
-#'
 
 
 
@@ -1061,12 +1071,13 @@ lslx$set("public",
          "initialize",
          function(model,
                   data,
-                  sample_cov,
-                  sample_mean,
-                  sample_size,
                   group_variable,
                   reference_group,
                   weight_variable,
+                  auxiliary_variable,
+                  sample_cov,
+                  sample_mean,
+                  sample_size,
                   verbose = TRUE) {
            if (missing(model)) {
              stop("Argument 'model' cannot be empty.")
@@ -1097,6 +1108,13 @@ lslx$set("public",
              } else {
                if (!(weight_variable %in% colnames(data))) {
                  stop("Argument 'weight_variable' is not recognized.")
+               }
+             }
+             if (missing(auxiliary_variable)) {
+               
+             } else {
+               if (!all(auxiliary_variable %in% colnames(data))) {
+                 stop("Argument 'auxiliary_variable' is not recognized.")
                }
              }
            } else {
@@ -1130,8 +1148,10 @@ lslx$set("public",
              if (!missing(weight_variable)) {
                stop("Argument 'weight_variable' is unnecessary under moment data initialization.")
              }
+             if (!missing(auxiliary_variable)) {
+               stop("Argument 'auxiliary_variable' is unnecessary under moment data initialization.")
+             }
            }
-           
            if (any(grepl(pattern = "/|\\||@",
                          x = name_group))) {
              stop(
@@ -1187,6 +1207,11 @@ lslx$set("public",
                    weight <- list(data[, weight_variable])
                  }
                  names(weight) <- name_group
+                 if (missing(auxiliary_variable)) {
+                   auxiliary <- list()
+                 } else {
+                   auxiliary <- list(data[, auxiliary_variable])
+                 }
                } else {
                  data <-
                    data[order(as.character(getElement(data, group_variable))),]
@@ -1203,6 +1228,33 @@ lslx$set("public",
                      split(data[, weight_variable],
                            getElement(data, group_variable))
                  }
+                 if (missing(auxiliary_variable)) {
+                   auxiliary <- list()
+                 } else {
+                   auxiliary <-
+                     split(data[, auxiliary_variable],
+                           getElement(data, group_variable))
+                 }
+               }
+             }
+             if (!all(sapply(X = response, 
+                             FUN = function(response_i) {
+                               sapply(X = response_i,
+                                      FUN = function(response_ij) {
+                                        return(is.numeric(response_ij))
+                                      })
+                             }))) {
+               stop("Response variable(s) cannot contain non-numeric variables.")
+             }
+             if (length(auxiliary) > 0) {
+               if (!all(sapply(X = auxiliary, 
+                               FUN = function(auxiliary_i) {
+                                 sapply(X = auxiliary_i,
+                                        FUN = function(auxiliary_ij) {
+                                          return(is.numeric(auxiliary_ij))
+                                        })
+                               }))) {
+                 stop("Auxiliary variable(s) cannot contain non-numeric variables.")
                }
              }
              if (any(sapply(
@@ -1214,7 +1266,8 @@ lslx$set("public",
                stop("Weight variable cannot contain negative value.")
              }
              private$data <- lslxData$new(response = response,
-                                          weight = weight)
+                                          weight = weight,
+                                          auxiliary = auxiliary)
              if (verbose) {
                cat("An 'lslx' R6 class is initialized via 'data'.",
                    "\n")

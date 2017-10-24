@@ -1550,10 +1550,8 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
   
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
-  optimizer.update_residual_weight();
-  optimizer.update_moment_jacobian();
 
-  optimizer.update_loss_gradient();
+  optimizer.update_loss_gradient_direct();
   optimizer.update_regularizer_gradient();
   optimizer.update_objective_gradient();
   objective_gradient = optimizer.objective_gradient;

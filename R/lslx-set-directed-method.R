@@ -4,7 +4,7 @@ lslx$set("private",
                   right,
                   group,
                   type,
-                  verbose = T) {
+                  verbose = TRUE) {
            if (missing(left)) {
              stop("Argument 'left' must be given.")
            } else if(missing(right)) {
@@ -36,7 +36,7 @@ lslx$set("public",
          function(left,
                   right,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
@@ -52,7 +52,7 @@ lslx$set("public",
          function(left,
                   right,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
@@ -68,7 +68,7 @@ lslx$set("public",
          function(left,
                   right,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,

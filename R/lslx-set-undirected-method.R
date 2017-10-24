@@ -3,7 +3,7 @@ lslx$set("private",
          function(both,
                   group,
                   type,
-                  verbose=T) {
+                  verbose = TRUE) {
            if (is.na(private$model$reference_group)) {
              name <- combn(both,2,function(x) paste0(x[1],"<->",x[2]))
            } else if (missing(group)) {
@@ -24,7 +24,7 @@ lslx$set("public",
          "free_undirected",
          function(both,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
                                   type = "free",
@@ -37,7 +37,7 @@ lslx$set("public",
          "fix_undirected",
          function(both,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
                                   type = "fixed",
@@ -49,9 +49,11 @@ lslx$set("public",
 lslx$set("public",
          "penalize_undirected",
          function(both,
-                  group) {
+                  group,
+                  verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
-                                  type = "pen")
+                                  type = "pen",
+                                  verbose = verbose)
          }
 )
