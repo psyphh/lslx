@@ -40,16 +40,21 @@ lslxFitting$set("private",
                   } else {
                     self$control$response <- FALSE
                   }
+                  if (length(data$auxiliary) > 0) {
+                    self$control$auxiliary <- TRUE
+                  } else {
+                    self$control$auxiliary <- FALSE
+                  }
                   if (self$control$penalty_method %in% c("mcp", "lasso")) {
                     self$control$regularizer <- TRUE
                   } else {
                     self$control$regularizer <- FALSE
                   }
-                  if (self$control$regularizer) {
-                    if (self$control$penalty_method == "none") {
-                      self$control$algorithm <- "BFGS"
-                    } else {
+                  if (self$control$algorithm == "default") {
+                    if (self$control$regularizer) {
                       self$control$algorithm <- "fisher"
+                    } else {
+                      self$control$algorithm <- "BFGS"
                     }
                   } 
                   if (self$control$missing_method == "default") {
@@ -127,7 +132,6 @@ lslxFitting$set("private",
                           TRUE,
                           FALSE
                         ),
-                      
                       theta_start = model$specification$start,
                       identity_y2 = Matrix::Matrix(),
                       duplication_y = Matrix::Matrix(),
@@ -232,60 +236,81 @@ lslxFitting$set("private",
                       saturated_moment_acov = list()
                     )
                   if (self$control$response) {
-                    idc_use <-
+                    idc_complete <-
                       lapply(
                         X = data$pattern,
                         FUN = function(pattern_i) {
-                          idc_use_i <-
+                          idc_complete_i <-
                             apply(X = pattern_i,
                                   MARGIN = 1,
                                   FUN = prod)
-                          return(as.logical(idc_use_i))
+                          return(as.logical(idc_complete_i))
                         }
                       )
                     if (self$control$missing_method == "two_stage") {
-                      response <- data$response
-                      pattern <- data$pattern
+                      if (self$control$auxiliary) {
+                        response <- 
+                          mapply(FUN = function(response_i,
+                                                auxiliary_i) {
+                            return(cbind(response_i, auxiliary_i))
+                          },
+                          data$response,
+                          data$auxiliary,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE)
+                        pattern <- 
+                          mapply(FUN = function(pattern_i,
+                                                auxiliary_i) {
+                            return(cbind(pattern_i, !is.na(auxiliary_i)))
+                          },
+                          data$pattern,
+                          data$auxiliary,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE)
+                      } else {
+                        response <- data$response
+                        pattern <- data$pattern
+                      }
                       weight <- data$weight
                     } else if (self$control$missing_method == "listwise_deletion") {
                       response <- 
                         mapply(FUN = function(response_i,
-                                              idc_use_i) {
+                                              idc_complete_i) {
                           response_i <- 
-                            response_i[idc_use_i, , drop = FALSE]
+                            response_i[idc_complete_i, , drop = FALSE]
                           return(response_i)
                           },
                           data$response,
-                          idc_use,
+                          idc_complete,
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE)
                       pattern <- 
                         mapply(FUN = function(pattern_i,
-                                              idc_use_i) {
+                                              idc_complete_i) {
                           pattern_i <- 
-                            pattern_i[idc_use_i, , drop = FALSE]
+                            pattern_i[idc_complete_i, , drop = FALSE]
                           return(pattern_i)
                         },
                         data$pattern,
-                        idc_use,
+                        idc_complete,
                         SIMPLIFY = FALSE,
                         USE.NAMES = TRUE)
                       weight <- 
                         mapply(FUN = function(weight_i,
-                                              idc_use_i) {
-                          weight_i <- weight_i[idc_use_i]
+                                              idc_complete_i) {
+                          weight_i <- weight_i[idc_complete_i]
                           weight_i <- weight_i / sum(weight_i)
                           return(weight_i)
                         },
                         data$weight,
-                        idc_use,
+                        idc_complete,
                         SIMPLIFY = FALSE,
                         USE.NAMES = TRUE)
                     } else {
                     }
                     self$reduced_data$n_observation <-
                       sum(sapply(X = response, FUN = nrow))
-                    self$reduced_data$n_complete_observation <- sum(unlist(idc_use))
+                    self$reduced_data$n_complete_observation <- sum(unlist(idc_complete))
                     self$reduced_data$sample_proportion <-
                       lapply(
                         X = lapply(X = response, FUN = nrow),
@@ -382,15 +407,6 @@ lslxFitting$set("private",
                       iter_other_max = self$control$iter_other_max,
                       tol_other = self$control$tol_other
                     )
-                    self$reduced_data$saturated_cov <-
-                      lapply(
-                        X = self$reduced_data$saturated_cov,
-                        FUN = function(saturated_cov_i) {
-                          diag(saturated_cov_i) <-
-                            diag(saturated_cov_i) + self$control$ridge_cov
-                          return(saturated_cov_i)
-                        }
-                      )
                     m2_idx <-
                       lapply(
                         X = m_factor,
@@ -426,6 +442,73 @@ lslxFitting$set("private",
                       saturated_moment_acov = self$reduced_data$saturated_moment_acov
                     )
                     self$reduced_data$n_missing_pattern <- nlevels(unlist(m_factor)) 
+                    if (self$control$auxiliary) {
+                      y_name <- c(colnames(data$response[[1]]), colnames(data$auxiliary[[1]]))
+                    } else {
+                      y_name <- colnames(data$response[[1]])
+                    }
+                    y2_name <- outer(y_name, y_name, 
+                                     FUN = function(y_name_i, y_name_j) {
+                                       return(paste(y_name_i, y_name_j, sep = "*"))
+                                     } )
+                    y2_name <- y2_name[lower.tri(y2_name, diag = TRUE)]
+                    self$reduced_data$saturated_mean <-
+                      lapply(
+                        X = self$reduced_data$saturated_mean,
+                        FUN = function(saturated_mean_i) {
+                          rownames(saturated_mean_i) <- y_name
+                          return(saturated_mean_i)
+                        }
+                      )
+                    self$reduced_data$saturated_cov <-
+                      lapply(
+                        X = self$reduced_data$saturated_cov,
+                        FUN = function(saturated_cov_i) {
+                          diag(saturated_cov_i) <-
+                            diag(saturated_cov_i) + self$control$ridge_cov
+                          rownames(saturated_cov_i) <- 
+                            colnames(saturated_cov_i) <- y_name
+                          return(saturated_cov_i)
+                        }
+                      )
+                    self$reduced_data$saturated_moment_acov <-
+                      lapply(
+                        X = self$reduced_data$saturated_moment_acov,
+                        FUN = function(saturated_moment_acov_i) {
+                          rownames(saturated_moment_acov_i) <- 
+                            colnames(saturated_moment_acov_i) <- c(y_name, y2_name)
+                          return(saturated_moment_acov_i)
+                        }
+                      )
+                    if (self$control$auxiliary) {
+                      y_name <- colnames(data$response[[1]])
+                      y2_name <- outer(y_name, y_name, 
+                                       FUN = function(y_name_i, y_name_j) {
+                                         return(paste(y_name_i, y_name_j, sep = "*"))
+                                       } )
+                      y2_name <- y2_name[lower.tri(y2_name, diag = TRUE)]
+                      self$reduced_data$saturated_mean <-
+                        lapply(
+                          X = self$reduced_data$saturated_mean,
+                          FUN = function(saturated_mean_i) {
+                            return(saturated_mean_i[y_name, , drop = FALSE])
+                          }
+                        )
+                      self$reduced_data$saturated_cov <-
+                        lapply(
+                          X = self$reduced_data$saturated_cov,
+                          FUN = function(saturated_cov_i) {
+                            return(saturated_cov_i[y_name, y_name])
+                          }
+                        )
+                      self$reduced_data$saturated_moment_acov <-
+                        lapply(
+                          X = self$reduced_data$saturated_moment_acov,
+                          FUN = function(saturated_moment_acov_i) {
+                            return(saturated_moment_acov_i[c(y_name, y2_name), c(y_name, y2_name)])
+                          }
+                        )
+                    }
                   } else {
                     if (self$control$missing_method == "two_stage") {
                       stop("Argument 'missing_method' cannot be 'two_stage' when only moment data is available.")

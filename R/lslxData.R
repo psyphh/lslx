@@ -5,6 +5,7 @@ lslxData <-
       response = "list",
       pattern = "list",
       weight = "list",
+      auxiliary = "list",
       sample_cov = "list",
       sample_mean = "list",
       sample_size = "list"
@@ -17,12 +18,14 @@ lslxData$set("public",
              "initialize",
              function(response,
                       weight,
+                      auxiliary,
                       sample_cov,
                       sample_mean,
                       sample_size) {
                if (!missing(response)) {
                  self$response <- response
                  self$weight <- weight
+                 self$auxiliary <- auxiliary
                  self$pattern <- 
                    lapply(X = self$response,
                           FUN = function(response_i) {
@@ -46,20 +49,11 @@ lslxData$set("public",
                  self$weight <- 
                    mapply(FUN = function(weight_i,
                                          idc_use_i) {
-                     return(weight_i[idc_use_i])
+                     weight_i <- weight_i[idc_use_i]
+                     return(weight_i / sum(weight_i))
                    },
                    self$weight,
                    idc_use,
-                   SIMPLIFY = FALSE,
-                   USE.NAMES = TRUE)
-
-                 self$weight <- 
-                   mapply(FUN = function(weight_i,
-                                         weight_sum_i) {
-                     return(weight_i / weight_sum_i)
-                   },
-                   self$weight,
-                   lapply(X = self$weight, FUN = sum),
                    SIMPLIFY = FALSE,
                    USE.NAMES = TRUE)
                  
@@ -73,6 +67,18 @@ lslxData$set("public",
                    SIMPLIFY = FALSE,
                    USE.NAMES = TRUE)
                  
+                 if (length(auxiliary) > 0) {
+                   self$auxiliary <- 
+                     mapply(FUN = function(auxiliary_i,
+                                           idc_use_i) {
+                       return(auxiliary_i[idc_use_i, ])
+                     },
+                     self$auxiliary,
+                     idc_use,
+                     SIMPLIFY = FALSE,
+                     USE.NAMES = TRUE)
+                 } 
+                 
                  self$sample_cov <- list()
                  self$sample_mean <- list()
                  self$sample_size <-
@@ -81,6 +87,7 @@ lslxData$set("public",
                } else {
                  self$response <- list()
                  self$weight <- list()
+                 self$auxiliary <- list()
                  self$pattern <- list()
                  self$sample_cov <- sample_cov
                  self$sample_mean <- sample_mean

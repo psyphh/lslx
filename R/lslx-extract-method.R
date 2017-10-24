@@ -536,29 +536,6 @@ lslx$set("public",
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            loss_gradient <-
-             compute_loss_gradient_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           rownames(loss_gradient) <-
-             rownames(private$model$specification)
-           return(loss_gradient)
-         })
-
-
-lslx$set("public",
-         "extract_loss_gradient_direct",
-         function(selector,
-                  exclude_improper = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        exclude_improper = exclude_improper)
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           loss_gradient <-
              compute_loss_gradient_direct_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
@@ -570,6 +547,7 @@ lslx$set("public",
              rownames(private$model$specification)
            return(loss_gradient)
          })
+
 
 
 lslx$set("public",

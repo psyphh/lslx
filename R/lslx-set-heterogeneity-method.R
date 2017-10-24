@@ -3,7 +3,7 @@ lslx$set("private",
          function(block,
                   group,
                   type,
-                  verbose = T) {
+                  verbose = TRUE) {
            
            if (is.na(private$model$reference_group)){
              stop("Reference group is not specified.",
@@ -54,7 +54,7 @@ lslx$set("public",
          "free_heterogeneity",
          function(block,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_heterogeneity(block = block,
                                      group = group,
                                      type = "free",
@@ -67,7 +67,7 @@ lslx$set("public",
          "fix_heterogeneity",
          function(block,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_heterogeneity(block = block,
                                      group = group,
                                      type = "fixed",
@@ -80,7 +80,7 @@ lslx$set("public",
          "penalize_heterogeneity",
          function(block,
                   group,
-                  verbose = T) {
+                  verbose = TRUE) {
            private$set_heterogeneity(block = block,
                                      group = group,
                                      type = "pen",
