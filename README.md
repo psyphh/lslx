@@ -33,10 +33,10 @@ r6_lslx$summarize(selector)
 # Tutorial
 You can learn how to use `lslx` by examples with the vignettes.
 ``` r
-vignette("lslx-example-1")
-vignette("lslx-example-2")
-vignette("lslx-example-3")
-vignette("lslx-example-4")
+vignette("regression-analysis")
+vignette("factor-analysis")
+vignette("structural-equation-modeling")
+vignette("multigroup-analysis")
 ```
 Of course, help file is also available.
 ``` r

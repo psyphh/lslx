@@ -1078,7 +1078,7 @@ Yuan, K. H., & Hayashi, K. (2006). Standard errors in covariance structure model
 
 Yuan, K.-H., & Lu, L. (2008). SEM with missing data and unknown population distributions using two-stage ML: Theory and its application. Multivariate Behavioral Research, 43(4), 621–652.
 
-Yuan, G. X., Ho, C. H., & Lin, C. J. (2012). An Improved GLMNET for L1-regularized Logistic Regression. J. Mach. Learn. Res., 13(1), 1999–2030.
+Yuan, G. X., Ho, C. H., & Lin, C. J. (2012). An Improved GLMNET for L1-regularized Logistic Regression. Journal of Machine Learning Research, 13(1), 1999–2030.
 
 Zhang, C. H. (2010). Nearly unbiased variable selection under minimax concave penalty. Annals of Statistics, 38(2), 894–942.
 
