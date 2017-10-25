@@ -674,9 +674,9 @@ void lslxOptimizer::update_regularizer_gradient() {
   if (lambda > DBL_EPSILON) {
     for (i = 0; i < theta_name.size(); i++) {
       if (theta_is_pen[i]) {
-        if ((theta_value[i] <= (lambda * gamma)) & (theta_value[i] > 0)) {
+        if ((theta_value[i] <= (lambda * gamma)) & (theta_value[i] > DBL_EPSILON)) {
           regularizer_gradient(i, 0) = lambda - (theta_value[i] / gamma);
-        } else if ((- theta_value[i] <= (lambda * gamma)) & (theta_value[i] < 0)) {
+        } else if ((- theta_value[i] <= (lambda * gamma)) & (theta_value[i] < - DBL_EPSILON)) {
           regularizer_gradient(i, 0) = - lambda - (theta_value[i] / gamma);
         } else if ((theta_value[i] > (lambda * gamma)) | ((- theta_value[i]) > (lambda * gamma))) {
           regularizer_gradient(i, 0) = 0;
@@ -939,6 +939,7 @@ void lslxOptimizer::update_numerical_condition() {
       scaling_factor = NAN;      
     }
   } else {
+    degree_of_freedom_adj = NAN;
     scaling_factor = NAN;
   }
 }
