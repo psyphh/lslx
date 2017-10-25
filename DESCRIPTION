@@ -15,9 +15,9 @@ Imports: Rcpp,
     RcppEigen,
     R6,
     Matrix,
-    ggplot2
-Suggests: lavaan,
-    knitr,
+    ggplot2,
+    lavaan
+Suggests: knitr,
     rmarkdown
 VignetteBuilder: knitr
 URL: https://github.com/psyphh/lslx
