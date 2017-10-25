@@ -727,7 +727,7 @@ void lslxOptimizer::update_theta_direction() {
     for (i = 0; i < iter_in_max; i++) {
       for (j = 0; j < theta_name.size(); j++) {
         Eigen::Map<Eigen::VectorXd> d(Rcpp::as< Eigen::Map <Eigen::VectorXd> >(theta_direction));
-        double g_ij = g(j, 0) + (h * d)(j);
+        double g_ij = g(j, 0) + (h * d)(j, 0);
         double h_ij = h(j, j);
         if (lambda > DBL_EPSILON) {
           if (theta_is_free[j]) {
