@@ -76,7 +76,7 @@
 #' A naive method for penalty level selection is using information criteria.
 #' Huang, Chen, and Weng (2017) have shown the asymptotic properties of Akaike information criterion (AIC) and Bayesian information criterion (BIC) in selecting the penalty level.
 #' In \pkg{lslx}, infromation criteria other an AIC and BIC can be also used.
-#' However, the empirical performances of the included criteria should be further studied.
+#' However, the empirical performances of these included criteria should be further studied.
 #' Details of choosing an optimal penalty level can be found in the sections of Penalty Level Selection
 #' \cr
 #' \cr
@@ -324,9 +324,11 @@
 #' \deqn{objective(\theta, \lambda) = loss(\theta) + regularizer(\theta, \lambda)}
 #' where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, possibly lasso (Tibshirani, 1996) or mcp (Zhang, 2010), and \eqn{\lambda} is a regularization parameter.
 #' The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
-#' The algorithm can be thought as a quasi-Newton method with inner loop and outer loop.
+#' The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
 #' The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
-#' To sve the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden–Fletcher–Goldfarb–Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
+#' To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden–Fletcher–Goldfarb–Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
+#' Although the computational cost of BFGS approximation is much smaller than calculating expected hessian, 
+#' Our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
 #' The inner loop stops if the change of the derived direction is quite small.
 #' The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
 #' The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
@@ -356,6 +358,13 @@
 #' If the two-stage method is implemented, the standard error formula will be corrected for the presence of missing data (see Yuan & Lu, 2008 for technical details).
 #' \cr
 #' \cr
+#' So far, \pkg{lslx} doesn't include the full information maximum likelihood (FIML) method for missing values.
+#' One reason is that PL can be computationally intensive if many penalty levels are considered.
+#' The additional E-step in each iteration by FIML makes the problem worse.
+#' Another reason is that the two step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
+#' It seems that the implementation of FIML in PL may not bring further advantages.
+#' \cr
+#' \cr
 #'
 #'@section Penalty Level Selection:
 #' Penalty level selection in \pkg{lslx} is based on optimizing the value of some information criterion.
@@ -364,7 +373,6 @@
 #'   \tabular{lll}{
 #'     \code{aic} \tab Akaike information criterion (Akaike, 1974) \tab \eqn{loss(\theta) - (2 / N) * df(\theta) } \cr
 #'     \code{aic3} \tab Akaike information criterion with penalty being 3 (Sclove, 1987) \tab \eqn{loss(\theta) - (3 / N) * df(\theta) } \cr
-#'     \code{tic} \tab Takeuchi information criterion (Takeuchi, 1976) \tab \eqn{loss(\theta) - (2 / N) * df_adj(\theta) } \cr
 #'     \code{caic} \tab consistent Akaike information criterion (Bozdogan, 1987) \tab \eqn{loss(\theta) - ((log(N) + 1) / N) * df(\theta) } \cr
 #'     \code{bic} \tab Bayesian information criterion (Schwarz, 1978) \tab \eqn{loss(\theta) - (log(N) / N) * df(\theta) }  \cr
 #'     \code{abic} \tab adjusted Bayesian information criterion (Sclove, 1987) \tab \eqn{loss(\theta) - (log((N + 2) / 24 ) / N) * df(\theta) }  \cr
@@ -386,12 +394,14 @@
 #' \item{
 #' \eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - #(\theta)}
 #' }
-#' \item{
-#' \eqn{df_adj(\theta)}: the adjusted degree of freedom by considering model misspecification
-#' }
 #' }
 #' Note the the formula for calculating the information criteria in \pkg{lslx} are different to other softwares. 
 #' The loss function value is used to replaced the likelihood function value and hence the penalty term is also divided by sample size \eqn{N}.
+#' For each information criterion, a robust version is calculated if raw data is available.
+#' Their coreesponding names are \code{raic}, \code{raic3}, \code{rcaic}, \code{rbic}, \code{rabic}, and \code{rhbic} with "r" standing for "robust". 
+#' These robust criteria use the Satorra-Bentler scaling factor for correcting degree of freedom.
+#' For the case of normal data and correctly specified model, the two versions will be the same asymptotically.
+#'  
 #' 
 #' Huang, Chen, and Weng (2017) have study the asymptotic behaviors of \code{aic} and \code{bic} under penalized estimation.
 #' They show that under suitable conditions, \code{aic} can select a model with minimum espected loss and \code{bic} can choose the most parsimous one from models that attain the minimum espected loss.
@@ -500,7 +510,7 @@
 #'     \code{group_variable} \tab A \code{character} with length one to specify what variable is used for labeling group. \cr
 #'     \code{reference_group} \tab A \code{character} with length one to specify which group is set as reference. \cr
 #'     \code{weight_variable} \tab A \code{character} with length one to specify what variable is used for sampling weight. \cr
-#'     \code{auxiliary_variable} \tab A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments.
+#'     \code{auxiliary_variable} \tab A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments when missing data presents and two-step method is implemented.
 #'     Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.  \cr
 #'     \code{sample_cov} \tab A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.\cr
 #'     \code{sample_mean} \tab A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors. \cr
@@ -693,16 +703,19 @@
 #' However, the summarize method requires users to specify which selector should be used.
 #' The summary includes model information, model fit, coefficient estimates, and related statistical inference.
 #' \describe{
-#'   \item{\code{summarize(selector, standard_error = "default", alpha_level = .05, digit = 3, exclude_improper = TRUE, verbose = TRUE)}}{
+#'   \item{\code{summarize(selector, standard_error = "default", alpha_level = .05, digit = 3, simplify = FALSE, exclude_improper = TRUE)}}{
 #'   The method prints a summary for the fitting result under the given selector.
 #'   \tabular{ll}{
-#'     \code{selector} \tab A \code{character} to specify a selector for determining an optimal penalty level. Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}. \cr
+#'     \code{selector} \tab A \code{character} to specify a selector for determining an optimal penalty level. 
+#'     Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, 
+#'     or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}. \cr
 #'     \code{standard_error} \tab A \code{character} to specify the standard error to be used for hypothesis testing. 
 #'     The argument can be either \code{"sandwich"}, \code{"expected_fisher"}, and \code{"observed_fisher"}.
 #'     If it is specified as \code{"default"}, it will be set as 
 #'     (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available. \cr
 #'     \code{alpha_level} \tab A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals. \cr
 #'     \code{digit} \tab An \code{interger} to specify the number of digits to be displayed. \cr
+#'     \code{simplify} \tab A \code{logical} to specify whether the result should be simplified. \cr
 #'     \code{exclude_improper} \tab A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection. 
 #'     Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
 #'     non-convexity result is determined by checking the minimum of univariate approximate hessian.\cr
@@ -716,7 +729,8 @@
 #' So far, only tests for likelihood ratio (LR), RMSEA, and coefficients are available.
 #' For each test-related method, users should specify \code{selector} and \code{exclude_improper}.
 #' Argument \code{selector} is used to specify which model selection criterion should be used to choose an optimal penalty level.
-#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
+#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#' or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}.
 #' If no penalty is considered, \code{selector} can be omitted.
 #' Argument \code{exclude_improper} specifies whether non-convergence or non-convexity results should be removed for penalty level selection.
 #' A non-convergence result is determined by examine the maximal elements of absolute objective gradient and the number of iteration.
@@ -800,8 +814,9 @@
 #' \cr
 #' In extract-related methods, two common arguments should be introduced first: \code{selector} and \code{exclude_improper}.
 #' Argument \code{selector} is used to specify which information criterion should be used to choose an optimal penalty level.
-#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, or \code{"hbic"}.
-#' If no penalty is considered, \code{selector} can be omitted.
+#' Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#'  or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}.
+#' If no regularizer or only one penalty level is considered, argument \code{selector} can be omitted.
 #' Argument \code{exclude_improper} specifies whether non-convergence results or non-convexity results should be removed for penalty level selection.
 #' A non-convergence result determined by examine the maximal elements of absolute objective gradient and the number of iteration.
 #' A non-convexity result is determined by checking the minimum of univariate approximate hessian.
@@ -923,7 +938,9 @@
 #'
 #' Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics and standard errors in covariance structure analysis. 
 #' In A. von Eye & C. C. Clogg (Eds.), Latent variable analysis: Applications to developmental research (pp. 399–419). Thousand Oaks, CA: Sage.
-#'
+#' 
+#' Savalei, V. & Falk, C. F. (2014). Robust two-stage approach outperforms robust full information maximum likelihood with incomplete nonnormal data. Structural Equation Modeling: A Multidisciplinary Journal, 21(2), 280-302.
+#' 
 #' Savalei, V. & Bentler, P. M. (2009). A Two-Stage Approach to Missing Data: Theory and Application to Auxiliary Variables, Structural Equation Modeling: A Multidisciplinary Journal, 16(3), 477-497.
 #'
 #' Schwarz, G. (1978). Estimating the dimension of a model. The Annals of Statistics, 6(2), 461–464.
@@ -966,7 +983,7 @@
 #' y <~ x5 + x6 + x7 + x8 + x9 + x10
 #' '
 #'
-#' # create an lslx object via specified model and raw data
+#' # initialize an lslx object via specified model and raw data
 #' r6_lslx <- lslx$new(model = model,
 #'                     data = data)
 #'
@@ -995,11 +1012,9 @@
 #'
 #' r6_lslx <- lslx$new(model = model,
 #'                     data = lavaan::HolzingerSwineford1939)
-#'
 #' r6_lslx$fit(penalty_method = "mcp",
 #'             lambda_grid = seq(.02, .30, .02),
 #'             gamma_grid = c(5, 10))
-#'
 #' r6_lslx$summarize(selector = "bic")
 #'
 #'
@@ -1014,7 +1029,7 @@
 #' dem65 <= ind60 + dem60
 #' '
 #'
-#' # create an lslx object via specified model and sample covariance matrix
+#' # initialize an lslx object via specified model and sample covariance matrix
 #' r6_lslx <- lslx$new(model = model,
 #'                     sample_cov = cov(lavaan::PoliticalDemocracy),
 #'                     sample_size = nrow(lavaan::PoliticalDemocracy))
@@ -1029,19 +1044,18 @@
 #'
 #' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
 #'                 gamma_grid = Inf)
-#'
 #' r6_lslx$summarize(selector = "aic")
 #'
 #'
-#' ## Semi-Confirmatory Multigroup Factor Analysis ##
-#' # run `vignette("multigroup-analysis")` to see the vignette
-#' # School Pasteur is specified as reference
+#' ## Semi-Confirmatory Multi-Group Factor Analysis ##
+#' # run `vignette("multi-group-analysis")` to see the vignette
 #' model <-
 #' '
 #' visual  :=> fix(1) * x1 + x2 + x3
 #' textual :=> fix(1) * x4 + x5 + x6
 #' speed   :=> fix(1) * x7 + x8 + x9
 #' '
+#' # school is set as group variable and Pasteur is specified as reference
 #' r6_lslx <- lslx$new(model = model,
 #'                     data = lavaan::HolzingerSwineford1939,
 #'                     group_variable = "school",
@@ -1049,10 +1063,39 @@
 #'
 #' # penalize increment components of loadings in 'Grant-White'
 #' r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
-#'
 #' r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
-#'
 #' r6_lslx$summarize(selector = "bic")
+#' 
+#' 
+#' #' ## Semi-Confirmatory Factor Analysis with Missing Data ##
+#' # run `vignette("missing-data-analysis")` to see the vignette
+#' # create missing values for x5 and x9 by the code in package semTools
+#' data <- lavaan::HolzingerSwineford1939
+#' data$x5 <- ifelse(data$x1 <= quantile(data$x1, .3), NA, data$x5)
+#' data$age <- data$ageyr + data$agemo/12
+#' data$x9 <- ifelse(data$age <= quantile(data$age, .3), NA, data$x9)
+#' 
+#' model <-
+#' '
+#' visual  :=> x1 + x2 + x3
+#' textual :=> x4 + x5 + x6
+#' speed   :=> x7 + x8 + x9
+#' visual  :~> x4 + x5 + x6 + x7 + x8 + x9 
+#' textual :~> x1 + x2 + x3 + x7 + x8 + x9 
+#' speed   :~> x1 + x2 + x3 + x4 + x5 + x6 
+#' visual  <=> fix(1) * visual
+#' textual <=> fix(1) * textual
+#' speed   <=> fix(1) * speed
+#' '
+#' 
+#' # initialize an lslx object with specified auxiliary variables
+#' r6_lslx <- lslx$new(model = model,
+#'                     data = data,
+#'                     auxiliary_variable = c("ageyr", "agemo"))
+#' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+#'                 gamma_grid = c(5, 10))
+#' r6_lslx$summarize(selector = "bic")
+#'              
 
 
 
