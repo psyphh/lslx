@@ -356,6 +356,13 @@
 #' If the two-stage method is implemented, the standard error formula will be corrected for the presence of missing data (see Yuan & Lu, 2008 for technical details).
 #' \cr
 #' \cr
+#' So far, \pkg{lslx} doesn't include the full information maximum likelihood (FIML) method for missing values.
+#' One reason is that PL can be computationally intensive if many penalty levels are considered.
+#' The additional E-step in each iteration by FIML makes the problem worse.
+#' Another reason is that the two step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
+#' It seems that the implementation of FIML in PL may not bring further advantages.
+#' \cr
+#' \cr
 #'
 #'@section Penalty Level Selection:
 #' Penalty level selection in \pkg{lslx} is based on optimizing the value of some information criterion.
@@ -923,7 +930,9 @@
 #'
 #' Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics and standard errors in covariance structure analysis. 
 #' In A. von Eye & C. C. Clogg (Eds.), Latent variable analysis: Applications to developmental research (pp. 399–419). Thousand Oaks, CA: Sage.
-#'
+#' 
+#' Savalei, V. & Falk, C. F. (2014). Robust two-stage approach outperforms robust full information maximum likelihood with incomplete nonnormal data. Structural Equation Modeling: A Multidisciplinary Journal, 21(2), 280-302.
+#' 
 #' Savalei, V. & Bentler, P. M. (2009). A Two-Stage Approach to Missing Data: Theory and Application to Auxiliary Variables, Structural Equation Modeling: A Multidisciplinary Journal, 16(3), 477-497.
 #'
 #' Schwarz, G. (1978). Estimating the dimension of a model. The Annals of Statistics, 6(2), 461–464.
@@ -1033,8 +1042,8 @@
 #' r6_lslx$summarize(selector = "aic")
 #'
 #'
-#' ## Semi-Confirmatory Multigroup Factor Analysis ##
-#' # run `vignette("multigroup-analysis")` to see the vignette
+#' ## Semi-Confirmatory Multi-Group Factor Analysis ##
+#' # run `vignette("multi-group-analysis")` to see the vignette
 #' # School Pasteur is specified as reference
 #' model <-
 #' '

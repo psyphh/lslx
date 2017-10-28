@@ -36,7 +36,7 @@ You can learn how to use `lslx` by examples with the vignettes.
 vignette("regression-analysis")
 vignette("factor-analysis")
 vignette("structural-equation-modeling")
-vignette("multigroup-analysis")
+vignette("multi-group-analysis")
 ```
 Of course, help file is also available.
 ``` r
