@@ -67,10 +67,12 @@ public:
   
   double objective_gradient_abs_max, objective_hessian_convexity;
   int n_iter_out, n_nonzero_coefficient, degree_of_freedom;
-  double degree_of_freedom_adj, scaling_factor;
+  double robust_degree_of_freedom, scaling_factor;
   
-  double aic, aic3, tic, caic;
+  double aic, aic3, caic;
   double bic, abic, hbic;
+  double raic, raic3, rcaic;
+  double rbic, rabic, rhbic;
   double rmsea, srmr, cfi, nnfi;
   
   lslxOptimizer(Rcpp::List reduced_data,
@@ -926,12 +928,12 @@ void lslxOptimizer::update_numerical_condition() {
           n_moment, theta_name.size()) = moment_jacobian_i;
       }
       moment_jacobian_matrix = slice_col(moment_jacobian_matrix, idx_is_effective);
-      degree_of_freedom_adj = 0.5 * double(n_observation) * (saturated_moment_acov_matrix * 
+      robust_degree_of_freedom = 0.5 * double(n_observation) * (saturated_moment_acov_matrix * 
         (residual_weight_matrix - (residual_weight_matrix * moment_jacobian_matrix) *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix * moment_jacobian_matrix).inverse() *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix))).diagonal().sum();
       if (degree_of_freedom > 0) {
-        scaling_factor = degree_of_freedom_adj / degree_of_freedom;
+        scaling_factor = robust_degree_of_freedom / degree_of_freedom;
       } else {
         scaling_factor = NAN;
       }
@@ -939,7 +941,7 @@ void lslxOptimizer::update_numerical_condition() {
       scaling_factor = NAN;      
     }
   } else {
-    degree_of_freedom_adj = NAN;
+    robust_degree_of_freedom = NAN;
     scaling_factor = NAN;
   }
 }
@@ -950,12 +952,20 @@ void lslxOptimizer::update_numerical_condition() {
 void lslxOptimizer::update_information_criterion() {
   aic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom);
   aic3 = loss_value - (3.0 / double(n_observation)) * double(degree_of_freedom);
-  tic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom_adj);
   caic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(degree_of_freedom);
   
   bic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(degree_of_freedom);
   abic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(degree_of_freedom);
   hbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(degree_of_freedom);
+  
+  raic = loss_value - (2.0 / double(n_observation)) * double(robust_degree_of_freedom);
+  raic3 = loss_value - (3.0 / double(n_observation)) * double(robust_degree_of_freedom);
+  rcaic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(robust_degree_of_freedom);
+  
+  rbic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(robust_degree_of_freedom);
+  rabic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(robust_degree_of_freedom);
+  rhbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(robust_degree_of_freedom);
+  
 }
 
 
@@ -1032,7 +1042,7 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
       _["loss_value"] = loss_value,
       _["n_nonzero_coefficient"] = n_nonzero_coefficient,
       _["degree_of_freedom"] = degree_of_freedom,
-      _["degree_of_freedom_adj"] = degree_of_freedom_adj,
+      _["robust_degree_of_freedom"] = robust_degree_of_freedom,
       _["scaling_factor"] = scaling_factor);
   return Rcpp::clone(numerical_condition);
 }
@@ -1042,11 +1052,16 @@ Rcpp::NumericVector lslxOptimizer::extract_information_criterion() {
     Rcpp::NumericVector::create(
       _["aic"] = aic,
       _["aic3"] = aic3,
-      _["tic"] = tic,
       _["caic"] = caic,
       _["bic"] = bic,
       _["abic"] = abic,
-      _["hbic"] = hbic);
+      _["hbic"] = hbic,
+      _["raic"] = raic,
+      _["raic3"] = raic3,
+      _["rcaic"] = rcaic,
+      _["rbic"] = rbic,
+      _["rabic"] = rabic,
+      _["rhbic"] = rhbic);
   return Rcpp::clone(information_criterion);
 }
 

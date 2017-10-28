@@ -123,7 +123,7 @@ lslx$set("public",
                "loss value",
                "number of non-zero coefficient",
                "degree of freedom",
-               "degree of freedom adjusted",
+               "robust degree of freedom",
                "scaling factor"
              )
            information_criterion <-
@@ -137,11 +137,16 @@ lslx$set("public",
              c(
                "Akaike information criterion (aic)",
                "Akaike information criterion with penalty being 3 (aic3)",
-               "Takeuchi information criterion (tic)",
                "consistent Akaike information criterion (caic)",
-               "Bayesian information criterion (bic))",
+               "Bayesian information criterion (bic)",
                "adjusted Bayesian information criterion (abic)",
-               "Haughton Bayesian information criterion (hbic)"
+               "Haughton Bayesian information criterion (hbic)",
+               "robust Akaike information criterion (raic)",
+               "robust Akaike information criterion with penalty being 3 (raic3)",
+               "robust consistent Akaike information criterion (rcaic)",
+               "robust Bayesian information criterion (rbic)",
+               "robust adjusted Bayesian information criterion (rabic)",
+               "robust Haughton Bayesian information criterion (rhbic)"
              )
            fit_indice <-
              formatC(
