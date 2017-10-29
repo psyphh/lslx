@@ -1016,6 +1016,7 @@ visual  :=> fix(1) * x1 + x2 + x3
 textual :=> fix(1) * x4 + x5 + x6
 speed   :=> fix(1) * x7 + x8 + x9
 '
+
 # school is set as group variable and Pasteur is specified as reference
 r6_lslx <- lslx$new(model = model,
                     data = lavaan::HolzingerSwineford1939,
