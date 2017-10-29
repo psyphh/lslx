@@ -45,7 +45,11 @@ speed   <=> fix(1) * speed
 ```
 To initialize an `lslx` object with auxiliary variables, we need to specify the `auxiliary_variable` argument.
 `auxiliary_variable` argument only accepts numeric variables.
+<<<<<<< HEAD
 If any categorical variable is considered as a valid auxiliary variable, user should first transform it to a set of dummy variables (see `model.matrix`).
+=======
+If any categorical variable ia considered as a valid auxiliary variable, user should transform it as a set of dummy variables first (see `model.matrix`).
+>>>>>>> 46a5d6cc4222d4056ee87753c4601f3ed13c38cd
 ```{r comment = "", message = FALSE}
 library(lslx)
 r6_lslx <- lslx$new(model = model,
@@ -55,7 +59,11 @@ r6_lslx <- lslx$new(model = model,
 
 ## Model Fitting
 So far, the specified auxiliary variables are only stored in `lslx` object. 
+<<<<<<< HEAD
 They are actually used after implementing the `fit` related methods.
+=======
+They are only used after implementing the `fit` related methods.
+>>>>>>> 46a5d6cc4222d4056ee87753c4601f3ed13c38cd
 ```{r comment = "", message = FALSE}
 r6_lslx$fit(penalty_method = "mcp",
             lambda_grid = seq(.02, .30, .02),
@@ -68,11 +76,14 @@ However, listwise deletion has no theoretical advantages over the two step metho
 
 ## Model Summarizing
 The following code summarize the fitting result under the penalty level selected by Bayesian information criterion.
+<<<<<<< HEAD
 The `number of missing pattern` shows how many missing patterns present in the data set (include the complete pattern).
 If the `lslx` object is initialized via raw data, by default, a corrected sandwich standard error will be used for coefficient test.
 The correction is based on the asymptotic covariance of saturated derived by full information maximum likelihood.
 Also, the mean adjusted likelihood ratio test is based on this quantity.
 For the references, pleases see the Section of Missing Value in `?lslx`
+=======
+>>>>>>> 46a5d6cc4222d4056ee87753c4601f3ed13c38cd
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
 r6_lslx$summarize(selector = "bic")
 ```

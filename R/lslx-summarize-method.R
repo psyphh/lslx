@@ -3,6 +3,7 @@ lslx$set("public",
          function(selector,
                   standard_error = "default",
                   alpha_level = .05,
+                  simplify = FALSE,
                   digit = 3,
                   simplify = FALSE,
                   exclude_improper = TRUE) {

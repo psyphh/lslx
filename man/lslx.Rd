@@ -1010,6 +1010,10 @@ r6_lslx$summarize(selector = "aic")
 
 ## Semi-Confirmatory Multi-Group Factor Analysis ##
 # run `vignette("multi-group-analysis")` to see the vignette
+<<<<<<< HEAD
+=======
+# School Pasteur is specified as reference
+>>>>>>> 46a5d6cc4222d4056ee87753c4601f3ed13c38cd
 model <-
 '
 visual  :=> fix(1) * x1 + x2 + x3
