@@ -57,7 +57,11 @@ compute_saturated_moment_cpp <- function(y_obs, w, m_idx, saturated_mean, satura
     invisible(.Call('_lslx_compute_saturated_moment_cpp', PACKAGE = 'lslx', y_obs, w, m_idx, saturated_mean, saturated_cov, iter_other_max, tol_other))
 }
 
-compute_saturated_moment_acov_cpp <- function(y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov) {
-    invisible(.Call('_lslx_compute_saturated_moment_acov_cpp', PACKAGE = 'lslx', y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov))
+compute_saturated_moment_acov_response_cpp <- function(y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov) {
+    invisible(.Call('_lslx_compute_saturated_moment_acov_response_cpp', PACKAGE = 'lslx', y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov))
+}
+
+compute_saturated_moment_acov_moment_cpp <- function(n_observation, sample_proportion, saturated_cov, saturated_moment_acov) {
+    invisible(.Call('_lslx_compute_saturated_moment_acov_moment_cpp', PACKAGE = 'lslx', n_observation, sample_proportion, saturated_cov, saturated_moment_acov))
 }
 
