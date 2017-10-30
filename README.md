@@ -23,7 +23,7 @@ r6_lslx <- lslx$new(model, data)
 ```
 2. Fit the specified model to the imported data with specified fitting control.
 ``` r
-r6_lslx$fit(penalty_method, lambda_grid, gamma_grid)
+r6_lslx$fit(penalty_method, lambda_grid, delta_grid)
 ```
 3. Summarize the fitting results with specified selector.
 ``` r
