@@ -45,7 +45,7 @@ speed   <=> fix(1) * speed
 ```
 To initialize an `lslx` object with auxiliary variables, we need to specify the `auxiliary_variable` argument.
 `auxiliary_variable` argument only accepts numeric variables.
-If any categorical variable ia considered as a valid auxiliary variable, user should transform it as a set of dummy variables first (see `model.matrix`).
+If any categorical variable ia considered as a valid auxiliary variable, user should transform it as a set of dummy variables first. One possible method is using `model.matrix` function.
 ```{r comment = "", message = FALSE}
 library(lslx)
 r6_lslx <- lslx$new(model = model,
@@ -67,12 +67,12 @@ Another missing method in the current version is listwise deletion.
 However, listwise deletion has no theoretical advantages over the two step method.
 
 ## Model Summarizing
-The following code summarize the fitting result under the penalty level selected by Bayesian information criterion.
+The following code summarizes the fitting result under the penalty level selected by Bayesian information criterion (BIC).
 The `number of missing pattern` shows how many missing patterns present in the data set (include the complete pattern).
 If the `lslx` object is initialized via raw data, by default, a corrected sandwich standard error will be used for coefficient test.
 The correction is based on the asymptotic covariance of saturated derived by full information maximum likelihood.
 Also, the mean adjusted likelihood ratio test is based on this quantity.
-For the references, pleases see the Section of Missing Value in `?lslx`
+For the reference, please see the section of Missing Data in `?lslx`
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
 r6_lslx$summarize(selector = "bic")
 ```

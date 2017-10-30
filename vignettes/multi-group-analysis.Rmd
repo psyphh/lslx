@@ -64,13 +64,13 @@ Note that parameters in `Grant-White` now reflect differences since `Pasteur` is
 r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
 r6_lslx$penalize_heterogeneity(block = "y<-1", group = "Grant-White")
 ```
-Since the homogeneity of latent factor means may not be a reasonable assumtion when examinning imeasurement invariance, the following code relax the assumption of homogeneous latent means
+Since the homogeneity of latent factor means may not be a reasonable assumtion when examinning measurement invariance, the following code relaxes this assumption
 ```{r comment = "", message = FALSE}
 r6_lslx$free_directed(left = c("visual", "textual", "speed"),
                       right = "1",
                       group = "Grant-White")
 ```
-To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
+To see more methods to modify a specified model, please check the section of Set-Related Method via `?lslx`. 
 
 
 
