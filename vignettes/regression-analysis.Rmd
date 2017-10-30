@@ -93,19 +93,19 @@ r6_lslx$plot_numerical_condition()
 
 
 The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
-The plot shows that an optimal value of lambda is `0.15`.
+The plot shows that an optimal value of lambda is any value larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_information_criterion()
 ```
 
 The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-We can see that all the coefficients become zero when the value of lambda is larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_fit_indice()
 ```
 
 The method `plot_coefficient` shows the solution path of coefficients in the given block.
 The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the regression coeffcients from observed variables to observed variables.
+We can see that all the regression coefficients become zero when the value of lambda is larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_coefficient(block = "y<-y")
 ```
