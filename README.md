@@ -37,6 +37,7 @@ vignette("regression-analysis")
 vignette("factor-analysis")
 vignette("structural-equation-modeling")
 vignette("multi-group-analysis")
+vignette("missing-data-analysis")
 ```
 Of course, help file is also available.
 ``` r
