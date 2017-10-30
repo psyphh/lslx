@@ -804,7 +804,7 @@ void lslxOptimizer::update_theta_value() {
   double objective_value_old = objective_value;
   double regularizer_value_old = regularizer_value;
   double step_size_i;
-  double regularizer_value_0;
+  double regularizer_value_0 = regularizer_value;
   int i;
   for (i = 0; i < iter_armijo_max; i++) {
     step_size_i = std::pow(step_size, i);
@@ -1746,7 +1746,7 @@ void compute_saturated_moment_acov_response_cpp(
     hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
 
     duplication_i = create_duplication(n_response_i);
-    if (y_obs_i.size() == 1 & (Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i) {
+    if ((y_obs_i.size() == 1) & ((Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i)) {
       y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[0]);
       w_ij = Rcpp::as<Eigen::VectorXd>(w_i[0]);
       sample_size_ij = y_obs_ij.rows();
