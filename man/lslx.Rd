@@ -1025,6 +1025,14 @@ r6_lslx <- lslx$new(model = model,
 
 # penalize increment components of loadings in 'Grant-White'
 r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
+
+# penalize increment components of intercepts of responses in 'Grant-White'
+r6_lslx$penalize_heterogeneity(block = "y<-1", group = "Grant-White")
+
+# penalize increment components of means of latent factors in 'Grant-White'
+r6_lslx$free_directed(left = c("visual", "textual", "speed"),
+                      right = "1",
+                      group = "Grant-White")
 r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
 r6_lslx$summarize(selector = "bic")
 

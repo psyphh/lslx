@@ -72,7 +72,7 @@ All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 Unlike traditional SEM analysis, `lslx` fit the model into data under all the penalty levels considered.
 To summarize the fitting result, a selector to determine an optimal penalty level must be specified.
 Availble selectors can be found in the section of Penalty Level Selection via `?lslx`.
-The following code summarize the fitting result under the penalty level selected by Akaike information criterion.
+The following code summarize the fitting result under the penalty level selected by Akaike information criterion (AIC).
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
 r6_lslx$summarize(selector = "aic")
 ```
@@ -87,32 +87,34 @@ However, it may not be valid after selecting an optimal penalty level.
 The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
 The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
 The plot can be used to evaluate the quality of numerical optimization.
+`n_iter_out` shows that the algorithm converges quickly under all the penalty levels.
+`objective_gradient_abs_max` and `objective_hessian_convexity` indicate that the obtained coefficients are valid minimizers under all the penalty levels.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_numerical_condition()
 ```
 
 
 The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
-The plot shows that an optimal value of lambda is `0.15`.
+The plot shows that an optimal value of lambda is any value larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_information_criterion()
 ```
 
 The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-We can see that all the coefficients become zero when the value of lambda is larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_fit_indice()
 ```
 
 The method `plot_coefficient` shows the solution path of coefficients in the given block.
 The following code plots the solution paths of all coefficients in the block `y<-y`, which contains all the regression coeffcients from observed variables to observed variables.
+We can see that all the regression coefficients become zero when the value of lambda is larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_coefficient(block = "y<-y")
 ```
 
 ## Objects Extraction
 In `lslx`, many quantities related to SEM can be extracted by extract-related method.
-For example, the coefficient can be obtained by
+For example, the coefficient under the penalty level selected by `aic` can be obtained by
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$extract_coefficient(selector = "aic")
 ```

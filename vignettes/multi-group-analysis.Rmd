@@ -56,13 +56,23 @@ Hence, the parameters in `Grant-White` now reflect differences from the referenc
 
 
 ## Model Respecification
-After an `lslx` object is initialized, model can be respecified by `free_heterogeneity`, `fix_heterogeneity`, and `penalize_heterogeneity` methods.
-The following code sets `x2<-visual`, `x3<-visual`, `x5<-textual`, `x6<-textual`, `x8<-speed`, and `x9<-speed` in `Grant-White` as penalized parameters.
+After an `lslx` object is initialized, the heterogeneity of a multi-group model can be quickly respecified by `free_heterogeneity`, `fix_heterogeneity`, and `penalize_heterogeneity` methods.
+The following code sets `x2<-visual`, `x3<-visual`, `x5<-textual`, `x6<-textual`, `x8<-speed`, `x9<-speed`, and 
+`x2<-1`, `x3<-1`, `x5<-1`, `x6<-1`, `x8<-1`, `x9<-1` in `Grant-White` as penalized parameters.
 Note that parameters in `Grant-White` now reflect differences since `Pasteur` is set as reference.
 ```{r comment = "", message = FALSE}
 r6_lslx$penalize_heterogeneity(block = "y<-f", group = "Grant-White")
+r6_lslx$penalize_heterogeneity(block = "y<-1", group = "Grant-White")
+```
+Since the homogeneity of latent factor means may not be a reasonable assumtion when examinning imeasurement invariance, the following code relax the assumption of homogeneous latent means
+```{r comment = "", message = FALSE}
+r6_lslx$free_directed(left = c("visual", "textual", "speed"),
+                      right = "1",
+                      group = "Grant-White")
 ```
 To see more methods for respecifying model, please check the section of Set-Related Method via `?lslx`. 
+
+
 
 
 ## Model Fitting
@@ -84,6 +94,7 @@ The following code summarize the fitting result under the penalty level selected
 r6_lslx$summarize(selector = "bic")
 ```
 In this example, we can see that all of the loadings are invariant across the two groups.
+However, the intercepts of `x3` and `x7` seem to be not invariant.
 The `summarize` method also shows the result of significance tests for the coefficients.
 In `lslx`, the default standard errors are calculated based on sandwich formula whenever raw data is available.
 It is generally valid even when the model is misspecified and the data is not normal.
