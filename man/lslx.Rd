@@ -1037,7 +1037,7 @@ r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
 r6_lslx$summarize(selector = "bic")
 
 
-#' ## Semi-Confirmatory Factor Analysis with Missing Data ##
+## Semi-Confirmatory Factor Analysis with Missing Data ##
 # run `vignette("missing-data-analysis")` to see the vignette
 # create missing values for x5 and x9 by the code in package semTools
 data <- lavaan::HolzingerSwineford1939
@@ -1065,7 +1065,6 @@ r6_lslx <- lslx$new(model = model,
 r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
                 delta_grid = c(5, 10))
 r6_lslx$summarize(selector = "bic")
-             
 }
 \references{
 Akaike, H. (1974). A new look at the statistical model identification. IEEE Transactionson Automatic Control, 19(6), 716–723.
