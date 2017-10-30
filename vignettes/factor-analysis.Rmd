@@ -70,10 +70,10 @@ After an `lslx` object is initialized, method `fit` can be used to fit the speci
 ```{r comment = "", message = FALSE}
 r6_lslx$fit(penalty_method = "mcp",
              lambda_grid = seq(.02, .30, .02),
-             gamma_grid = c(5, 10))
+             delta_grid = c(5, 10))
 ```
-The fitting process requires users to specify the penalty method (argument `penalty_method`) and the considerd penalty levels (argument `lambda_grid` and `gamma_grid`).
-In this example, the `mcp` penalty is implemented on the lambda grid `seq(.02, .30, .02)` and gamma grid `c(5, 10)`.
+The fitting process requires users to specify the penalty method (argument `penalty_method`) and the considerd penalty levels (argument `lambda_grid` and `delta_grid`).
+In this example, the `mcp` penalty is implemented on the lambda grid `seq(.02, .30, .02)` and delta grid `c(5, 10)`.
 Note that in this example `lambda = 0` is not considered because it may result in unidentified result.
 All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 

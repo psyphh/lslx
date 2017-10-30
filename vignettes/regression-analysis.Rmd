@@ -99,7 +99,7 @@ r6_lslx$plot_information_criterion()
 ```
 
 The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-We can see that all the coefficients become zero when the value of gamma is larger than `0.15`.
+We can see that all the coefficients become zero when the value of lambda is larger than `0.15`.
 ```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
 r6_lslx$plot_fit_indice()
 ```

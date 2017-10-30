@@ -1,12 +1,12 @@
 lslx$set("public",
          "fit_mcp",
          function(lambda_grid = 0,
-                  gamma_grid = Inf,
+                  delta_grid = Inf,
                   ...) {
            self$fit(
              penalty_method = "mcp",
              lambda_grid = lambda_grid,
-             gamma_grid = gamma_grid,
+             delta_grid = delta_grid,
              ...
            )
          })
@@ -24,7 +24,7 @@ lslx$set("public",
          "fit",
          function(penalty_method = "none",
                   lambda_grid = 0,
-                  gamma_grid = Inf,
+                  delta_grid = Inf,
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
@@ -47,7 +47,7 @@ lslx$set("public",
            } else {
              if (penalty_method == "none") {
                lambda_grid <- 0
-               gamma_grid <- Inf
+               delta_grid <- Inf
              }
              if (penalty_method == "lasso") {
                if (any(lambda_grid < 0)) {
@@ -55,7 +55,7 @@ lslx$set("public",
                    "When argument 'penalty_method' is set as 'lasso', any element in argument 'lambda_grid' cannot be smaller than 0."
                  )
                }
-               gamma_grid <- Inf
+               delta_grid <- Inf
              }
              if (penalty_method == "mcp") {
                if (any(lambda_grid < 0)) {
@@ -63,9 +63,9 @@ lslx$set("public",
                    "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
                  )
                }
-               if (any(gamma_grid < 1)) {
+               if (any(delta_grid < 1)) {
                  stop(
-                   "When argument 'penalty_method' is set as 'mcp', any element in argument 'gamma_grid' cannot be smaller than 1."
+                   "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' cannot be smaller than 1."
                  )
                }
              }
@@ -119,7 +119,7 @@ lslx$set("public",
              list(
                penalty_method = penalty_method,
                lambda_grid = lambda_grid,
-               gamma_grid = gamma_grid,
+               delta_grid = delta_grid,
                missing_method = missing_method,
                start_method = start_method,
                algorithm = algorithm,
@@ -161,7 +161,7 @@ lslx$set("public",
                sapply(
                  X = private$fitting$fitted_result$numerical_condition,
                  FUN = function(x) {
-                   getElement(x, "gamma")
+                   getElement(x, "delta")
                  }
                )
              )

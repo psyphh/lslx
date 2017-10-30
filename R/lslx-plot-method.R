@@ -50,7 +50,7 @@ lslx$set("public",
                }
              ))
            
-           df_for_plot$gamma <-
+           df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
@@ -60,7 +60,7 @@ lslx$set("public",
            
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line() +
-             ggplot2::facet_grid(condition ~ gamma,
+             ggplot2::facet_grid(condition ~ delta,
                                  scales = "free_y") +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
@@ -119,7 +119,7 @@ lslx$set("public",
                }
              ))
            
-           df_for_plot$gamma <-
+           df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
@@ -129,7 +129,7 @@ lslx$set("public",
            
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
-             ggplot2::facet_grid(. ~ gamma, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(. ~ delta, labeller = ggplot2::label_both) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)
@@ -181,7 +181,7 @@ lslx$set("public",
                  x[2]
                }
              ))
-           df_for_plot$gamma <-
+           df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
@@ -190,7 +190,7 @@ lslx$set("public",
              ))
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = indice)) +
-             ggplot2::facet_grid(. ~ gamma, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(. ~ delta, labeller = ggplot2::label_both) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)
@@ -286,7 +286,7 @@ lslx$set("public",
                }
              ))
            
-           df_for_plot$gamma <-
+           df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
@@ -296,7 +296,7 @@ lslx$set("public",
            
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = estimate)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = relation)) +
-             ggplot2::facet_grid(group ~ gamma, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(group ~ delta, labeller = ggplot2::label_both) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)

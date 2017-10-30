@@ -59,11 +59,11 @@ lslx$set("public",
                  ifelse(private$fitting$control$penalty_method != "mcp",
                         "none",
                         ifelse(
-                          length(private$fitting$control$gamma_grid) == 1,
-                          private$fitting$control$gamma_grid,
+                          length(private$fitting$control$delta_grid) == 1,
+                          private$fitting$control$delta_grid,
                           paste(
-                            min(private$fitting$control$gamma_grid),
-                            max(private$fitting$control$gamma_grid),
+                            min(private$fitting$control$delta_grid),
+                            max(private$fitting$control$delta_grid),
                             sep = " - "
                           )
                         )),
@@ -84,7 +84,7 @@ lslx$set("public",
              c(
                "penalty method",
                "lambda grid",
-               "gamma grid",
+               "delta grid",
                "algorithm",
                "missing method",
                "tolerance for convergence"
@@ -120,14 +120,14 @@ lslx$set("public",
              ifelse(private$fitting$control$penalty_method == "none",
                     "none",
                     numerical_condition[["lambda"]])
-           numerical_condition[["gamma"]] <- 
+           numerical_condition[["delta"]] <- 
              ifelse(private$fitting$control$penalty_method != "mcp",
                     "none",
-                    numerical_condition[["gamma"]])
+                    numerical_condition[["delta"]])
            names(numerical_condition) <-
              c(
                "lambda",
-               "gamma",
+               "delta",
                "objective value",
                "objective gradient absolute maximum",
                "objective hessian convexity",

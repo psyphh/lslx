@@ -22,7 +22,7 @@
 #' \item {
 #' Fit the specified model to the imported data with given fitting control. \cr
 #'
-#' \code{r6_lslx$fit(penalty_method, lambda_grid, gamma_grid)}
+#' \code{r6_lslx$fit(penalty_method, lambda_grid, delta_grid)}
 #' }
 #'
 #' \item{
@@ -640,7 +640,7 @@
 #' Fitting results will be stored in \code{fitting} and can be used for further summary by member functions.
 #'
 #' \describe{
-#'   \item{\code{fit(penalty_method = "none", lambda_grid = 0, gamma_grid = Inf, 
+#'   \item{\code{fit(penalty_method = "none", lambda_grid = 0, delta_grid = Inf, 
 #'   algorithm = "default", missing_method = "default", start_method = "default",
 #'   iter_out_max = 100L, iter_in_max = 50L, iter_other_max = 500L, iter_armijo_max = 100L, 
 #'   tol_out = 1e-4, tol_in = 1e-4, tol_other = 1e-4, step_size = 0.5, armijo = 1e-5, 
@@ -651,7 +651,7 @@
 #'     \code{penalty_method} \tab A \code{character} to specify the penalty method. 
 #'     The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.    \cr
 #'     \code{lambda_grid} \tab A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. \cr
-#'     \code{gamma_grid} \tab A \code{numeric} with values larger than one for specifying the non-convexity \code{"mcp"}. \cr
+#'     \code{delta_grid} \tab A \code{numeric} with values larger than one for specifying the non-convexity \code{"mcp"}. \cr
 #'     \code{algorithm} \tab A \code{character} to determine the method of optimization. 
 #'     The current version supports \code{"BFGS"} and \code{"fisher"}. 
 #'     If the argument is set as \code{"default"}, then (1) \code{"BFGS"} will be implemented if no penalty is considered; 
@@ -687,11 +687,11 @@
 #'   Argument \code{...} can be used to specify other control parameters in \code{fit()} method.
 #'   }
 #'
-#'   \item{\code{fit_mcp(lambda_grid = 0, gamma_grid = Inf, ...)}}{
+#'   \item{\code{fit_mcp(lambda_grid = 0, delta_grid = Inf, ...)}}{
 #'   The method fits the specified model to data by minimizing ML loss function with mcp (Zhang, 2010).
 #'   It is a user friendly wrapper for \code{fit()} method with argument \code{penalty_method = "mcp"}.
 #'   Argument \code{lambda_grid} is a non-negative \code{numeric} to specify the penalty levels under consideration.
-#'   Argument \code{gamma_grid} is a non-negative \code{numeric} larger than one to specify the values of parameter controlling the non-convexity of MCP.
+#'   Argument \code{delta_grid} is a non-negative \code{numeric} larger than one to specify the values of parameter controlling the non-convexity of MCP.
 #'   Argument \code{...} can be used to specify other control parameters in \code{fit()} method.
 #'   }
 #' }
@@ -1014,7 +1014,7 @@
 #'                     data = lavaan::HolzingerSwineford1939)
 #' r6_lslx$fit(penalty_method = "mcp",
 #'             lambda_grid = seq(.02, .30, .02),
-#'             gamma_grid = c(5, 10))
+#'             delta_grid = c(5, 10))
 #' r6_lslx$summarize(selector = "bic")
 #'
 #'
@@ -1043,7 +1043,7 @@
 #'                                       "y6<->y8"))
 #'
 #' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
-#'                 gamma_grid = Inf)
+#'                 delta_grid = Inf)
 #' r6_lslx$summarize(selector = "aic")
 #'
 #'
@@ -1094,7 +1094,7 @@
 #'                     data = data,
 #'                     auxiliary_variable = c("ageyr", "agemo"))
 #' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
-#'                 gamma_grid = c(5, 10))
+#'                 delta_grid = c(5, 10))
 #' r6_lslx$summarize(selector = "bic")
 #'              
 

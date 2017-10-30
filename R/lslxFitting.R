@@ -33,8 +33,8 @@ lslxFitting$set("private",
                   self$control <- control
                   self$control$lambda_grid <-
                     sort(self$control$lambda_grid, decreasing = TRUE)
-                  self$control$gamma_grid <-
-                    sort(self$control$gamma_grid, decreasing = TRUE)
+                  self$control$delta_grid <-
+                    sort(self$control$delta_grid, decreasing = TRUE)
                   if (length(data$response) > 0) {
                     self$control$response <- TRUE
                   } else {
@@ -911,24 +911,24 @@ lslxFitting$set("private",
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *
-                        length(self$control$gamma_grid)
+                        length(self$control$delta_grid)
                     )
                   self$fitted_result$information_criterion <-
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *
-                        length(self$control$gamma_grid)
+                        length(self$control$delta_grid)
                     )
                   self$fitted_result$fit_indice <-
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *
-                        length(self$control$gamma_grid)
+                        length(self$control$delta_grid)
                     )
                   self$fitted_result$coefficient <-
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *
-                        length(self$control$gamma_grid)
+                        length(self$control$delta_grid)
                     )
                 })

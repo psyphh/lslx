@@ -20,7 +20,7 @@ public:
   bool response, regularizer;
   
   std::string regularizer_type;
-  double lambda, gamma;
+  double lambda, delta;
   int iter_out;
   
   int n_observation;
@@ -80,7 +80,7 @@ public:
                 Rcpp::List control,
                 Rcpp::List supplied_result);
   
-  void set_regularizer(Rcpp::CharacterVector regularizer_type_, double lambda_, double gamma_);
+  void set_regularizer(Rcpp::CharacterVector regularizer_type_, double lambda_, double delta_);
   void set_theta_value(Rcpp::NumericVector theta_value_);
   void update_coefficient_matrice();
   void update_implied_moment();
@@ -230,10 +230,10 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
 
 void lslxOptimizer::set_regularizer(Rcpp::CharacterVector regularizer_type_,
                                     double lambda_, 
-                                    double gamma_) {
+                                    double delta_) {
   regularizer_type = Rcpp::as<std::string>(regularizer_type_[0]);
   lambda = lambda_;
-  gamma = gamma_;
+  delta = delta_;
 }
 
 void lslxOptimizer::set_theta_value(Rcpp::NumericVector theta_value_) {
@@ -664,15 +664,15 @@ void lslxOptimizer::update_regularizer_value() {
   if (lambda > DBL_EPSILON) {
     for (i = 0; i < n_theta; i++) {
       if (theta_is_pen[i]) {
-        if (std::fabs(theta_value[i]) < (lambda * gamma)) {
+        if (std::fabs(theta_value[i]) < (lambda * delta)) {
           if (std::fabs(theta_value[i]) < DBL_EPSILON) {
             regularizer_value_i = 0.0;
           } else {
             regularizer_value_i = 
-              lambda * (std::fabs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * gamma));
+              lambda * (std::fabs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * delta));
           }
         } else {
-          regularizer_value_i = (std::pow(lambda, 2) * gamma) / 2.0;
+          regularizer_value_i = (std::pow(lambda, 2) * delta) / 2.0;
         }
       } else {
         regularizer_value_i = 0;
@@ -688,11 +688,11 @@ void lslxOptimizer::update_regularizer_gradient() {
   if (lambda > DBL_EPSILON) {
     for (i = 0; i < n_theta; i++) {
       if (theta_is_pen[i]) {
-        if ((theta_value[i] <= (lambda * gamma)) & (theta_value[i] > DBL_EPSILON)) {
-          regularizer_gradient(i, 0) = lambda - (theta_value[i] / gamma);
-        } else if ((- theta_value[i] <= (lambda * gamma)) & (theta_value[i] < - DBL_EPSILON)) {
-          regularizer_gradient(i, 0) = - lambda - (theta_value[i] / gamma);
-        } else if ((theta_value[i] > (lambda * gamma)) | ((- theta_value[i]) > (lambda * gamma))) {
+        if ((theta_value[i] <= (lambda * delta)) & (theta_value[i] > DBL_EPSILON)) {
+          regularizer_gradient(i, 0) = lambda - (theta_value[i] / delta);
+        } else if ((- theta_value[i] <= (lambda * delta)) & (theta_value[i] < - DBL_EPSILON)) {
+          regularizer_gradient(i, 0) = - lambda - (theta_value[i] / delta);
+        } else if ((theta_value[i] > (lambda * delta)) | ((- theta_value[i]) > (lambda * delta))) {
           regularizer_gradient(i, 0) = 0;
         } else {
           regularizer_gradient(i, 0) = lambda;
@@ -747,16 +747,16 @@ void lslxOptimizer::update_theta_direction() {
           if (theta_is_free[j]) {
             z[j] = (-g_ij / h_ij);
           } else if (theta_is_pen[j]) {
-            z_r = ((theta_value[j] + theta_direction[j]) / gamma - g_ij - lambda) / (h_ij - (1.0 / gamma));
-            z_l = ((theta_value[j] + theta_direction[j]) / gamma - g_ij + lambda) / (h_ij - (1.0 / gamma));
+            z_r = ((theta_value[j] + theta_direction[j]) / delta - g_ij - lambda) / (h_ij - (1.0 / delta));
+            z_l = ((theta_value[j] + theta_direction[j]) / delta - g_ij + lambda) / (h_ij - (1.0 / delta));
             if (z_r >= - (theta_value[j] + theta_direction[j])) {
-              if (z_r >= (lambda * gamma - (theta_value[j] + theta_direction[j]))) {
+              if (z_r >= (lambda * delta - (theta_value[j] + theta_direction[j]))) {
                 z[j] = (-g_ij / h_ij);
               } else {
                 z[j] = z_r;
               }
             } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
-              if (z_l <= (-lambda * gamma - (theta_value[j] + theta_direction[j]))) {
+              if (z_l <= (-lambda * delta - (theta_value[j] + theta_direction[j]))) {
                 z[j] = (-g_ij / h_ij);
               } else {
                 z[j] = z_l;
@@ -906,7 +906,7 @@ void lslxOptimizer::update_numerical_condition() {
       objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
       idx_is_effective.push_back(i);
     } else if (theta_is_pen[i]) {
-      objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian - (1 / gamma);
+      objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian - (1 / delta);
       if (std::abs(theta_value[i]) > DBL_EPSILON) {
         idx_is_effective.push_back(i);
       } else {
@@ -1046,7 +1046,7 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
   Rcpp::NumericVector numerical_condition = 
     Rcpp::NumericVector::create(
       _["lambda"] = lambda,
-      _["gamma"] = gamma,
+      _["delta"] = delta,
       _["objective_value"] = objective_value,
       _["objective_gradient_abs_max"] = objective_gradient_abs_max,
       _["objective_hessian_convexity"] = objective_hessian_convexity,
@@ -1315,7 +1315,7 @@ void compute_regularized_path_cpp(
                           control,
                           supplied_result);
   Rcpp::NumericVector lambda_grid = Rcpp::as<Rcpp::NumericVector>(control["lambda_grid"]);
-  Rcpp::NumericVector gamma_grid = Rcpp::as<Rcpp::NumericVector>(control["gamma_grid"]);
+  Rcpp::NumericVector delta_grid = Rcpp::as<Rcpp::NumericVector>(control["delta_grid"]);
   Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
   Rcpp::List information_criterion = Rcpp::as<Rcpp::List>(fitted_result["information_criterion"]);
   Rcpp::List fit_indice = Rcpp::as<Rcpp::List>(fitted_result["fit_indice"]);
@@ -1323,15 +1323,15 @@ void compute_regularized_path_cpp(
   
   int i, j, idx;
   for (i = 0; i < lambda_grid.size(); i++) {
-    for (j = 0; j < gamma_grid.size(); j++) {
+    for (j = 0; j < delta_grid.size(); j++) {
       optimizer.set_regularizer(
         Rcpp::as< Rcpp::CharacterVector >(control["penalty_method"]), 
-        lambda_grid[i], gamma_grid[j]);
+        lambda_grid[i], delta_grid[j]);
       optimizer.update_coefficient();
       optimizer.update_numerical_condition();
       optimizer.update_information_criterion();
       optimizer.update_fit_indice();
-      idx = i * gamma_grid.size() + j;
+      idx = i * delta_grid.size() + j;
       coefficient[idx] = optimizer.extract_coefficient();
       numerical_condition[idx] = optimizer.extract_numerical_condition();
       information_criterion[idx] = optimizer.extract_information_criterion();
@@ -1591,7 +1591,7 @@ Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(
 Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
     Rcpp::NumericVector theta_value,
     double lambda,
-    double gamma,
+    double delta,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
@@ -1602,7 +1602,7 @@ Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, gamma);
+  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, delta);
   optimizer.update_regularizer_gradient();
   regularizer_gradient = optimizer.regularizer_gradient;
   return Rcpp::wrap(regularizer_gradient);
@@ -1613,7 +1613,7 @@ Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
 Rcpp::NumericMatrix compute_objective_gradient_cpp(
     Rcpp::NumericVector theta_value,
     double lambda,
-    double gamma,
+    double delta,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
@@ -1624,7 +1624,7 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, gamma);
+  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, delta);
   
   optimizer.update_coefficient_matrice();
   optimizer.update_implied_moment();
@@ -1655,6 +1655,7 @@ void compute_saturated_moment_cpp(
     Eigen::MatrixXd e_sum_i, c_sum_i;
     Eigen::MatrixXd a_ik, b_ik;
     Eigen::MatrixXd y_ik, y_ik_w;
+    double moment_diff_max;
     
     int i, j, k;
     int n_group = y_obs.size();
@@ -1687,10 +1688,10 @@ void compute_saturated_moment_cpp(
         }
         saturated_mean[i] = e_sum_i;
         saturated_cov[i] = c_sum_i - e_sum_i * e_sum_i.transpose();
-        double delta_max = 
+        moment_diff_max = 
           std::max((Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]) - saturated_mean_i).array().abs().maxCoeff(),
                    (Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]) - saturated_cov_i).array().abs().maxCoeff());
-        if (delta_max < tol_other) {
+        if (moment_diff_max < tol_other) {
           break;
         }
       }

@@ -59,7 +59,7 @@ They are actually used after implementing the `fit` related methods.
 ```{r comment = "", message = FALSE}
 r6_lslx$fit(penalty_method = "mcp",
             lambda_grid = seq(.02, .30, .02),
-            gamma_grid = c(5, 10))
+            delta_grid = c(5, 10))
 ```
 By default, `fit` related methods implement two-step method (possibly with auxiliary variables) for handling missing values.
 User can specify the missing method explicitly via `missing_method` argument.

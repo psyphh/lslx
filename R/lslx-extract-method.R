@@ -89,7 +89,7 @@ lslx$set("public",
              if (length(idx_convexity) == 0) {
                stop(
                  "The PL estimates under all penalty levels are derived under nonconvex hessian. \n",
-                 "Please try larger value of gamma or check the identifiability of specified model."
+                 "Please try larger value of delta or check the identifiability of specified model."
                )
              }
            } else {
@@ -561,13 +561,13 @@ lslx$set("public",
              private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
-           gamma <- as.numeric(strsplit(x = penalty_level,
+           delta <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            regularizer_gradient <-
              compute_regularizer_gradient_cpp(
                theta_value = coefficient,
                lambda = lambda,
-               gamma = gamma,
+               delta = delta,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
@@ -589,13 +589,13 @@ lslx$set("public",
              private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
-           gamma <- as.numeric(strsplit(x = penalty_level,
+           delta <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            objective_gradient <-
              compute_objective_gradient_cpp(
                theta_value = coefficient,
                lambda = lambda,
-               gamma = gamma,
+               delta = delta,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
