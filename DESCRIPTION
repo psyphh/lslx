@@ -14,10 +14,10 @@ LinkingTo: Rcpp,
 Imports: Rcpp,
     RcppEigen,
     R6,
-    ggplot2
-Suggests: knitr,
-    rmarkdown,
+    ggplot2,
     lavaan
+Suggests: knitr,
+    rmarkdown
 VignetteBuilder: knitr
 URL: https://github.com/psyphh/lslx
 BugReports: https://github.com/psyphh/lslx/issues
