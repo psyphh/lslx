@@ -60,7 +60,7 @@ lslxData$set("public",
                  self$pattern <- 
                    mapply(FUN = function(pattern_i,
                                          idc_use_i) {
-                     return(pattern_i[idc_use_i, ])
+                     return(pattern_i[idc_use_i, , drop = FALSE])
                    },
                    self$pattern,
                    idc_use,
@@ -71,7 +71,7 @@ lslxData$set("public",
                    self$auxiliary <- 
                      mapply(FUN = function(auxiliary_i,
                                            idc_use_i) {
-                       return(auxiliary_i[idc_use_i, ])
+                       return(auxiliary_i[idc_use_i, , drop = FALSE])
                      },
                      self$auxiliary,
                      idc_use,

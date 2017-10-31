@@ -511,8 +511,8 @@ lslxFitting$set("private",
                       FUN = function(saturated_cov_i) {
                         diag(saturated_cov_i) <-
                           diag(saturated_cov_i) + self$control$ridge_cov
-                        rownames(saturated_cov_i) <-
-                          colnames(saturated_cov_i) <- y_name
+                        rownames(saturated_cov_i) <- y_name
+                        colnames(saturated_cov_i) <- y_name
                         return(saturated_cov_i)
                       }
                     )
@@ -521,7 +521,8 @@ lslxFitting$set("private",
                       X = self$reduced_data$saturated_moment_acov,
                       FUN = function(saturated_moment_acov_i) {
                         rownames(saturated_moment_acov_i) <-
-                          colnames(saturated_moment_acov_i) <-
+                          c(y_name, y2_name)
+                        colnames(saturated_moment_acov_i) <-
                           c(y_name, y2_name)
                         return(saturated_moment_acov_i)
                       }
@@ -548,14 +549,16 @@ lslxFitting$set("private",
                       lapply(
                         X = self$reduced_data$saturated_cov,
                         FUN = function(saturated_cov_i) {
-                          return(saturated_cov_i[y_name, y_name])
+                          return(saturated_cov_i[y_name, y_name, drop = FALSE])
                         }
                       )
                     self$reduced_data$saturated_moment_acov <-
                       lapply(
                         X = self$reduced_data$saturated_moment_acov,
                         FUN = function(saturated_moment_acov_i) {
-                          return(saturated_moment_acov_i[c(y_name, y2_name), c(y_name, y2_name)])
+                          return(saturated_moment_acov_i[c(y_name, y2_name), 
+                                                         c(y_name, y2_name),
+                                                         drop = FALSE])
                         }
                       )
                   } else {
