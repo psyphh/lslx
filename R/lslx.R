@@ -1258,13 +1258,13 @@ lslx$set("public",
                  if (missing(weight_variable)) {
                    weight <- list(rep(1, nrow(data)))
                  } else {
-                   weight <- list(data[, weight_variable])
+                   weight <- list(data[, weight_variable, drop = FALSE])
                  }
                  names(weight) <- name_group
                  if (missing(auxiliary_variable)) {
                    auxiliary <- list()
                  } else {
-                   auxiliary <- list(data[, auxiliary_variable])
+                   auxiliary <- list(data[, auxiliary_variable, drop = FALSE])
                  }
                } else {
                  data <-
@@ -1272,21 +1272,21 @@ lslx$set("public",
                  data[, group_variable] <-
                    as.character(getElement(data, group_variable))
                  response <-
-                   split(data[, private$model$name_response],
+                   split(data[, private$model$name_response, drop = FALSE],
                          getElement(data, group_variable))
                  if (missing(weight_variable)) {
                    weight <- split(rep(1, nrow(data)),
                                    getElement(data, group_variable))
                  } else {
                    weight <-
-                     split(data[, weight_variable],
+                     split(data[, weight_variable, drop = FALSE],
                            getElement(data, group_variable))
                  }
                  if (missing(auxiliary_variable)) {
                    auxiliary <- list()
                  } else {
                    auxiliary <-
-                     split(data[, auxiliary_variable],
+                     split(data[, auxiliary_variable, drop = FALSE],
                            getElement(data, group_variable))
                  }
                }
