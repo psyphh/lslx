@@ -1181,28 +1181,29 @@ lslx$set("public",
                sample_cov <- list(sample_cov)
              }
              if (is.null(names(sample_cov))) {
-               name_group <-
-                 paste0("G", 1:length(sample_cov))
+               if (length(sample_cov) > 1) {
+                 name_group <- paste0("G", 1:length(sample_cov))
+               } else {
+                 name_group <- "G"
+               }
                names(sample_cov) <- name_group
                if (verbose) {
                  cat(
-                   "NOTE: Because argument 'sample_cov' doesn't contain group name(s), ",
-                   "default group name(s) is created: ",
-                   do.call(paste, as.list(name_group)),
-                   ".\n"
+                   "NOTE: Because argument 'sample_cov' doesn't contain group name(s),",
+                   "default group name(s) is created.\n"
                  )
                }
              } else {
                name_group <- names(sample_cov)
              }
              if (!missing(group_variable)) {
-               stop("Argument 'group_variable' is unnecessary under moment data initialization.")
+               stop("Argument 'group_variable' is unnecessary under moment initialization.")
              }
              if (!missing(weight_variable)) {
-               stop("Argument 'weight_variable' is unnecessary under moment data initialization.")
+               stop("Argument 'weight_variable' is unnecessary under moment initialization.")
              }
              if (!missing(auxiliary_variable)) {
-               stop("Argument 'auxiliary_variable' is unnecessary under moment data initialization.")
+               stop("Argument 'auxiliary_variable' is unnecessary under moment initialization.")
              }
            }
            if (any(grepl(pattern = "/|\\||@",
@@ -1367,9 +1368,8 @@ lslx$set("public",
                names(sample_mean) <- name_group
                if (verbose) {
                  cat(
-                   "NOTE: Because argument 'sample_mean' is missing, ",
-                   "default 'sample_mean' is created: ",
-                   "a list of zero vector(s) with appropriate size.\n"
+                   "NOTE: Because argument 'sample_mean' is missing,",
+                   "default 'sample_mean' is created.\n"
                  )
                }
              } else {
@@ -1491,19 +1491,26 @@ lslx$set("public",
              cat("  Latent Factor(s):",
                  private$model$name_factor,
                  "\n")
-             cat("  Group(s):",
-                 private$model$name_group,
-                 "\n")
-             cat("  Reference Group:",
-                 private$model$reference_group,
-                 "\n")
+             if (length(private$data$auxiliary) > 0) {
+               cat("  Auxiliary Variable(s):",
+                   colnames(private$data$auxiliary[[1]]),
+                   "\n")               
+             }
+             if (length(private$model$name_group) > 1) {
+               cat("  Group(s):",
+                   private$model$name_group,
+                   "\n")
+               cat("  Reference Group:",
+                   private$model$reference_group,
+                   "\n")
+             }
              if (!is.na(private$model$reference_group)) {
                cat(
                  "NOTE:",
                  "Because",
                  private$model$reference_group,
                  "is set as reference,",
-                 "coefficients in other groups actually represent increments from the reference."
+                 "coefficients in other groups actually represent increments from the reference.\n"
                )
              }
            }

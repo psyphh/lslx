@@ -251,7 +251,6 @@ lslx$set("private",
                           "FREE",
                           "FIXED")
                  ),
-                 "parameter",
                  "with starting value =",
                  paste0(specification_i$start, "."),
                  "\n"
