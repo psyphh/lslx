@@ -70,8 +70,8 @@ For details, please see the the section of Extract-Related Methods via `?lslx`.
 After an `lslx` object is initialized, method `fit` can be used to fit the specified model to the given data.
 ```{r comment = "", message = FALSE}
 r6_lslx$fit(penalty_method = "mcp",
-             lambda_grid = seq(.02, .30, .02),
-             delta_grid = c(5, 10))
+            lambda_grid = seq(.02, .30, .02),
+            delta_grid = c(5, 10))
 ```
 The fitting process requires users to specify the penalty method (argument `penalty_method`) and the considerd penalty levels (argument `lambda_grid` and `delta_grid`).
 In this example, the `mcp` penalty is implemented on the lambda grid `seq(.02, .30, .02)` and delta grid `c(5, 10)`.

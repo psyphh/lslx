@@ -730,7 +730,7 @@ void lslxOptimizer::update_theta_direction() {
   int i, j;
   if (regularizer) {
     g = loss_gradient;
-    if (algorithm == "BFGS") {
+    if (algorithm == "bfgs") {
       h = loss_bfgs_hessian;
     } else if (algorithm == "fisher") {
       h = loss_expected_hessian;
@@ -782,7 +782,7 @@ void lslxOptimizer::update_theta_direction() {
     }
   } else {
     g = loss_gradient;
-    if (algorithm == "BFGS") {
+    if (algorithm == "bfgs") {
       h = loss_bfgs_hessian_inv;
     } else if (algorithm == "fisher") {
       h = expand_both(slice_both(
@@ -852,7 +852,7 @@ void lslxOptimizer::update_coefficient() {
     update_loss_gradient();
     update_loss_expected_hessian();
   } 
-  if (algorithm == "BFGS") {
+  if (algorithm == "bfgs") {
     update_loss_bfgs_hessian();
   } 
   update_regularizer_value();
@@ -862,7 +862,7 @@ void lslxOptimizer::update_coefficient() {
   for (iter_out = 1; iter_out <= iter_out_max; iter_out++) {
     update_theta_direction();
     update_theta_value();
-    if (algorithm == "BFGS") {
+    if (algorithm == "bfgs") {
       update_loss_gradient_direct();
       update_loss_bfgs_hessian();
     } else if (algorithm == "fisher") {
@@ -895,7 +895,7 @@ void lslxOptimizer::update_numerical_condition() {
   Rcpp::IntegerVector idx_is_effective(0);
   Eigen::MatrixXd loss_hessian;
   Eigen::MatrixXd saturated_moment_acov_matrix, residual_weight_matrix, moment_jacobian_matrix;
-  if (algorithm == "BFGS") {
+  if (algorithm == "bfgs") {
     loss_hessian = loss_bfgs_hessian;
   } else if (algorithm == "fisher") {
     loss_hessian = loss_expected_hessian;    

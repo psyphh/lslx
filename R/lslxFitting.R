@@ -31,10 +31,6 @@ lslxFitting$set("private",
                          data,
                          control) {
                   self$control <- control
-                  self$control$lambda_grid <-
-                    sort(self$control$lambda_grid, decreasing = TRUE)
-                  self$control$delta_grid <-
-                    sort(self$control$delta_grid, decreasing = TRUE)
                   if (length(data$response) > 0) {
                     self$control$response <- TRUE
                   } else {
@@ -50,11 +46,49 @@ lslxFitting$set("private",
                   } else {
                     self$control$regularizer <- FALSE
                   }
+                  if (self$control$lambda_grid[[1]] == "default") {
+                    self$control$lambda_grid <- 0
+                  } else {
+                    if (self$control$penalty_method == "none") {
+                      self$control$lambda_grid <- 0
+                    } else if (self$control$penalty_method == "lasso") {
+                      if (any(self$control$lambda_grid < 0)) {
+                        stop(
+                          "When argument 'penalty_method' is set as 'lasso', any element in argument 'lambda_grid' cannot be smaller than 0."
+                        )
+                      }
+                    } else if (self$control$penalty_method == "mcp") {
+                      if (any(self$control$lambda_grid < 0)) {
+                        stop(
+                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                        )
+                      }
+                    } else {
+                    }
+                  }
+                  if (self$control$delta_grid[[1]] == "default") {
+                    self$control$delta_grid <- Inf
+                  } else {
+                    if (self$control$penalty_method %in% c("none", "lasso")) {
+                      self$control$delta_grid <- Inf
+                    } else if (self$control$penalty_method == "mcp") {
+                      if (any(self$control$lambda_grid <= 0)) {
+                        stop(
+                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                        )
+                      }
+                    } else {
+                    }
+                  }
+                  self$control$lambda_grid <-
+                    sort(self$control$lambda_grid, decreasing = TRUE)
+                  self$control$delta_grid <-
+                    sort(self$control$delta_grid, decreasing = TRUE)
                   if (self$control$algorithm == "default") {
                     if (self$control$regularizer) {
                       self$control$algorithm <- "fisher"
                     } else {
-                      self$control$algorithm <- "BFGS"
+                      self$control$algorithm <- "bfgs"
                     }
                   }
                   if (self$control$missing_method == "default") {
@@ -65,11 +99,9 @@ lslxFitting$set("private",
                     }
                   }
                   if (self$control$start_method == "default") {
-                    self$control$start_method <- "MH"
+                    self$control$start_method <- "mh"
                   }
                 })
-
-
 
 
 lslxFitting$set("private",
@@ -202,7 +234,7 @@ lslxFitting$set("private",
                           mapply(
                             FUN = function(pattern_i,
                                            auxiliary_i) {
-                              return(cbind(pattern_i,!is.na(auxiliary_i)))
+                              return(cbind(pattern_i, !is.na(auxiliary_i)))
                             },
                             data$pattern,
                             data$auxiliary,
@@ -255,6 +287,7 @@ lslxFitting$set("private",
                           USE.NAMES = TRUE
                         )
                     } else {
+                      
                     }
                     self$reduced_data$n_observation <-
                       sum(sapply(X = response, FUN = nrow))
@@ -541,11 +574,10 @@ lslxFitting$set("private",
                 })
 
 
-
 lslxFitting$set("private",
                 "compute_fitted_start",
                 function() {
-                  if (self$control$start_method == "MH") {
+                  if (self$control$start_method == "mh") {
                     saturated_cov_pool <-
                       Reduce(
                         "+",
@@ -890,6 +922,7 @@ lslxFitting$set("private",
                       )
                   )
                 })
+
 
 lslxFitting$set("private",
                 "compute_saturated_model",

@@ -662,21 +662,23 @@ Currently, three fit-related methods are available: \code{fit()}, \code{fit_lass
 Fitting results will be stored in \code{fitting} and can be used for further summary by member functions.
 
 \describe{
-  \item{\code{fit(penalty_method = "none", lambda_grid = 0, delta_grid = Inf, 
+  \item{\code{fit(penalty_method = "none", lambda_grid = "default", delta_grid = "default", 
   algorithm = "default", missing_method = "default", start_method = "default",
   iter_out_max = 100L, iter_in_max = 50L, iter_other_max = 500L, iter_armijo_max = 100L, 
-  tol_out = 1e-4, tol_in = 1e-4, tol_other = 1e-4, step_size = 0.5, armijo = 1e-5, 
+  tol_out = 1e-3, tol_in = 1e-3, tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, 
   ridge_cov = 1e-4, ridge_hessian = 1e-4, positive_diag = TRUE, verbose = TRUE)}}{
   The method fits the specified model to data by minimizing penalized ML loss function.
   It is the most comprehensive method for fitting and hence many arguments can be specified.
   \tabular{ll}{
     \code{penalty_method} \tab A \code{character} to specify the penalty method. 
     The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.    \cr
-    \code{lambda_grid} \tab A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. \cr
-    \code{delta_grid} \tab A \code{numeric} with values larger than one for specifying the non-convexity \code{"mcp"}. \cr
+    \code{lambda_grid} \tab A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. 
+    If it is set as \code{"default"}, its value will be zero. \cr
+    \code{delta_grid} \tab A \code{numeric} with values larger than one for specifying the non-convexity \code{"mcp"}. 
+    If it is set as \code{"default"}, its value will be infinity. \cr
     \code{algorithm} \tab A \code{character} to determine the method of optimization. 
-    The current version supports \code{"BFGS"} and \code{"fisher"}. 
-    If the argument is set as \code{"default"}, then (1) \code{"BFGS"} will be implemented if no penalty is considered; 
+    The current version supports \code{"bfgs"} and \code{"fisher"}. 
+    If the argument is set as \code{"default"}, then (1) \code{"bfgs"} will be implemented if no penalty is considered; 
     (2) \code{"fisher"} will be implemented if penalty is considered.  \cr
     \code{missing_method} \tab A \code{character} to determine the method for handling missing data (or \code{NA}). 
     The current version supports \code{"two_stage"} and \code{"listwise_deletion"}. 
@@ -684,8 +686,8 @@ Fitting results will be stored in \code{fitting} and can be used for further sum
     If the argument is set as \code{"default"} and only moment data is available, the \code{"listwise_deletion"} will be used 
     (actually, in this case no missing presences).\cr
     \code{start_method} \tab A \code{character} to determine the method for calculating unspecified starting values. 
-    The current version supports \code{"MH"} (McDonald & Hartmann, 1992) and \code{"heuristic"}.
-    If the argument is set as \code{"default"}, the \code{"MH"} will be implemented. \cr
+    The current version supports \code{"mh"} (McDonald & Hartmann, 1992) and \code{"heuristic"}.
+    If the argument is set as \code{"default"}, the \code{"mh"} will be implemented. \cr
     \code{positive_diag} \tab A \code{logical} to specify whether the variance estimate should be constrained to be larger than \code{ridge_cov}. \cr
     \code{iter_out_max} \tab A positive \code{integer} to specify the maximal iterations for outer loop of the modified \code{glmnet} algorithm.  \cr
     \code{iter_in_max} \tab A positive \code{integer} to specify the maximal iterations for inner loop of the modified \code{glmnet} algorithm.  \cr

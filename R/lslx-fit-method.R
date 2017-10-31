@@ -1,7 +1,7 @@
 lslx$set("public",
          "fit_mcp",
          function(lambda_grid = 0,
-                  delta_grid = Inf,
+                  delta_grid = "default",
                   ...) {
            self$fit(
              penalty_method = "mcp",
@@ -23,8 +23,8 @@ lslx$set("public",
 lslx$set("public",
          "fit",
          function(penalty_method = "none",
-                  lambda_grid = 0,
-                  delta_grid = Inf,
+                  lambda_grid = "default",
+                  delta_grid = "default",
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
@@ -41,43 +41,39 @@ lslx$set("public",
                   ridge_hessian = 1e-4,
                   positive_diag = TRUE,
                   verbose = TRUE) {
-           proc_time_start <- proc.time()
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
              stop("Argument 'penalty_method' can be only either 'none', 'lasso', or 'mcp'.")
-           } else {
-             if (penalty_method == "none") {
-               lambda_grid <- 0
-               delta_grid <- Inf
-             }
-             if (penalty_method == "lasso") {
-               if (any(lambda_grid < 0)) {
-                 stop(
-                   "When argument 'penalty_method' is set as 'lasso', any element in argument 'lambda_grid' cannot be smaller than 0."
-                 )
+           } 
+           if (!is.numeric(lambda_grid)) {
+             if (!is.character(lambda_grid)) {
+               stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
+             } else if (is.character(lambda_grid) & (length(lambda_grid) != 1)) {
+               stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
+             } else if (is.character(lambda_grid) & (length(lambda_grid) == 1)) {
+               if (lambda_grid != "default") {
+                 stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
                }
-               delta_grid <- Inf
              }
-             if (penalty_method == "mcp") {
-               if (any(lambda_grid < 0)) {
-                 stop(
-                   "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
-                 )
-               }
-               if (any(delta_grid < 1)) {
-                 stop(
-                   "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' cannot be smaller than 1."
-                 )
+           }
+           if (!is.numeric(delta_grid)) {
+             if (!is.character(delta_grid)) {
+               stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
+             } else if (is.character(delta_grid) & (length(delta_grid) != 1)) {
+               stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
+             } else if (is.character(delta_grid) & (length(delta_grid) == 1)) {
+               if (delta_grid != "default") {
+                 stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
                }
              }
            }
            if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
              stop("Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'.")
            }
-           if (!(start_method %in% c("default", "MH", "heuristic"))) {
-             stop("Argument 'start_method' can be only 'default', 'MH', or 'heuristic'.")
+           if (!(start_method %in% c("default", "mh", "heuristic"))) {
+             stop("Argument 'start_method' can be only 'default', 'mh', or 'heuristic'.")
            }
-           if (!(algorithm %in% c("default", "BFGS", "fisher"))) {
-             stop("Argument 'algorithm' can be only 'default', 'BFGS', or 'fisher'.")
+           if (!(algorithm %in% c("default", "bfgs", "fisher"))) {
+             stop("Argument 'algorithm' can be only 'default', 'bfgs', or 'fisher'.")
            }
            if (!(is.numeric(iter_out_max) &
                  (length(iter_out_max) = 1))) {
@@ -112,7 +108,7 @@ lslx$set("public",
            }
            if (!(is.logical(positive_diag) &
                  (length(positive_diag) = 1))) {
-             stop("Argument 'positive_diag' must be a numeric vector with length one.")
+             stop("Argument 'positive_diag' must be a logical vector with length one.")
            }
 
            control <-
@@ -120,9 +116,9 @@ lslx$set("public",
                penalty_method = penalty_method,
                lambda_grid = lambda_grid,
                delta_grid = delta_grid,
+               algorithm = algorithm,
                missing_method = missing_method,
                start_method = start_method,
-               algorithm = algorithm,
                iter_out_max = iter_out_max,
                iter_in_max = iter_in_max,
                iter_other_max = iter_other_max,
