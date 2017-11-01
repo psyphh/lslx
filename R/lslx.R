@@ -1500,9 +1500,11 @@ lslx$set("public",
                cat("  Group(s):",
                    private$model$name_group,
                    "\n")
-               cat("  Reference Group:",
-                   private$model$reference_group,
-                   "\n")
+               if (!is.na(private$model$reference_group)) {
+                 cat("  Reference Group:",
+                     private$model$reference_group,
+                     "\n") 
+               }
              }
              if (!is.na(private$model$reference_group)) {
                cat(
