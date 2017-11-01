@@ -59,6 +59,12 @@ lslx$set("public",
                "."
              )
            }
+           if ((selector %in% c("raic", "raic3", "rcaic", "rbic", "rabic", "rhbic")) & 
+               (!private$fitting$control$response)) {
+             stop("When lslx object is initialized via moments,",
+                  " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available.")
+           }
+           
            if (exclude_improper) {
              idx_convergence <-
                which(

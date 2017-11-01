@@ -330,7 +330,7 @@ On the other hand, if some group is set as reference (argument \code{referene_gr
 
 Let \eqn{\theta} denote the vector of model parameter.
 \pkg{lslx} tries to find a PL estimate for \eqn{\theta} by minimizing the objective function
-\deqn{objective(\theta, \lambda) = loss(\theta) + regularizer(\theta, \lambda)}
+\eqn{objective(\theta, \lambda) = loss(\theta) + regularizer(\theta, \lambda)}
 where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, possibly lasso (Tibshirani, 1996) or mcp (Zhang, 2010), and \eqn{\lambda} is a regularization parameter.
 The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
@@ -405,7 +405,7 @@ where
 \eqn{loss(\theta)}: the loss value under estimate \eqn{\theta}
 }
 \item{
-\eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - #(\theta)}
+\eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - }#\eqn{(\theta)}
 }
 }
 Note the the formula for calculating the information criteria in \pkg{lslx} are different to other softwares. 
@@ -454,10 +454,10 @@ where
 \eqn{loss(\theta)}: the loss value under estimate \eqn{\theta}
 }
 \item{
-\eqn{#(\theta)}: the number of non-zero elements in \eqn{\theta}
+#\eqn{(\theta)}: the number of non-zero elements in \eqn{\theta}
 }
 \item{
-\eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - #(\theta)}
+\eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 -}#\eqn{(\theta)}
 }
 \item{
 \eqn{loss_0}: the loss value under baseline model
@@ -756,7 +756,7 @@ Test-related mthods are used to obtain the result of specific statistical test.
 So far, only tests for likelihood ratio (LR), RMSEA, and coefficients are available.
 For each test-related method, users should specify \code{selector} and \code{exclude_improper}.
 Argument \code{selector} is used to specify which model selection criterion should be used to choose an optimal penalty level.
-Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
 or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}.
 If no penalty is considered, \code{selector} can be omitted.
 Argument \code{exclude_improper} specifies whether non-convergence or non-convexity results should be removed for penalty level selection.
@@ -845,7 +845,7 @@ Therefore, the extract-related methods not only extract objects but may possibly
 \cr
 In extract-related methods, two common arguments should be introduced first: \code{selector} and \code{exclude_improper}.
 Argument \code{selector} is used to specify which information criterion should be used to choose an optimal penalty level.
-Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"tic"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
  or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}.
 If no regularizer or only one penalty level is considered, argument \code{selector} can be omitted.
 Argument \code{exclude_improper} specifies whether non-convergence results or non-convexity results should be removed for penalty level selection.
