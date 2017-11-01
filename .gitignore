@@ -1,8 +1,3 @@
 .Rproj.user
-.Rhistory
-.RData
-.Ruserdata
 inst/doc
-.Rd2pdf2740
-.Rd2pdf2756
-.Rd2pdf2784
+.DS_Store
