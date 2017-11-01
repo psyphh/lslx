@@ -72,9 +72,9 @@ lslxFitting$set("private",
                     if (self$control$penalty_method %in% c("none", "lasso")) {
                       self$control$delta_grid <- Inf
                     } else if (self$control$penalty_method == "mcp") {
-                      if (any(self$control$lambda_grid <= 0)) {
+                      if (any(self$control$delta_grid <= 0)) {
                         stop(
-                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' must be positive."
                         )
                       }
                     } else {
