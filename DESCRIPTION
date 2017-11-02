@@ -7,7 +7,7 @@ Description: lslx is a package for fitting semi-confirmatory structural equation
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Collate: lslxData.R lslxModel.R lslxFitting.R lslx.R lslx-set-coefficient-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R 
+Collate: lslxData.R lslxModel.R lslxFitting.R lslx.R lslx-initialize-method.R lslx-set-coefficient-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R 
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp,
     RcppEigen
