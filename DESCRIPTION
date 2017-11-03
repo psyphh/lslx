@@ -3,7 +3,7 @@ Type: Package
 Title: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
 Version: 0.6.0
 Authors@R: c(person("Po-Hsien", "Huang", email = "psyphh@gmail.com", role = c("cre", "aut")), person("Wen-Hsin", "Hu", email = "loveakai@gmail.com", role = "aut"))
-Description: lslx is a package for fitting semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) developed by Huang, Chen, and Weng (2017). In this semi-confirmatory method, an SEM model is distinguished into two parts: a confirmatory part and an exploratory part. The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing. The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory. By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently determined by the sparsity pattern of these penalized parameters. 
+Description: Fits semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) with lasso or minimax concave penalty (MCP) developed by Huang, Chen, and Weng (2017) <doi:10.1007/s11336-017-9566-9>.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
