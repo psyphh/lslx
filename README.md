@@ -1,7 +1,7 @@
 # lslx
 `lslx` is a package for fitting semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) developed by Huang, Chen, and Weng (2017). In this semi-confirmatory method, an SEM model is distinguished into two parts: a comfirmatory part and an exploratory part. The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing. The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory. By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relaitonships in the exploratory part can be efficiently determined by the sparsity pattern of these penalized parameters. 
 
-`lslx` also supports multi-group analysis for evaluating heterogeneity and robust two-stage method with auxiliary variables for handling missing data.
+`lslx` can be also seen as a package for conducting usual SEM with several robust procedures, including sandwich standard error formula, mean-adjusted likelihood ratio test, and two step approach with auxiliary variables for missing data. `lslx` also supports multi-group analysis for evaluating group heterogeneity. For now, the major limitations of `lslx` are that (1) it cannot impose linear or non-linear contraints for coefficients; and (2) it cannot handle the presence of ordinal responses.
 
 # Installation
 The following code will install `lslx` and all the dependencies. 
