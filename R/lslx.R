@@ -49,41 +49,41 @@
 #' On the other hand, it has many built-in methods to respecify model, fit the model to data, and test goodness of fit and coefficients.
 #' The initialization of a new \code{lslx} object requires importing a model and a data set to be analyzed.
 #' After an \code{lslx} object is initialized, build-in methods can be used to modify the object, find the estimates, and summarize fitting result.
-#' Details of object initialization is described in the section of Initialization Method.
+#' Details of object initialization is described in the section of \emph{Initialize Method}.
 #' 
 #' In the current semi-confirmatory approach, the model specification is quite similar to the traditional practice of SEM except that some parameters can be set as penalized.
 #' Model specification in \code{lslx} mainly relies on the argument model when creating a new \code{lslx} object.
 #' After a \code{lslx} object is initialized, the intialized model can be still modified by set-related methods.
 #' These set-related methods may hugely change the intialized model by just one simple command.
 #' This two-step approach allows users specifying their own models flexibly and efficiently.
-#' Details of the model specification can be found in the sections of Model Syntax and Set-Related Methods.
+#' Details of the model specification can be found in the sections of \emph{Model Syntax} and \emph{Set-Related Methods}.
 #' 
 #' Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized maximum likelihood (ML) loss function.
 #' The penalty function can be set as lasso (Tibshirani, 1996) or mcp (minimax concave penalty; Zhang, 2010).
 #' \pkg{lslx} solves the optimization problem based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 #' The underlying optimizer is written by using \pkg{Rcpp} (Eddelbuettel & Francois, 2011) and \pkg{RcppEigen} (Bates & Eddelbuettel, 2013).
 #' Our experiences show that the algorithm can effeciently find a local minimum provided that (1) the starting value is reasonable, and (2) the saturated covariance matrix is not nearly singular.
-#' Details of optimization algorithm and how to implement the algorithm can be found in the sections of Optimization Algorithm and Fit-Related Methods.
+#' Details of optimization algorithm and how to implement the algorithm can be found in the sections of \emph{Optimization Algorithm} and \emph{Fit-Related Methods}.
 #' 
 #' When conducting SEM, missing data are easily encountered.
 #' \pkg{lslx} can handle missing data problem by listwise deletion and two-step methods.
-#' Details of the methods for mssing data can be found in the section of Missing Data.
+#' Details of the methods for mssing data can be found in the section of \emph{Missing Data}.
 #' 
 #' After fitting the specified model to data under all of the considered penalty levels, an optimal penalty level should be chosen.
 #' A naive method for penalty level selection is using information criteria.
 #' Huang, Chen, and Weng (2017) have shown the asymptotic properties of Akaike information criterion (AIC) and Bayesian information criterion (BIC) in selecting the penalty level.
 #' In \pkg{lslx}, infromation criteria other an AIC and BIC can be also used.
 #' However, the empirical performances of these included criteria should be further studied.
-#' Details of choosing an optimal penalty level can be found in the sections of Penalty Level Selection
+#' Details of choosing an optimal penalty level can be found in the section of \emph{Penalty Level Selection}.
 #' 
 #' Given a penalty level, it is important to evaluate the goodness-of-fit of selected model and coefficients.
 #' In \pkg{lslx}, it is possible to make statistical inferences for goodness-of-fit and coefficients.
 #' However, the inference methods assume that no model selection is conducted, which is not true in the case of using PL.
-#' Details of statistical inference can be found in the sections of Model fit Evaluation and Coefficient Evaluation.
-#' Implementations of these methods can be found in the sections of Summarize Method and Test-Related Methods.
+#' Details of statistical inference can be found in the sections of \emph{Model Fit Evaluation} and \emph{Coefficient Evaluation}.
+#' Implementations of these methods can be found in the sections of \emph{Summarize Method} and \emph{Test-Related Methods}.
 #' 
 #' Besides making statistical inference, \code{lslx} has methods for plotting the fitting results, include visualizing quality of optimization and the values of information criteria, fit indices, and coefficient estimates.
-#' Details of methods for plotting can be found in the section of Plot-Related Methods.
+#' Details of methods for plotting can be found in the section of \emph{Plot-Related Methods}.
 #' 
 #' An object of \code{lslx} R6 class is composed by three R6 class objects: \code{lslxModel}, \code{lslxData}, and \code{lslxFitting}.
 #' \code{lslxModel} contains the specified model and \code{lslxData} object stores the imported data to be analyzed.
@@ -91,7 +91,7 @@
 #' After the underlying optimizer finishes its job, the fitting results will be also stored in \code{lslxFitting}.
 #' Since the three members are set as private, they can be only assessed by defined member functions.
 #' Other than the three members, quantities that are crucial for SEM can be also extracted, such as model-implied moments, information matrice, and etc..
-#' Details of methods for obtaining private members and SEM-related quantities can be found in the sections of Get-Related Methods and Extract-Related Methods.
+#' Details of methods for obtaining private members and SEM-related quantities can be found in the sections of \emph{Get-Related Methods} and \emph{Extract-Related Methods}.
 #' 
 #' 
 #'
@@ -294,7 +294,8 @@
 #' Loadings for \code{y1}, \code{y4}, and \code{y7} are set as fixed for scale setting in both groups.
 #' You may observe that the syntax for multi-group analysis is the same as that for single group analysis.
 #' That is true because in \pkg{lslx} a multi-group analysis is mainly identified by specifying a group variable.
-#' If the imported data can be divided into several samples based on some group variable (argument \code{group_variable} in \code{new} method, please see the section of Initialize Method) for group labeling, \pkg{lslx} will automatically conduct multi-group analysis (see Example 4 in the Section of Examples).
+#' If the imported data can be divided into several samples based on some group variable (argument \code{group_variable} in \code{new} method, please see the section of \emph{Initialize Method}) for group labeling, \pkg{lslx} will automatically conduct multi-group analysis 
+#' (see example of \emph{Semi-Confirmatory Multi-Group Factor Analysis} in the Section of \emph{Examples}).
 #'
 #' Sometimes, we may hope to specify different model structures for the two groups.
 #' It can be achieved by using vector version of prefix, which is also motivated by the syntax in \pkg{lavaan}.
@@ -313,7 +314,7 @@
 #' However, \pkg{lslx} parameterizes group parameters in different way compared to other SEM software.
 #' Under \pkg{lslx}, each group parameter is decomposed into a sum of a reference component and an increment component.
 #' If the reference component is assumed to be zero, the increment component represents the group parameter, which is equivalent to the usual parameterization in other softwares.
-#' On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of Initialize Method), then the reference component now represents the group parameter of the reference group and other increment components represent the differences from the reference group.
+#' On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of \emph{Initialize Method}), then the reference component now represents the group parameter of the reference group and other increment components represent the differences from the reference group.
 #' 
 #'
 #'@section Optimization Algorithm:
@@ -353,7 +354,7 @@
 #' The current version also supports the use of auxiliary varialbes (see Savalei & Bentler, 2008).
 #' If the two-stage method is implemented, the standard error formula will be corrected for the presence of missing data (see Yuan & Lu, 2008 for technical details).
 #' 
-#' So far, \pkg{lslx} doesn't include the full information maximum likelihood (FIML) method for missing values.
+#' So far, \pkg{lslx} doesn't include the full-information maximum likelihood (FIML) method for missing values.
 #' One reason is that PL can be computationally intensive if many penalty levels are considered.
 #' The additional E-step in each iteration by FIML makes the problem worse.
 #' Another reason is that the two step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
@@ -367,17 +368,17 @@
 #' 
 #' \describe{
 #'   \item{\code{aic}}{Akaike Information Criterion (Akaike, 1974) 
-#'   \deqn{loss(\theta) - (2 / N) * df(\theta) } }
+#'   \deqn{AIC(\theta)=loss(\theta) - (2 / N) * df(\theta) } }
 #'   \item{\code{aic3}}{Akaike Information Criterion with Penalty Being 3 (Sclove, 1987) 
-#'   \deqn{loss(\theta) - (3 / N) * df(\theta) }} 
+#'   \deqn{AIC3(\theta)=loss(\theta) - (3 / N) * df(\theta) }} 
 #'   \item{\code{caic}}{Consistent Akaike Information Criterion (Bozdogan, 1987)
-#'   \deqn{loss(\theta) - ((log(N) + 1) / N) * df(\theta) }} 
+#'   \deqn{CAIC(\theta)=loss(\theta) - ((log(N) + 1) / N) * df(\theta) }} 
 #'   \item{\code{bic}}{Bayesian Information Criterion (Schwarz, 1978) 
-#'   \deqn{loss(\theta) - (log(N) / N) * df(\theta) } }
+#'   \deqn{BIC(\theta)=loss(\theta) - (log(N) / N) * df(\theta) } }
 #'   \item{\code{abic}}{Adjusted Bayesian Information Criterion (Sclove, 1987) 
-#'   \deqn{loss(\theta) - (log((N + 2) / 24 ) / N) * df(\theta) }} 
+#'   \deqn{ABIC(\theta)=loss(\theta) - (log((N + 2) / 24 ) / N) * df(\theta) }} 
 #'   \item{\code{hbic}}{Haughton Bayesian Information Criterion (Haughton, 1997) 
-#'   \deqn{loss(\theta) - (log(N / \pi ) / N) * df(\theta) }}
+#'   \deqn{HBIC(\theta)=loss(\theta) - (log(N / \pi ) / N) * df(\theta) }}
 #' }
 #' 
 #' where
@@ -415,14 +416,14 @@
 #' In the current version, available fit indices for model evaluation are
 #' \describe{
 #' \item{\code{rmsea}}{Root Mean Square Error of Approximation (Steiger, 1998; Steiger & Lind, 1980) 
-#' \deqn{ \sqrt(G * max(loss(\theta) / df(\theta) - 1 / N, 0)) }}
+#' \deqn{ RMSEA(\theta)=\sqrt(G * max(loss(\theta) / df(\theta) - 1 / N, 0)) }}
 #' \item{\code{cfi}}{Comparative Fit Indice (Bentler, 1990)
-#' \deqn{ (max(loss_0 - df_0 / N, 0) - max(loss(\theta) - df(\theta) / N, 0)) / max(loss_0 - df_0 / N, 0)}}
+#' \deqn{ CFI(\theta)=(max(loss_0 - df_0 / N, 0) - max(loss(\theta) - df(\theta) / N, 0)) / max(loss_0 - df_0 / N, 0)}}
 #' \item{\code{nnfi}}{Non-Normed Fit Indice (Tucker & Lewis, 1973)
-#' \deqn{ (loss_0 / df_0 - loss(\theta) / df(\theta)) / (loss_0 / df_0 - 1 /N) }}
+#' \deqn{ NNFI(\theta)=(loss_0 / df_0 - loss(\theta) / df(\theta)) / (loss_0 / df_0 - 1 /N) }}
 #' \item{\code{srmr}}{Standardized Root Mean of Residual (Bentler, 1995) 
-#' \deqn{ \sqrt(\sum w_g \sum \sum ((\sigma_{gij} - s_{gij})^2 / (\sigma_{gii} * \sigma_{gjj})) / (G * P * (P + 1) / 2) +} 
-#' \deqn{\sum w_g \sum((\mu_{gi} - m_{gi}) ^ 2 / \sigma_{gii}) / (G * P)) }}
+#' \deqn{ SRMR(\theta)=\sqrt(\sum_g w_g \sum_i \sum_{j \leq i} ((\sigma_{gij} - s_{gij})^2 / (\sigma_{gii} * \sigma_{gjj})) / (G * P * (P + 1) / 2)} 
+#' \deqn{+\sum_g w_g \sum_i ((\mu_{gi} - m_{gi}) ^ 2 / \sigma_{gii}) / (G * P)) }}
 #' }
 #' where
 #' \itemize{
@@ -494,33 +495,32 @@
 #' \item{\bold{Arguments}}{
 #' 
 #' }
-#' \item{\code{model}       }{A \code{character} with length one to represent the model specification. 
-#' See the section of Model Syntax for more information.}
-#' \item{\code{data}       }{A \code{data.frame} of raw data. 
+#' \item{\code{model}}{A \code{character} with length one to represent the model specification.}
+#' \item{\code{data}}{A \code{data.frame} of raw data. 
 #' It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).}
-#' \item{\code{group_variable}  }{A \code{character} with length one to specify what variable is used for labeling group.}
-#' \item{\code{reference_group}  }{A \code{character} with length one to specify which group is set as reference. }
-#' \item{\code{weight_variable}  }{A \code{character} with length one to specify what variable is used for sampling weight.}
+#' \item{\code{group_variable}}{A \code{character} with length one to specify what variable is used for labeling group.}
+#' \item{\code{reference_group}}{A \code{character} with length one to specify which group is set as reference. }
+#' \item{\code{weight_variable}}{A \code{character} with length one to specify what variable is used for sampling weight.}
 #' \item{\code{auxiliary_variable}}{A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments when missing data presents and two-step method is implemented.
 #' Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.}
-#' \item{\code{sample_cov}    }{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.}
-#' \item{\code{sample_mean}    }{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
-#' \item{\code{sample_size}    }{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
-#' \item{\code{verbose}      }{A \code{logical} to specify whether messages made by \code{lslx} should be printed.} 
+#' \item{\code{sample_cov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.}
+#' \item{\code{sample_mean}}{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
+#' \item{\code{sample_size}}{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
+#' \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.} 
 #' }
 #' \bold{Details}
 #' 
 #' \code{$new()} initialzes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM).
-#' Argument \code{model} specifies the relations among observed variables and latent factors.
-#' Argument \code{data} is a raw data set to be fitted.
 #' In most cases, a new \code{lslx} object is initialized by supplying \code{model} and \code{data}.
-#' If raw data set is not available, \code{lslx} also supports initialization via sample moments.
-#' In that case, \code{sample_cov} and \code{sample_size} are required.
-#' Argument \code{sample_mean} is optional. 
+#' For details of syntax for model specification, see the section of \emph{Model Syntax}.
+#' If raw data is not available, \code{lslx} also supports initialization via sample moments.
+#' In that case, \code{sample_cov} and \code{sample_size} are required. 
 #' If \code{sample_mean} is missing under moment initialization, it is assumed to be zero.
-#' If multi-group analysis is desired, argument \code{group_variable} should be given to specify what variable is used for labeling group.
+#' When multi-group analysis is desired, argument \code{group_variable} should be given to specify what variable is used for labeling group.
 #' Argument \code{reference_group} can be used to set reference group.
-#' Note that if some group is set as reference, the coefficients in other groups will represent increments from the reference. 
+#' Note that if some group is set as reference, the coefficients in other groups will represent increments from the reference.
+#' When the missingness of data depends on some other variables, \code{auxiliary_variable} can be used to specify auxiliary variables for estimate saturated moments.
+#' For details of missing data, see the section of \emph{Missing Data}.
 #' 
 #'
 #' @section Set-Related Methods:
@@ -576,7 +576,6 @@
 #' (2) it has either free or penalized reference component.
 #' The method is only available in the case of multi-group analysis with specified reference group.
 #'
-#'
 #' Inside \code{lslx} object, every coefficient (or parameter) has its own name and belongs to some block.
 #' \itemize{
 #' \item{The coefficient name is constructed by a relation and a group name.
@@ -594,12 +593,11 @@
 #' }
 #' }
 #' Arguments in set-related methods may rely on the naming rule of coefficent name and block to modify model specification.
-#' 
 #'
 #' @section Fit-Related Methods:
 #' 
-#' \preformatted{$fit(penalty_method = "none", lambda_grid = "default", delta_grid = "default", 
-#'      algorithm = "default", missing_method = "default", start_method = "default",
+#' \preformatted{$fit(penalty_method = "none", lambda_grid = "default", delta_grid = "default",
+#'       algorithm = "default", missing_method = "default", start_method = "default",
 #'      iter_out_max = 100L, iter_in_max = 50L, iter_other_max = 500L, 
 #'      iter_armijo_max = 100L, tol_out = 1e-3, tol_in = 1e-3, tol_other = 1e-7, 
 #'      step_size = 0.5, armijo = 1e-5, ridge_cov = 1e-4, ridge_hessian = 1e-4, 
@@ -641,9 +639,13 @@
 #'\item{\code{ridge_cov}}{A small positive \code{numeric} for the ridge of sample covariance matrix and the minimal value of variance estimate if \code{positive_diag = TRUE}.} 
 #'\item{\code{ridge_hessian}}{A small positive \code{numeric} for the ridge of approximated hessian in optimization.}
 #'\item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
-#'\item{\code{...}}{Other named arguments for implementing \code{$fit()}.}
+#'\item{\code{...}}{Other passing arguments for calling \code{$fit()}.}
 #'}
 #' \bold{Details}
+#' 
+#' Fit-related methods are used for fitting model to data.
+#' The success of these methods may depend on the specified fitting control.
+#' For details of optimization algorithm, see the section of \emph{Optimization Algorithm}.
 #' 
 #' \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function.
 #' It is the most comprehensive fit method and hence many arguments can be specified.
@@ -681,7 +683,8 @@
 #' \code{$summarize()} prints a summary for the fitting result under the given selector.
 #' It requires users to specify which selector should be used.
 #' By default, the summary includes model information, numerical conditions, information criteria, fit inddices, coefficient estimates, and related statistical inference.
-#'      
+#' For details of evaluation and inference methods, see the sections of \emph{Model Fit Evaluation} and \emph{Coefficient Evaluation}.
+#'
 #' @section Test-Related Methods:
 #' 
 #' \preformatted{$test_lr(selector, exclude_improper = TRUE)
@@ -710,12 +713,15 @@
 #' So far, only tests for likelihood ratio (LR), root mean square error of approximation (RMSEA), and coefficients are available.
 #' 
 #' \code{$test_lr()} returns a \code{data.frame} of result for likelihood ratio test.
-#' If raw data is available, it also calculates a mean-adjusted statistic (Satorra & Bentler, 1994).
+#' If raw data is available, it also calculates a mean-adjusted statistic.
+#' For details of significance test method for LR, see the section of \emph{Model Fit Evaluation}.
 #' 
 #' \code{$test_rmsea()} returns a \code{data.frame} of result for rmsea confidence intervals.
 #' If raw data is available, it also calculates a mean-adjusted confidence interval (Brosseau-Liard, Savalei & Li, 2012; Li & Bentler, 2006).
+#' For details of confidence interval construction for RMSEA, see the section of \emph{Model Fit Evaluation}.
 #' 
 #' \code{$test_coefficient()} returns a \code{data.frame} of result for coefficient significance and confidence interval.
+#' For details of standard error formula for LR, see the section of \emph{Coefficient Evaluation}.
 #' 
 #' @section Plot-Related Methods:
 #' \preformatted{$plot_numerical_condition()
@@ -749,6 +755,7 @@
 #' \preformatted{$get_model()
 #' $get_data()
 #' $get_fitting()
+#' 
 #' }
 #' \bold{Details}
 #' 
@@ -827,6 +834,7 @@
 #' \code{$extract_saturated_cov()} returns a \code{list} of saturated sample mean vector(s).
 #' 
 #' \code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments.
+#' Note that if raw data is not available, asymptotic covariance matrice is calculated by assuming normality for data.
 #' 
 #' \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level.
 #' 
@@ -853,14 +861,16 @@
 #' \code{$extract_expected_fisher()} returns a \code{matrix} of the expected Fisher information matrix.
 #' 
 #' \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix.
+#' Note that the observed information matrix is calculated via numerical differentiation for the gradient of loss.
 #' 
 #' \code{$extract_score_acov()} returns a \code{matrix} of the asymptotic covariance of scores.
 #' 
 #' \code{$extract_coefficient_acov()} returns a \code{matrix} of the asymptotic covariance of coefficients.
+#' For details of standard error formula, see the section of \emph{Coefficient Evaluation}.
 #' 
 #' \code{$extract_loss_gradient()} returns a \code{matrix} of the gradient of loss function.
 #' 
-#' \code{$extract_regularizer_gradient()} returns a \code{matrix} of the gradient of regularizer.
+#' \code{$extract_regularizer_gradient()} returns a \code{matrix} of the sub-gradient of regularizer.
 #' 
 #' \code{$extract_objective_gradient()} returns a \code{matrix} of the sub-gradient of objective function.
 #' 
