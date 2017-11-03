@@ -251,7 +251,7 @@ lslxFitting$set("private",
                             },
                             data$pattern,
                             data$auxiliary,
-                            idc_use_i,
+                            idc_use,
                             SIMPLIFY = FALSE,
                             USE.NAMES = TRUE
                           )
@@ -283,8 +283,8 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_use_i) {
-                            weight_i <- weight_i[idc_use_i, , drop = FALSE]
-                            weight_i <- weight_i / colSums(weight_i)
+                            weight_i <- weight_i[idc_use_i, ]
+                            weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
                           data$weight,
@@ -319,8 +319,8 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_complete_i) {
-                            weight_i <- weight_i[idc_complete_i, , drop = FALSE]
-                            weight_i <- weight_i / colSums(weight_i)
+                            weight_i <- weight_i[idc_complete_i, ]
+                            weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
                           data$weight,

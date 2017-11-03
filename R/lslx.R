@@ -554,7 +554,7 @@
 #' \item{\code{both}}{A \code{character} to indicate variable names in both side of operator \code{"<->"}.}
 #' \item{\code{group}}{A \code{character} to indicate group names that the specified relations belong to.}
 #' \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
-#' Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
+#' Its value must be \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
 #' \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 #' }
 #' \bold{Details}
@@ -725,16 +725,25 @@
 #' For details of standard error formula for LR, see the section of \emph{Coefficient Evaluation}.
 #' 
 #' @section Plot-Related Methods:
-#' \preformatted{$plot_numerical_condition()
-#' $plot_information_criterion()
-#' $plot_fit_indice()
-#' $plot_coefficient(block, left, right, both)}
+#' \preformatted{$plot_numerical_condition(condition= "default")
+#' $plot_information_criterion(criterion = "default")
+#' $plot_fit_indice(indice = "default")
+#' $plot_coefficient(block = "default", left = "default", 
+#'                   right = "default", both = "default")}
 #' \describe{
 #' \item{\bold{Arguments}}{
 #' 
 #' }
+#' \item{\code{condition}}{A \code{character} to specify which numerical conditions should be plotted.
+#' Its value must be \code{"objective_value"}, \code{"objective_gradient_abs_max"}, \code{"objective_hessian_convexity"}, 
+#' \code{"n_iter_out"}, \code{"loss_value"}, \code{"n_nonzero_coefficient"}, or their combination.}
+#'  \item{\code{criterion}}{A \code{character} to specify which information criteria should be plotted.
+#'  Its value must be \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#'  \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}, or their combination.}
+#'  \item{\code{indice}}{A \code{character} to specify which fit indices should be plotted.
+#'  Its value must be \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, \code{"srmr"}, or their combination. }
 #'  \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
-#'  Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
+#'  Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
 #'  \item{\code{left}}{A \code{character} to specify the variables in the left-hand side of operator in \code{block}.}
 #'  \item{\code{right}}{A \code{character} to specify the variables in the right-hand side of operator in \code{block}.}
 #'  \item{\code{both}}{A \code{character} to specify the variables in both sides of operator in \code{block}.}
@@ -743,14 +752,18 @@
 #' 
 #' Plot-related methods are used for visualizing the fitting results.
 #' 
-#' \code{$plot_numerical_condition()} gives an overview of the quality of optimization,
-#' including the number of iterations, the maximal element of absolute subgradient of object function, and the minimum of univariate approximate hessian across the given penalty levels.
+#' \code{$plot_numerical_condition()} plots the values of selected numerical conditions.
+#' It can be used to assess the quality of optimization.
+#' By default, \code{"n_iter_out"}, \code{"objective_gradient_abs_max"}, and \code{"objective_hessian_convexity"} across the given penalty levels are plotted.
 #' 
 #' \code{$plot_information_criterion()} shows how the values of information criteria vary with penalty levels.
+#' By default, \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, and \code{"hbic"} are plotted.
 #' 
 #' \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels.
+#' By default, \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, and \code{"srmr"} are plotted.
 #' 
 #' \code{$plot_coefficient()} visualizes the solution paths of coefficients belonging to the intersection of \code{block}, \code{left}, \code{right}, and \code{both} arguments.
+#' By default, all of the coefficients are plotted.
 #'
 #' @section Get-Related Methods:
 #' \preformatted{$get_model()
@@ -812,7 +825,7 @@
 #'   If it is specified as \code{"default"}, it will be set as 
 #'   (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
 #' \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
-#'  Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
+#'  Its value must be \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
 #'\item{\code{exclude_improper}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection. 
 #'   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
 #'   non-convexity result is determined by checking the minimum of univariate approximate hessian.}

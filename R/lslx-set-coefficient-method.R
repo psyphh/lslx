@@ -225,7 +225,8 @@ lslx$set("private",
                        FALSE,
                        ifelse(group_i == private$model$reference_group,
                               TRUE,
-                              FALSE)),
+                              FALSE)
+                     ),
                    matrice = matrice_i,
                    block = block_i,
                    type = type,
@@ -259,20 +260,18 @@ lslx$set("private",
            }
            
            if (verbose & !is.na(private$model$reference_group)) {
-               cat(
-                 "NOTE: Because",
-                 private$model$reference_group,
-                 "is set as reference,",
-                 "a relation under other group", 
-                 "actually represents an increment between the specified group",
-                 "and the reference group",
-                 paste0(private$model$reference_group, ".\n")
-               )
+             cat(
+               "NOTE: Because",
+               private$model$reference_group,
+               "is set as reference,",
+               "a relation under other group",
+               "actually represents an increment. \n"
+             )
              cat(
                "NOTE: Please check whether the starting value for the increment represents a difference. \n"
              )
            }
-
+           
            private$model$specification <-
              private$model$specification <-
              private$model$specification[order(
@@ -284,7 +283,7 @@ lslx$set("private",
                match(private$model$specification$left, private$model$name_eta),
                decreasing = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
                method = "radix"
-             ), ]
+             ),]
            
            private$model$name_endogenous <-
              unique(private$model$specification$left[private$model$specification$matrice == "beta"])

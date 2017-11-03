@@ -1,16 +1,23 @@
 lslx$set("public",
          "plot_numerical_condition",
-         function() {
+         function(condition = "default") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_numerical_condition' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-
-           condition <-
-             c("n_iter_out",
-               "objective_gradient_abs_max",
-               "objective_hessian_convexity")
+           if (condition == "default") {
+             condition <-
+               c("n_iter_out",
+                 "objective_gradient_abs_max",
+                 "objective_hessian_convexity")
+           } else {
+             if (any(!(
+               condition %in% names(private$fitting$fitted_result$numerical_condition[[1]])
+             ))) {
+               stop("Argument `condition` contains unrecognized numerical condition.")
+             }
+           }
            df_for_plot <-
              as.data.frame(do.call(cbind,
                                    private$fitting$fitted_result$numerical_condition)[condition,
@@ -23,8 +30,6 @@ lslx$set("public",
                x = rownames(df_for_plot)
              )
            df_for_plot$condition <- condition
-           
-           
            df_for_plot <-
              reshape(
                data = df_for_plot,
@@ -35,13 +40,10 @@ lslx$set("public",
                times = colnames(df_for_plot)[-ncol(df_for_plot)],
                direction = "long"
              )
-           
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
-           
            df_for_plot$penalty_level <- NULL
-           
            df_for_plot$lambda <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -49,7 +51,6 @@ lslx$set("public",
                  x[2]
                }
              ))
-           
            df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -57,7 +58,6 @@ lslx$set("public",
                  x[4]
                }
              ))
-           
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line() +
              ggplot2::facet_grid(condition ~ delta,
@@ -76,24 +76,27 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_information_criterion",
-         function() {
+         function(criterion = "default") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           criterion <-
-             names(private$fitting$fitted_result$information_criterion[[1]])
-           
+           if (criterion == "default") {
+             criterion <- c("aic", "aic3", "caic", "bic", "abic", "hbic")
+           } else {
+             if (any(!(
+               criterion %in% names(private$fitting$fitted_result$information_criterion[[1]])
+             ))) {
+               stop("Argument `criterion` contains unrecognized information criterion.")
+             }
+           }
            df_for_plot <-
-             as.data.frame(
-               do.call(
-                 cbind,
-                 private$fitting$fitted_result$information_criterion)[
-                   criterion, , drop = FALSE])
-           
+             as.data.frame(do.call(
+               cbind,
+               private$fitting$fitted_result$information_criterion
+             )[criterion, , drop = FALSE])
            df_for_plot$criterion <- criterion
-           
            df_for_plot <-
              reshape(
                data = df_for_plot,
@@ -104,13 +107,10 @@ lslx$set("public",
                times = colnames(df_for_plot)[-ncol(df_for_plot)],
                direction = "long"
              )
-           
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
-           
            df_for_plot$penalty_level <- NULL
-           
            df_for_plot$lambda <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -118,7 +118,6 @@ lslx$set("public",
                  x[2]
                }
              ))
-           
            df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -126,7 +125,6 @@ lslx$set("public",
                  x[4]
                }
              ))
-           
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
              ggplot2::facet_grid(. ~ delta, labeller = ggplot2::label_both) +
@@ -146,19 +144,27 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_fit_indice",
-         function() {
+         function(indice = "default") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           indice <-
-             names(private$fitting$fitted_result$fit_indice[[1]])
+           if (indice == "default") {
+             indice <-
+               names(private$fitting$fitted_result$fit_indice[[1]])
+           } else {
+             if (any(!(
+               indice %in% names(private$fitting$fitted_result$fit_indice[[1]])
+             ))) {
+               stop("Argument `indice` contains unrecognized fit indice.")
+             }
+           }
            df_for_plot <-
              as.data.frame(do.call(cbind,
                                    private$fitting$fitted_result$fit_indice)[indice,
-                                                                                  ,
-                                                                                  drop = FALSE])
+                                                                             ,
+                                                                             drop = FALSE])
            df_for_plot$indice <- indice
            df_for_plot <-
              reshape(
@@ -206,25 +212,25 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_coefficient",
-         function(block,
-                  left,
-                  right,
-                  both) {
+         function(block = "default",
+                  left = "default",
+                  right = "default",
+                  both = "default") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_coefficient' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (missing(block)) {
+           if (block == "default") {
              block <- unique(private$model$specification$block)
            }
-           if (missing(left)) {
+           if (left == "default") {
              left <- c(private$model$name_eta, "1")
            }
-           if (missing(right)) {
+           if (right == "default") {
              right <- c(private$model$name_eta, "1")
            }
-           if (missing(both)) {
+           if (both == "default") {
              both <- c(private$model$name_eta, "1")
            }
            df_for_plot <-
@@ -241,7 +247,6 @@ lslx$set("public",
              sleftp("No such type of coefficient in the specified model.")
            }
            df_for_plot$name <- rownames(df_for_plot)
-           
            df_for_plot <-
              reshape(
                data = df_for_plot,
@@ -252,16 +257,13 @@ lslx$set("public",
                times = colnames(df_for_plot)[-ncol(df_for_plot)],
                direction = "long"
              )
-           
            name_split <- strsplit(x = df_for_plot$name,
                                   split = "\\|")
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
-           
            df_for_plot$name <- NULL
            df_for_plot$penalty_level <- NULL
-           
            df_for_plot$relation <-
              sapply(
                X = name_split,
@@ -269,7 +271,6 @@ lslx$set("public",
                  x[1]
                }
              )
-           
            df_for_plot$group <-
              sapply(
                X = name_split,
@@ -277,7 +278,6 @@ lslx$set("public",
                  x[2]
                }
              )
-           
            df_for_plot$lambda <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -285,7 +285,6 @@ lslx$set("public",
                  x[2]
                }
              ))
-           
            df_for_plot$delta <-
              as.numeric(sapply(
                X = penalty_level_split,
@@ -293,7 +292,6 @@ lslx$set("public",
                  x[4]
                }
              ))
-           
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = estimate)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = relation)) +
              ggplot2::facet_grid(group ~ delta, labeller = ggplot2::label_both) +
