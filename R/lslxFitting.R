@@ -64,6 +64,7 @@ lslxFitting$set("private",
                         )
                       }
                     } else {
+                      
                     }
                   }
                   if (self$control$delta_grid[[1]] == "default") {
@@ -78,6 +79,7 @@ lslxFitting$set("private",
                         )
                       }
                     } else {
+                      
                     }
                   }
                   self$control$lambda_grid <-
@@ -218,42 +220,84 @@ lslxFitting$set("private",
                         }
                       )
                     if (self$control$missing_method == "two_stage") {
+                      idc_use <-
+                        lapply(
+                          X = data$pattern,
+                          FUN = function(pattern_i) {
+                            return(rowSums(pattern_i) > 0)
+                          }
+                        )
                       if (self$control$auxiliary) {
                         response <-
                           mapply(
                             FUN = function(response_i,
-                                           auxiliary_i) {
-                              return(cbind(response_i, auxiliary_i))
+                                           auxiliary_i,
+                                           idc_use_i) {
+                              return(cbind(response_i[idc_use_i, , drop = FALSE],
+                                           auxiliary_i[idc_use_i, , drop = FALSE]))
                             },
                             data$response,
                             data$auxiliary,
+                            idc_use,
                             SIMPLIFY = FALSE,
                             USE.NAMES = TRUE
                           )
                         pattern <-
                           mapply(
                             FUN = function(pattern_i,
-                                           auxiliary_i) {
-                              return(cbind(pattern_i, !is.na(auxiliary_i)))
+                                           auxiliary_i,
+                                           idc_use_i) {
+                              return(cbind(pattern_i[idc_use_i, , drop = FALSE],!is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
                             },
                             data$pattern,
                             data$auxiliary,
+                            idc_use_i,
                             SIMPLIFY = FALSE,
                             USE.NAMES = TRUE
                           )
                       } else {
-                        response <- data$response
-                        pattern <- data$pattern
+                        response <-
+                          mapply(
+                            FUN = function(response_i,
+                                           idc_use_i) {
+                              return(response_i[idc_use_i, , drop = FALSE])
+                            },
+                            data$response,
+                            idc_use,
+                            SIMPLIFY = FALSE,
+                            USE.NAMES = TRUE
+                          )
+                        pattern <-
+                          mapply(
+                            FUN = function(pattern_i,
+                                           idc_use_i) {
+                              return(pattern_i[idc_use_i, , drop = FALSE])
+                            },
+                            data$pattern,
+                            idc_use,
+                            SIMPLIFY = FALSE,
+                            USE.NAMES = TRUE
+                          )
                       }
-                      weight <- data$weight
+                      weight <-
+                        mapply(
+                          FUN = function(weight_i,
+                                         idc_use_i) {
+                            weight_i <- weight_i[idc_use_i, , drop = FALSE]
+                            weight_i <- weight_i / colSums(weight_i)
+                            return(weight_i)
+                          },
+                          data$weight,
+                          idc_use,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
                     } else if (self$control$missing_method == "listwise_deletion") {
                       response <-
                         mapply(
                           FUN = function(response_i,
                                          idc_complete_i) {
-                            response_i <-
-                              response_i[idc_complete_i, , drop = FALSE]
-                            return(response_i)
+                            return(response_i[idc_complete_i, , drop = FALSE])
                           },
                           data$response,
                           idc_complete,
@@ -264,9 +308,7 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(pattern_i,
                                          idc_complete_i) {
-                            pattern_i <-
-                              pattern_i[idc_complete_i, , drop = FALSE]
-                            return(pattern_i)
+                            return(pattern_i[idc_complete_i, , drop = FALSE])
                           },
                           data$pattern,
                           idc_complete,
@@ -277,8 +319,8 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_complete_i) {
-                            weight_i <- weight_i[idc_complete_i]
-                            weight_i <- weight_i / sum(weight_i)
+                            weight_i <- weight_i[idc_complete_i, , drop = FALSE]
+                            weight_i <- weight_i / colSums(weight_i)
                             return(weight_i)
                           },
                           data$weight,
@@ -556,7 +598,7 @@ lslxFitting$set("private",
                       lapply(
                         X = self$reduced_data$saturated_moment_acov,
                         FUN = function(saturated_moment_acov_i) {
-                          return(saturated_moment_acov_i[c(y_name, y2_name), 
+                          return(saturated_moment_acov_i[c(y_name, y2_name),
                                                          c(y_name, y2_name),
                                                          drop = FALSE])
                         }

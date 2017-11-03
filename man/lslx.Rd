@@ -309,12 +309,14 @@ Since \pkg{lslx} treats the group variable as \code{factor}, its order is determ
 For example, if three groups \code{c}, \code{a}, and \code{b} are considered, then the first group is \code{a}, the second is \code{b}, and the third is \code{c}.
 
 
-In the current version of \pkg{lslx}, parameter constraints cannot be imposed.
-It seems that testing parameter invariance is impossible in \pkg{lslx}.
-However, \pkg{lslx} parameterizes group parameters in different way compared to other SEM software.
-Under \pkg{lslx}, each group parameter is decomposed into a sum of a reference component and an increment component.
-If the reference component is assumed to be zero, the increment component represents the group parameter, which is equivalent to the usual parameterization in other softwares.
-On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of \emph{Initialize Method}), then the reference component now represents the group parameter of the reference group and other increment components represent the differences from the reference group.
+In the current version of \pkg{lslx}, coefficient constraints cannot be imposed.
+It seems that testing coefficient invariance across groups is impossible in \pkg{lslx}.
+However, the present package parameterizes group coefficients in different way compared to other SEM software.
+Under \pkg{lslx}, each group coefficient is decomposed into a sum of a reference component and an increment component.
+If the reference component is assumed to be zero, the increment component represents the group coefficient, which is equivalent to the usual parameterization in other softwares.
+On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of \emph{Initialize Method}), 
+then the reference component now represents the group coefficient of the reference group and other increment components represent the differences from the reference group.
+The coefficient invariance across groups can be evaluated by examining the value or sparsity of the corresponding increment component.
 }
 
 \section{Optimization Algorithm}{
@@ -358,9 +360,9 @@ If the two-stage method is implemented, the standard error formula will be corre
 
 So far, \pkg{lslx} doesn't include the full-information maximum likelihood (FIML) method for missing values.
 One reason is that PL can be computationally intensive if many penalty levels are considered.
-The additional E-step in each iteration by FIML makes the problem worse.
+The additional E-step in each iteration of FIML makes the problem worse.
 Another reason is that the two step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
-It seems that the implementation of FIML in PL may not bring further advantages.
+Therefore, we tend to believe that the implementation of FIML in PL may not bring further advantages over the two step method.
 }
 
 \section{Penalty Level Selection}{
@@ -704,7 +706,7 @@ $test_rmsea(selector, alpha_level = .05, exclude_improper = TRUE)
 $test_coefficient(selector, standard_error = "default", 
                   alpha_level = .05, exclude_improper = TRUE)}
 \describe{
-\item{Arguments}{
+\item{\bold{Arguments}}{
 
 }
 \item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level. 

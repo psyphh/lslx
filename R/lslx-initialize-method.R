@@ -26,6 +26,9 @@ lslx$set("public",
              if (missing(group_variable)) {
                name_group <- "G"
              } else {
+               if (length(group_variable) > 1) {
+                 stop("Argument `group_variable` can be only of length one.")
+               }
                if (!(group_variable %in% colnames(data))) {
                  stop("Argument 'group_variable' is not recognized.")
                }
@@ -37,6 +40,9 @@ lslx$set("public",
              if (missing(weight_variable)) {
                
              } else {
+               if (length(weight_variable) > 1) {
+                 stop("Argument `weight_variable` can be only of length one.")
+               }
                if (!(weight_variable %in% colnames(data))) {
                  stop("Argument 'weight_variable' is not recognized.")
                }
@@ -111,12 +117,10 @@ lslx$set("public",
                }
              }
            }
-           
            private$model <-
              lslxModel$new(model = model,
                            name_group = name_group,
                            reference_group = reference_group)
-           
            if (!missing(data)) {
              if (!all(private$model$name_response %in% colnames(data))) {
                stop(
@@ -134,7 +138,7 @@ lslx$set("public",
                    list(data[, private$model$name_response, drop = FALSE])
                  names(response) <- name_group
                  if (missing(weight_variable)) {
-                   weight <- list(rep(1, nrow(data)))
+                   weight <- list(data.frame(weight = rep(1, nrow(data))))
                  } else {
                    weight <- list(data[, weight_variable, drop = FALSE])
                  }
@@ -142,7 +146,14 @@ lslx$set("public",
                  if (missing(auxiliary_variable)) {
                    auxiliary <- list()
                  } else {
-                   auxiliary <- list(data[, auxiliary_variable, drop = FALSE])
+                   auxiliary_variable <-
+                     setdiff(x = auxiliary_variable, 
+                             y = private$model$name_response)
+                   if (length(auxiliary_variable) > 0) {
+                     auxiliary <- list(data[, auxiliary_variable, drop = FALSE])
+                   } else {
+                     auxiliary <- list()
+                   }
                  }
                } else {
                  data <-
@@ -153,7 +164,7 @@ lslx$set("public",
                    split(data[, private$model$name_response, drop = FALSE],
                          getElement(data, group_variable))
                  if (missing(weight_variable)) {
-                   weight <- split(rep(1, nrow(data)),
+                   weight <- split(data.frame(weight = rep(1, nrow(data))),
                                    getElement(data, group_variable))
                  } else {
                    weight <-
@@ -201,8 +212,7 @@ lslx$set("public",
                                           weight = weight,
                                           auxiliary = auxiliary)
              if (verbose) {
-               cat("An 'lslx' R6 class is initialized via 'data'.",
-                   "\n")
+               cat("An 'lslx' R6 class is initialized via 'data'.\n")
              }
            } else {
              if (!all(private$model$name_response %in% colnames(sample_cov[[1]]))) {
@@ -366,9 +376,11 @@ lslx$set("public",
              cat("  Response Variable(s):",
                  private$model$name_response,
                  "\n")
-             cat("  Latent Factor(s):",
-                 private$model$name_factor,
-                 "\n")
+             if (length(private$model$name_factor) > 0) {
+               cat("  Latent Factor(s):",
+                   private$model$name_factor,
+                   "\n") 
+             }
              if (length(private$data$auxiliary) > 0) {
                cat("  Auxiliary Variable(s):",
                    colnames(private$data$auxiliary[[1]]),

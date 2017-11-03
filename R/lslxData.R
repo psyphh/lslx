@@ -31,59 +31,9 @@ lslxData$set("public",
                           FUN = function(response_i) {
                             return(!is.na(response_i))
                           })
-                 idc_use <-
-                   lapply(X = self$pattern,
-                          FUN = function(pattern_i) {
-                            return(rowSums(pattern_i) < nrow(pattern_i))
-                          })
-                 self$response <- 
-                   mapply(FUN = function(response_i,
-                                         idc_use_i) {
-                            return(response_i[idc_use_i, , drop = FALSE])
-                          },
-                          self$response,
-                          idc_use,
-                          SIMPLIFY = FALSE,
-                          USE.NAMES = TRUE)
-                 
-                 self$weight <- 
-                   mapply(FUN = function(weight_i,
-                                         idc_use_i) {
-                     weight_i <- weight_i[idc_use_i]
-                     return(weight_i / sum(weight_i))
-                   },
-                   self$weight,
-                   idc_use,
-                   SIMPLIFY = FALSE,
-                   USE.NAMES = TRUE)
-                 
-                 self$pattern <- 
-                   mapply(FUN = function(pattern_i,
-                                         idc_use_i) {
-                     return(pattern_i[idc_use_i, , drop = FALSE])
-                   },
-                   self$pattern,
-                   idc_use,
-                   SIMPLIFY = FALSE,
-                   USE.NAMES = TRUE)
-                 
-                 if (length(auxiliary) > 0) {
-                   self$auxiliary <- 
-                     mapply(FUN = function(auxiliary_i,
-                                           idc_use_i) {
-                       return(auxiliary_i[idc_use_i, , drop = FALSE])
-                     },
-                     self$auxiliary,
-                     idc_use,
-                     SIMPLIFY = FALSE,
-                     USE.NAMES = TRUE)
-                 } 
-                 
                  self$sample_cov <- list()
                  self$sample_mean <- list()
-                 self$sample_size <-
-                   lapply(X = response, 
-                          FUN = nrow)
+                 self$sample_size <- list()
                } else {
                  self$response <- list()
                  self$weight <- list()
