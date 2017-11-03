@@ -15,7 +15,7 @@ Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
 \code{lslx} is an \code{R6ClassGenerator} for constructing an \code{lslx} object that has methods for fitting semi-confirmatory SEM.
 In a simpliest case, the use of \code{lslx} involves three major steps
 \enumerate{
-\item {Initialize a new \code{lslx} object by specifying a model and imported a data set.
+\item {Initialize a new \code{lslx} object by specifying a model and importing a data set.
 
 \code{r6_lslx <- lslx$new(model, data)}
 }
@@ -101,7 +101,7 @@ The creation of syntax in \pkg{lslx} is highly motivated by \pkg{lavaan} (Rossee
 However, \pkg{lslx} utilizes slightly more complex, but still intuitive operators to describe relations among variables.
 
 
-\strong{Example 1: Multiple Regression Model} 
+\bold{Example 1: Multiple Regression Model} 
 
 Consider the first example of model that specifies a multiple regression model
 
@@ -161,7 +161,7 @@ For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the
 However, any prefix cannot simultaneously appears on both sides of operators, which results in an ambiguity specification.
 
 
-\strong{Example 2: Factor Analysis Model}
+\bold{Example 2: Factor Analysis Model}
 
 Now, we consider another example of equation specification.
 
@@ -240,7 +240,7 @@ One possible model specification for the semi-confirmatory approach is
 In this specification, loadings in the non-independent cluster will be also estimated but with penalization.
 
 
-\strong{Example 3: Path Models with both Observed Variables and Latent Factors}
+\bold{Example 3: Path Models with both Observed Variables and Latent Factors}
 
 In the third example, we consider a path model with both observed variables and latent factors
 
@@ -279,7 +279,7 @@ If no theory is available to guide the relationships in some part of the model,
 the semi-confirmatory approach can set this part as exploratory by setting the corresponding parameters as penalized.
 
 
-\strong{Example 4: Multi-Group Factor Analysis Model}
+\bold{Example 4: Multi-Group Factor Analysis Model}
 
 In the fourth example, we consider a multi-group factor analysis model.
 
@@ -325,7 +325,7 @@ where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, po
 The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
 The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
-To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden???Fletcher???Goldfarb???Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
+To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
 Although the computational cost of BFGS approximation is much smaller than calculating expected hessian, 
 Our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
 The inner loop stops if the change of the derived direction is quite small.
@@ -471,6 +471,7 @@ where
 }
 }
 In \pkg{lslx}, the baseline model is the model that assumes a diagonal covariance matrice and a saturated mean.
+Hence, the baseline model may not be appropriate if users hope to evaluate the goodness-of-fit of mean structure.
 
 
 It is also possible to test overall model fit by formal statistical test.
@@ -493,11 +494,12 @@ Further development is required to obtain valid test results or intervals after 
 \section{Initialize Method}{
 
 
-\preformatted{$new(model, data, sample_cov, sample_mean, sample_size, 
-     group_variable, reference_group, weight_variable, 
-     auxiliary_variable, verbose = TRUE)}
+\preformatted{$new(model, data, sample_cov, sample_mean, sample_size, group_variable, 
+     reference_group, weight_variable, auxiliary_variable, verbose = TRUE)}
 \describe{
-\item{\strong{Arguments}}{}
+\item{\bold{Arguments}}{
+
+}
 \item{\code{model}       }{A \code{character} with length one to represent the model specification. 
 See the section of Model Syntax for more information.}
 \item{\code{data}       }{A \code{data.frame} of raw data. 
@@ -512,7 +514,7 @@ Auxiliary variable(s) must be numeric. If any categorical auxiliary is considere
 \item{\code{sample_size}    }{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
 \item{\code{verbose}      }{A \code{logical} to specify whether messages made by \code{lslx} should be printed.} 
 }
-\strong{Details}
+\bold{Details}
 
 \code{$new()} initialzes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM).
 Argument \code{model} specifies the relations among observed variables and latent factors.
@@ -545,7 +547,9 @@ $free_heterogeneity(block, group, verbose = TRUE)
 $penalize_heterogeneity(block, group, verbose = TRUE)
 $fix_heterogeneity(block, group, verbose = TRUE)}
 \describe{
-\item{\strong{Arguments}}{}
+\item{\bold{Arguments}}{
+
+}
 \item{\code{name}}{A \code{character} to indicate which coefficients should be reset.}
 \item{\code{start}}{A \code{numeric} to specify starting values.
 The length of \code{start} should be one or match the length of \code{name} to avoid ambiguity.
@@ -556,10 +560,10 @@ If \code{start} is missing, the starting value will be set as
 \item{\code{both}}{A \code{character} to indicate variable names in both side of operator \code{"<->"}.}
 \item{\code{group}}{A \code{character} to indicate group names that the specified relations belong to.}
 \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
-Its value must be one of \code{f<-1}, \code{y<-1}, \code{f<-f}, \code{f<-y}, \code{y<-f}, \code{y<-y}, \code{f<->f}, \code{f<->y}, \code{y<->f}, and \code{y<->y}.}
+Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 }
-\strong{Details}
+\bold{Details}
 
 Set-related methods include several member functions that can be used to modify the initialized model specification.
 Like most encapsulation objects, set-related function is used to modify the inner members of object.
@@ -584,16 +588,16 @@ Inside \code{lslx} object, every coefficient (or parameter) has its own name and
 \itemize{
 \item{The coefficient name is constructed by a relation and a group name.
 A relation is defined by combining a left variable name, an operator, and a right variable name.
-For example, \code{y1<-f1} is a relation to represent the coefficient from \code{f1} to \code{y1}.
-Note that in relation we only use operators \code{<-} and \code{<->}.
-\code{->} is illegal and no distinction between \code{=} and \code{~} are made.
+For example, \code{"y1<-f1"} is a relation to represent the coefficient from \code{"f1"} to \code{"y1"}.
+Note that in relation we only use operators \code{"<-"} and \code{"<->"}.
+\code{"->"} is illegal and no distinction between \code{"="} and \code{"~"} are made.
 In multi-group analysis cases, a coefficient name requires explicitly specifying group name.
-For example, \code{y1<-f1|G1} is the parameter name for the path coefficient from \code{f1} to \code{y1} in group \code{G1}.}
+For example, \code{"y1<-f1|G1"} is the parameter name for the path coefficient from \code{"f1"} to \code{"y1"} in group \code{"G1"}.}
 \item{
 Block is defined by the types of left variable and right variable, and the operator.
-In \pkg{lslx}, \code{y} is used to indicate observed response, \code{f} is used for latent factor, and \code{1} is for intercept.
-Hence, \code{y<-f} is the block that contains all the coefficients from latent factors to observed responses.
-There are 10 possible distinct blocks: \code{f<-1}, \code{y<-1}, \code{f<-f}, \code{f<-y}, \code{y<-f}, \code{y<-y}, \code{f<->f}, \code{f<->y}, \code{y<->f}, and \code{y<->y}
+In \pkg{lslx}, \code{"y"} is used to indicate observed response, \code{"f"} is used for latent factor, and \code{"1"} is for intercept.
+Hence, \code{"y<-f"} is the block that contains all the coefficients from latent factors to observed responses.
+There are 10 possible distinct blocks: \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}
 }
 }
 Arguments in set-related methods may rely on the naming rule of coefficent name and block to modify model specification.
@@ -611,7 +615,9 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
 $fit_lasso(lambda_grid = 0, ...)
 $fit_mcp(lambda_grid = 0, delta_grid = Inf, ...)}
 \describe{
-\item{\strong{Arguments}}{}
+\item{\bold{Arguments}}{
+
+}
 \item{\code{penalty_method}}{A \code{character} to specify the penalty method. 
   The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.}
 \item{\code{lambda_grid}}{A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}. 
@@ -645,7 +651,7 @@ $fit_mcp(lambda_grid = 0, delta_grid = Inf, ...)}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 \item{\code{...}}{Other named arguments for implementing \code{$fit()}.}
 }
-\strong{Details}
+\bold{Details}
 
 \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function.
 It is the most comprehensive fit method and hence many arguments can be specified.
@@ -662,7 +668,9 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
 \preformatted{$summarize(selector, standard_error = "default", alpha_level = .05, 
            digit = 3, simplify = FALSE, exclude_improper = TRUE)}
 \describe{
-\item{\strong{Arguments}}{}
+\item{\bold{Arguments}}{
+
+}
 \item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level. 
   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, 
   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
@@ -677,7 +685,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
   non-convexity result is determined by checking the minimum of univariate approximate hessian.}
 }
-\strong{Details}
+\bold{Details}
 
 \code{$summarize()} prints a summary for the fitting result under the given selector.
 It requires users to specify which selector should be used.
@@ -692,7 +700,9 @@ $test_rmsea(selector, alpha_level = .05, exclude_improper = TRUE)
 $test_coefficient(selector, standard_error = "default", 
                   alpha_level = .05, exclude_improper = TRUE)}
 \describe{
-\item{Arguments}{}
+\item{Arguments}{
+
+}
 \item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level. 
   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, 
   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
@@ -705,10 +715,10 @@ $test_coefficient(selector, standard_error = "default",
   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
   non-convexity result is determined by checking the minimum of univariate approximate hessian.}
 }
-\strong{Details}
+\bold{Details}
 
 Test-related mthods are used to obtain the result of specific statistical test.
-So far, only tests for likelihood ratio (LR), RMSEA, and coefficients are available.
+So far, only tests for likelihood ratio (LR), root mean square error of approximation (RMSEA), and coefficients are available.
 
 \code{$test_lr()} returns a \code{data.frame} of result for likelihood ratio test.
 If raw data is available, it also calculates a mean-adjusted statistic (Satorra & Bentler, 1994).
@@ -726,14 +736,16 @@ $plot_information_criterion()
 $plot_fit_indice()
 $plot_coefficient(block, left, right, both)}
 \describe{
-\item{\strong{Arguments}}{}
- \item{\code{block}}{ A \code{character} of length one to specify which block of coefficients should be plotted.
- Its value must be one of \code{f<-1}, \code{y<-1}, \code{f<-f}, \code{f<-y}, \code{y<-f}, \code{y<-y}, \code{f<->f}, \code{f<->y}, \code{y<->f}, and \code{y<->y}.}
+\item{\bold{Arguments}}{
+
+}
+ \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
+ Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
  \item{\code{left}}{A \code{character} to specify the variables in the left-hand side of operator in \code{block}.}
  \item{\code{right}}{A \code{character} to specify the variables in the right-hand side of operator in \code{block}.}
  \item{\code{both}}{A \code{character} to specify the variables in both sides of operator in \code{block}.}
 }
-\strong{Details}
+\bold{Details}
 
 Plot-related methods are used for visualizing the fitting results.
 
@@ -751,8 +763,9 @@ including the number of iterations, the maximal element of absolute subgradient 
 
 \preformatted{$get_model()
 $get_data()
-$get_fitting()}
-\strong{Details}
+$get_fitting()
+}
+\bold{Details}
 
 Get-related methods are defined to obtain a deep copy of memebers inside \code{lslx}.
 Note that all of the data members of \code{lslx} are set as private to protect the inner data structure.
@@ -760,9 +773,9 @@ They cannot be assessed directly via \code{$}.
 
 \code{$get_model()} returns a deep copy of \code{model} member in the current \code{lslx} object.
 
-\code{get_data()} returns a deep copy of \code{data} member in the current \code{lslx} object.
+\code{$get_data()} returns a deep copy of \code{data} member in the current \code{lslx} object.
 
-\code{get_fitting()} returns a deep copy of \code{fitting} member in the current \code{lslx} object.
+\code{$get_fitting()} returns a deep copy of \code{fitting} member in the current \code{lslx} object.
 }
 
 \section{Extract-Related Methods}{
@@ -797,7 +810,9 @@ $extract_loss_gradient(selector, exclude_improper = TRUE)
 $extract_regularizer_gradient(selector, exclude_improper = TRUE)
 $extract_objective_gradient(selector, exclude_improper = TRUE)}
 \describe{
-\item{\strong{Arguments}}{}
+\item{\bold{Arguments}}{
+
+}
 \item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level. 
   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"}, 
   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
@@ -805,27 +820,30 @@ $extract_objective_gradient(selector, exclude_improper = TRUE)}
   The argument can be either \code{"sandwich"}, \code{"expected_fisher"}, and \code{"observed_fisher"}.
   If it is specified as \code{"default"}, it will be set as 
   (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
-\item{\code{block}}{ A \code{character} of length one to specify which block of coefficients should be plotted.
- Its value must be one of \code{f<-1}, \code{y<-1}, \code{f<-f}, \code{f<-y}, \code{y<-f}, \code{y<-y}, \code{f<->f}, \code{f<->y}, \code{y<->f}, and \code{y<->y}.}
+\item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
+ Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, and \code{"y<->y"}.}
 \item{\code{exclude_improper}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection. 
   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
   non-convexity result is determined by checking the minimum of univariate approximate hessian.}
 }
-\strong{Details}
+\bold{Details}
 
 Many extract-related methods are defined to obtain quantities that can be used for further SEM applications or model diagnosis.
 Some of these quantities only depend on data (e.g., saturated sample covariance matrix), but some of them relies on a penalty level (e.g., gradient of objective function).
 An optimal penalty level can be determined by specifying a \code{selector}.
 When implementing fit-related methods, \code{lslx} only records necessary results for saving memory.
 Therefore, the extract-related methods not only extract objects but may possibly re-compute some of them.
+If the extracted quantity is a function of model coefficients, note that fixed coefficient is still considered as a valid variable.
+For example, the sub-gradient of objective function is calculated by considering both estimated coefficients and fixed coefficients.
+Hence, it is not appropriate to use all the elements of the sub-gradient to evaluate the optimality of solution because the values of fixed coefficients are not optimized.
 
 \code{$extract_specification()} returns a \code{data.frame} of model specification.
 
-\code{$extract_saturated_mean()} returns a \code{list} of saturated sample covariance matrices.
+\code{$extract_saturated_mean()} returns a \code{list} of saturated sample covariance matrice(s).
 
-\code{$extract_saturated_cov()} returns a \code{list} of saturated sample mean vectors.
+\code{$extract_saturated_cov()} returns a \code{list} of saturated sample mean vector(s).
 
-\code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance of saturated moments.
+\code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments.
 
 \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level.
 
@@ -837,15 +855,15 @@ Therefore, the extract-related methods not only extract objects but may possibly
 
 \code{$extract_coefficient()} returns a \code{numeric} of estimates of the coefficients.
 
-\code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrices.
+\code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrice(s).
 
-\code{$extract_implied_mean()} returns a \code{list} of model-implied mean vectors.
+\code{$extract_implied_mean()} returns a \code{list} of model-implied mean vector(s).
 
-\code{$extract_residual_cov()} returns a \code{list} of residual matrices of covariance.
+\code{$extract_residual_cov()} returns a \code{list} of residual matrice(s) of covariance.
 
-\code{$extract_residual_mean()} returns a \code{list} of residual vectors of mean.
+\code{$extract_residual_mean()} returns a \code{list} of residual vector(s) of mean.
 
-\code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrices specified by \code{block}.
+\code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}.
 
 \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure.
 
@@ -861,7 +879,7 @@ Therefore, the extract-related methods not only extract objects but may possibly
 
 \code{$extract_regularizer_gradient()} returns a \code{matrix} of the gradient of regularizer.
 
-\code{$extract_objective_gradient()} returns a \code{matrix} of the gradient of objective function.
+\code{$extract_objective_gradient()} returns a \code{matrix} of the sub-gradient of objective function.
 }
 
 \examples{
@@ -882,8 +900,7 @@ y <~ x5 + x6 + x7 + x8 + x9 + x10
 '
 
 # initialize an lslx object via specified model and raw data
-r6_lslx <- lslx$new(model = model,
-                    data = data)
+r6_lslx <- lslx$new(model = model, data = data)
 
 # fit the specified model to data under specified penalty levels
 r6_lslx$fit(penalty_method = "lasso",

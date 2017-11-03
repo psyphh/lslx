@@ -99,25 +99,25 @@ However, it may not be valid after selecting an optimal penalty level.
 The method `plot_numerical_condition` shows the numerical condition under all the penalty levels.
 The following code plots the values of `n_iter_out` (number of iterations in outer loop), `objective_gradient_abs_max` (maximum of absolute value of gradient of objective function), and `objective_hessian_convexity` (minimum of univariate approximate hessian).
 The plot can be used to evaluate the quality of numerical optimization.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=200, out.width=600, out.height=300}
 r6_lslx$plot_numerical_condition()
 ```
 
 
 The method `plot_information_criterion` shows the values of information criteria under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=200, out.width=600, out.height=300}
 r6_lslx$plot_information_criterion()
 ```
 
 The method `plot_fit_indice` shows the values of fit indices under all the penalty levels.
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=200, out.width=600, out.height=300}
 r6_lslx$plot_fit_indice()
 ```
 
 
 The method `plot_coefficient` shows the solution path of coefficients in the given block.
 The following code plots the solution paths of all coefficients in the block `y<-f`, which contains all the regression coeffcients from latent factors to observed variables (i.e., factor loadings).
-```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=300, out.width=600, out.height=300}
+```{r comment = "", message = FALSE, fig.width = 8, fig.height = 4, dpi=200, out.width=600, out.height=300}
 r6_lslx$plot_coefficient(block = "y<-f")
 ```
 
