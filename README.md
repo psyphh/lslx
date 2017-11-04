@@ -4,7 +4,7 @@
 **lslx** can be also seen as a package for conducting usual SEM with several state-of-art inference methods, including sandwich standard error formula, mean-adjusted likelihood ratio test, and two step method with auxiliary variables for missing data. **lslx** also supports multi-group analysis for evaluating group heterogeneity. For now, the major limitations of **lslx** are that (1) it cannot impose linear or non-linear constraints for coefficients; (2) it cannot make valid inference under clustered or dependent data; and (3) it cannot handle the presence of ordinal responses.
 
 # Usage
-`lslx` is an R6ClassGenerator for constructing an `lslx` object that has methods for fitting semi-confirmatory SEM. In a simpliest case, the use of `lslx` involves three major steps
+`lslx` is an R6ClassGenerator for constructing an `lslx` object that has methods for fitting semi-confirmatory SEM. In a simplest case, the use of `lslx` involves three major steps
 
 1. Initialize a new `lslx` object by specifying a model and importing a data set.
 ``` r
