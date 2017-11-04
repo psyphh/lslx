@@ -26,4 +26,8 @@ install.packages("lslx", dependencies = TRUE)
 ```
 
 # Bug Reporting
+<<<<<<< HEAD
 If you find any bug, please post it on [issue](https://github.com/psyphh/lslx/issues).
+=======
+If you find any bug, please post it on https://github.com/psyphh/lslx/issues.
+>>>>>>> d05f6bc18a6ffb2eaf21fb0418ece6d7fa78d396
