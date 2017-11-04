@@ -116,7 +116,7 @@
 #' \item{For any endogenous veriable (i.e., an variable that is influenced by any other variable), its residual term is not required to be specified.
 #' In this example, \code{lslx} recognizes \code{y} is an endogenous variable and hence the variance of corresponding residual will be set as freely estimated parameter.
 #' It is also possible to explicitly specify the variance of residual of \code{y} by \code{y <=> y}.
-#' Here, the operator \code{"<=>"} indicates the covariance of the RHS and LHS variables should be freely estimated.}
+#' Here, the operator \code{<=>} indicates the covariance of the RHS and LHS variables should be freely estimated.}
 #' \item{If all of the specified equations do not contain the intercept variable \code{1}, then the intercept of each endogeneous and observed variable will be freely estimated.
 #' Since the intercept variable \code{1} doesn't appear in this example, the intercept for \code{y} will be set as a freely estimated parameter.
 #' We can explicitly set the intercept term by \code{y <= 1}.
@@ -135,8 +135,8 @@
 #' Also, the \code{lslx} parser will know that the intercept variable \code{1} has effect on all of \code{x1} and \code{x2}.}
 #' }
 #' The previous regression example can be equivalently represented by \code{x1 + x2 => y}.
-#' In \pkg{lslx} all of the directed operators can be reversed.
-#' Users can choose operators according to their own preference.
+#' In \pkg{lslx} all of the directed operators can be reversed under the stage of model specification.
+#' Users can choose the directions of operators according to their own preference.
 #' 
 #' The unique feature of \pkg{lslx} is that all of the parameters can be set as penalized.
 #' To penalize all of the regression coefficients, the equation can be modified as
@@ -157,8 +157,8 @@
 #' Inside the parentheses, starting values can be specified.
 #' Any prefix must present before some variable name and divided by asterisk \code{*}.
 #' Note that prefix can appear in the either RHS or LHS of operators and its function can be 'distributed' to the variables in the other side.
-#' For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be penalized.
-#' However, any prefix cannot simultaneously appears on both sides of operators, which results in an ambiguity specification.
+#' For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be freely estimated.
+#' However, any prefix cannot simultaneously appears on both sides of operators, which may result in an ambiguity specification.
 #' 
 #' 
 #' \bold{Example 2: Factor Analysis Model}
@@ -205,7 +205,7 @@
 #'  \code{fix(1) * y7 + y8 + y9 <=: f3}
 #'
 #' The prefix \code{fix(1)} will fix the corresponding loadings to be one.
-#' Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by only using \code{1 * y1}.
+#' Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by simply using \code{1 * y1}.
 #' In \pkg{lslx}, \code{1 * y1} means that the starting value of coefficient corresponding to \code{y1} (which can be free or penalized parameter, depending on the specified operator) is set as one.
 #' The second way for scale setting is fixing the variance of latent factors, which can be achieved by specifying additional equations
 #'
@@ -214,7 +214,10 @@
 #'  \code{fix(1) * f2 <=> f2}
 #' 
 #'  \code{fix(1) * f3 <=> f3}
-#'
+#' 
+#' Note that in the current version of \pkg{lslx}, scale setting will be not made automatically.
+#' Users must accomplish it manually.
+#' 
 #' When conducting factor analysis, we may face the problem that each variable may not be influenced by only one latent factor.
 #' The semi-confirmatory factor analysis, which penalizes some part of loading matrix, can be applied in this situation.
 #' One possible model specification for the semi-confirmatory approach is
