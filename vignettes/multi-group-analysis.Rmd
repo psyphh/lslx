@@ -3,7 +3,7 @@ title: "Semi-Confirmatory Multi-Group Factor Analysis"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Semi-Confirmatory Multi-Group Factor Analysis}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -78,10 +78,10 @@ To see more methods to modify a specified model, please check the section of Set
 ## Model Fitting
 After an `lslx` object is initialized, method `fit_lasso` can be used to fit the specified model into the given data with lasso penalty funtion.
 ```{r comment = "", message = FALSE}
-r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
+r6_lslx$fit_lasso(lambda_grid = seq(.01, .30, .01))
 ```
 The `fit_lasso` requires users to specify the considerd penalty levels (argument `lambda_grid`).
-In this example, the lambda grid is `seq(.02, .30, .02)`.
+In this example, the lambda grid is `seq(.01, .30, .01)`.
 All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 
 

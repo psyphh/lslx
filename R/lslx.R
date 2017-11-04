@@ -1004,7 +1004,7 @@
 #' r6_lslx <- lslx$new(model = model,
 #'                     data = lavaan::HolzingerSwineford1939)
 #' r6_lslx$fit(penalty_method = "mcp",
-#'             lambda_grid = seq(.02, .30, .02),
+#'             lambda_grid = seq(.01, .30, .01),
 #'             delta_grid = c(5, 10))
 #' r6_lslx$summarize(selector = "bic")
 #'
@@ -1033,7 +1033,7 @@
 #'                                       "y4<->y8",
 #'                                       "y6<->y8"))
 #'
-#' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+#' r6_lslx$fit_mcp(lambda_grid = seq(.01, .30, .01),
 #'                 delta_grid = Inf)
 #' r6_lslx$summarize(selector = "aic")
 #'
@@ -1063,7 +1063,7 @@
 #' r6_lslx$free_directed(left = c("visual", "textual", "speed"),
 #'                       right = "1",
 #'                       group = "Grant-White")
-#' r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
+#' r6_lslx$fit_lasso(lambda_grid = seq(.01, .30, .01))
 #' r6_lslx$summarize(selector = "bic")
 #' 
 #' 
@@ -1092,7 +1092,7 @@
 #' r6_lslx <- lslx$new(model = model,
 #'                     data = data,
 #'                     auxiliary_variable = c("ageyr", "agemo"))
-#' r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+#' r6_lslx$fit_mcp(lambda_grid = seq(.01, .30, .01),
 #'                 delta_grid = c(5, 10))
 #' r6_lslx$summarize(selector = "bic")
 #' 
