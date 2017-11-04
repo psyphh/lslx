@@ -45,4 +45,4 @@ Of course, help file is also available.
 ```
 
 # Bug Reporting
-If you find any bug, please mail psyphh@gmail.com.
+If you find any bug, please post it on https://github.com/psyphh/lslx/issues.

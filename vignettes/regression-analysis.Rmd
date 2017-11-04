@@ -3,7 +3,7 @@ title: "Regression Analysis with Lasso Penalty"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Regression Analysis with Lasso Penalty}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

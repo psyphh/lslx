@@ -1,5 +1,6 @@
-## Modification According to Suggestions of CRAN Maintainer
-Simplify description and add <doi> in DESCRIPTION file
+## lslx ver.0.6.0
+## Modification According to CRAN Maintainer
+Simplify description and add <doi> in DESCRIPTION
 
 ## Test environments
 * x86_64-apple-darwin15.6.0 (64-bit), R 3.4.2

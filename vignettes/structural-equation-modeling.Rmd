@@ -3,7 +3,7 @@ title: "Semi-Confirmatory Structural Equation Modeling"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Semi-Confirmatory Structural Equation Modeling}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -66,11 +66,11 @@ To see more methods for respecifying model, please check the section of Set-Rela
 ## Model Fitting
 After an `lslx` object is initialized, method `fit_mcp` can be used to fit the specified model into the given data with mcp penalty funtion.
 ```{r comment = "", message = FALSE}
-r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+r6_lslx$fit_mcp(lambda_grid = seq(.01, .30, .01),
                  delta_grid = Inf)
 ```
 The `fit_mcp` requires users to specify the considerd penalty levels (argument `lambda_grid` and `delta_grid`).
-In this example, the lambda grid is `seq(.02, .30, .02)` and the delta grid is `Inf`.
+In this example, the lambda grid is `seq(.01, .30, .01)` and the delta grid is `Inf`.
 Note that in this example `delta = Inf` makes mcp to be equivalent to the lasso panalty.
 All the fitting result will be stored in the `fitting` field of `r6_lslx`.
 

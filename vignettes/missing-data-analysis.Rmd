@@ -3,7 +3,7 @@ title: "Semi-Confirmatory Factor Analysis with Missing Data"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Semi-Confirmatory Factor Analysis with Missing Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -58,7 +58,7 @@ So far, the specified auxiliary variables are only stored in `lslx` object.
 They are actually used after implementing the `fit` related methods.
 ```{r comment = "", message = FALSE}
 r6_lslx$fit(penalty_method = "mcp",
-            lambda_grid = seq(.02, .30, .02),
+            lambda_grid = seq(.01, .30, .01),
             delta_grid = c(5, 10))
 ```
 By default, `fit` related methods implement two-step method (possibly with auxiliary variables) for handling missing values.
