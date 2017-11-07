@@ -157,6 +157,8 @@ rc_sem$summarize(type = "overall")["dpl", "bic optimal"]
 rc_sem$summarize(type = "individual")[, "bic optimal", drop = FALSE]
 ```
 The objective function value and estimate made by **lsl** is consistent with **lslx**, which further supports that solution of **regsem** can be further improved.
+Note that **lslx** and **lsl** implement totally different type of algorithms for optimization.
+The obtained consistent result cannot be attributed to the similarity of algorithms.
 
 ### Computation Time
 Finally, we compare the computation time of **lslx** and **regsem**
