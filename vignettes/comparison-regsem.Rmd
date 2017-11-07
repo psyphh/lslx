@@ -123,9 +123,11 @@ r6_lslx$extract_numerical_condition()["objective_value"]
 # objective function value in regsem (on the same scale)
 2 * fit_regsem$optim_fit
 ```
+
 By the fact that the objective value made by **regsem** is larger than that made by **lslx**, 
 it seems that the solution obtained by **regsem** can be further improved.
 The optimality of **lslx** solution can be checked by the sub-gradient of objective function
+
 ```{r comment = "", message = FALSE}
 r6_lslx$extract_objective_gradient()
 ```
@@ -186,3 +188,4 @@ microbenchmark::microbenchmark(
   times = 10)
 ```
 We can see that **lslx** is about 20 times faster than **regsem**.
+
