@@ -7,23 +7,28 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 options(width = 100)
 ```
-**lsl** is an old package for fitting semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL).
+[**lsl**](https://CRAN.R-project.org/package=lsl) is an old package for fitting semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL).
 It implements a expectation-conditional maximization (ECM) algorithm to optimize penalized criteria.
 **lsl** can be also seen as a predecessor of **lslx**.
 However, the interface and functionality of **lslx** are much improved.
 
-In this document, we try to compare the fitting results made by **lslx** and **lsl** for semi-confirmatory factor analysis.
-The data of Holzinger and Swineford (1939) is used.
+In this document, we try to compare the fitting results made by **lslx** and **lsl**.
+The first example in **lsl** is used, which fits a semi-confirmatory factor analysis model to the data of Holzinger and Swineford (1939) is used.
 Since the two packages target the same optimization problem, their results should be quite similar.
 Our experiments show that
 
 * **lslx** and **lsl** yield numerically the same results;
 
-* **lslx** is much faster than **lsl**.
+* **lslx** is about 80 times faster than **lsl**.
 
+Note that our comparison is made based on the following versions of packages.
+The comparison result can be different if other versions are used.
+```{r comment = "", message = FALSE}
+packageVersion("lslx"); packageVersion("lsl")
+```
 
 ### Syntax for Analysis
-We first compare the code syntax of **lslx** and **lsl** for conducting semi-confirmatory factor analysis.
+We first compare the code syntax of **lslx** and **lsl** by using the first example in **lsl**.
 The code of **lslx** is
 ```{r comment = "", message = FALSE}
 library(lslx)
