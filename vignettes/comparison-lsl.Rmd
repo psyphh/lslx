@@ -23,7 +23,7 @@ Our experiments show that
 
 
 ### Syntax for Analysis
-We first compare the syntax of **lslx** and **lsl** for conducting semi-confirmatory factor analysis.
+We first compare the code syntax of **lslx** and **lsl** for conducting semi-confirmatory factor analysis.
 The code of **lslx** is
 ```{r comment = "", message = FALSE}
 library(lslx)
