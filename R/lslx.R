@@ -331,7 +331,7 @@
 #' The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
 #' To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
 #' Although the computational cost of BFGS approximation is much smaller than calculating expected hessian, 
-#' Our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
+#' our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
 #' The inner loop stops if the change of the derived direction is quite small.
 #' The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
 #' The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
