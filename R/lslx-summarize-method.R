@@ -4,6 +4,7 @@ lslx$set("public",
                   standard_error = "default",
                   alpha_level = .05,
                   digit = 3,
+                  interval = TRUE,
                   simplify = FALSE,
                   exclude_improper = TRUE) {
            if (standard_error == "default") {
@@ -148,13 +149,13 @@ lslx$set("public",
            names(information_criterion) <-
              c(
                "Akaike information criterion (aic)",
-               "Akaike information criterion with penalty being 3 (aic3)",
+               "Akaike information criterion with penalty 3 (aic3)",
                "consistent Akaike information criterion (caic)",
                "Bayesian information criterion (bic)",
                "adjusted Bayesian information criterion (abic)",
                "Haughton Bayesian information criterion (hbic)",
                "robust Akaike information criterion (raic)",
-               "robust Akaike information criterion with penalty being 3 (raic3)",
+               "robust Akaike information criterion with penalty 3 (raic3)",
                "robust consistent Akaike information criterion (rcaic)",
                "robust Bayesian information criterion (rbic)",
                "robust adjusted Bayesian information criterion (rabic)",
@@ -199,7 +200,7 @@ lslx$set("public",
                  X = summary_list, FUN = names
                )))) + 5
              value_width <-
-               max(unlist(lapply(X = summary_list, FUN = nchar))) + 3
+               max(unlist(lapply(X = summary_list, FUN = nchar))) + 2
              for (name_i in names(summary_list)) {
                cat(name_i)
                summary_list_i <-
