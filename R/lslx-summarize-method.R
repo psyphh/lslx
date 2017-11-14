@@ -200,7 +200,7 @@ lslx$set("public",
                  X = summary_list, FUN = names
                )))) + 5
              value_width <-
-               max(unlist(lapply(X = summary_list, FUN = nchar))) + 2
+               max(unlist(lapply(X = summary_list, FUN = nchar))) + 1
              for (name_i in names(summary_list)) {
                cat(name_i)
                summary_list_i <-
@@ -341,7 +341,16 @@ lslx$set("public",
                "Variance"
              
              coefficient_test_rounded <-
-               data.frame(coefficient_test_rounded[c(1:10)])
+               data.frame(coefficient_test_rounded[c("type",
+                                                     "estimate",
+                                                     "standard_error",
+                                                     "z_value",
+                                                     "p_value",
+                                                     "lower",
+                                                     "upper",
+                                                     "block",
+                                                     "block_type",
+                                                     "group")])
              
              ## print by different groups
              if (!is.na(private$model$reference_group)) {
@@ -357,6 +366,7 @@ lslx$set("public",
              } else {
                group_by_order <- 1:length(private$model$name_group)
              }
+             
              for (i_group in group_by_order) {
                idc_group <-
                  coefficient_test_rounded$group == private$model$name_group[i_group]
@@ -365,7 +375,7 @@ lslx$set("public",
                rownames(data_single_group) <-
                  paste0(relation_as_groupname[idc_group], "  ")
                colnames(data_single_group) <-
-                 c(
+                 c("type",
                    "estimate",
                    "std.error",
                    "z-value",
@@ -374,9 +384,11 @@ lslx$set("public",
                    "upper",
                    "block",
                    "block_type",
-                   "type",
                    "group"
                  )
+               if (!interval) {
+                 data_single_group <- data_single_group[,!(colnames(data_single_group) %in% c("lower","upper"))]
+               }
                if (length(private$model$name_group) != 1) {
                  cat(
                    paste0(
@@ -419,7 +431,8 @@ lslx$set("public",
                      cat(" (increment component)\n")
                    }
                    data_single_group_block <-
-                     data_single_group[data_single_group$block_type == i_block_type, c(9, 1:6)]
+                     data_single_group[(data_single_group$block_type == i_block_type),
+                                       !(colnames(data_single_group) %in% c("block","block_type","group"))]
                    colnames(data_single_group_block) <-
                      paste0(" ", colnames(data_single_group_block))
                    print(data_single_group_block)
