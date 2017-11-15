@@ -11,17 +11,23 @@ lslx$set("private",
              stop("Argument 'right' must be given.")
            } else {}
            
-           combination <- expand.grid(left,"<-",right)
-           combination <- apply(combination,c(1,2), as.character)
-           
-           if (is.na(private$model$reference_group)) {
-             name <- paste0(combination[,1],combination[,2],combination[,3])
-           } else if (missing(group)) {
-             stop("Argument 'group' must be given")
-           } else { 
-             name <- paste0(combination[,1],combination[,2],combination[,3],"|",group)
-           }
-           
+           if (group == "default") {
+             group <-  private$model$name_group
+           } else if (!(group %in% private$model$name_group)) {
+             stop(
+               "Argument 'group' contains unknown group name.",
+               "\n  Group name(s) currently recognized by 'lslx' is ",
+               do.call(paste, as.list(private$model$name_group)),
+               ".",
+               "\n  Group name specified in 'group' is ",
+               group,
+               "."
+             )
+           } else {}
+           name <- paste0(expand.grid(left,"<-",right)[,1],
+                          expand.grid(left,"<-",right)[,2],
+                          expand.grid(left,"<-",right)[,3],
+                          "|",group)
            private$set_coefficient(
              name = name,
              type = type,
@@ -35,7 +41,7 @@ lslx$set("public",
          "free_directed",
          function(left,
                   right,
-                  group,
+                  group = "default",
                   verbose = TRUE) {
            private$set_directed(
              left = left,
@@ -51,7 +57,7 @@ lslx$set("public",
          "fix_directed",
          function(left,
                   right,
-                  group,
+                  group = "default",
                   verbose = TRUE) {
            private$set_directed(
              left = left,
@@ -67,7 +73,7 @@ lslx$set("public",
          "penalize_directed",
          function(left,
                   right,
-                  group,
+                  group = "default",
                   verbose = TRUE) {
            private$set_directed(
              left = left,

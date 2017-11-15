@@ -28,7 +28,7 @@ lslx$set("private",
                "."
              )
            }
-           relation<-private$model$specification[(private$model$specification$block==block)&
+           relation<-private$model$specification[(private$model$specification$block %in% block)&
                                                    (private$model$specification$type!="fixed")&
                                                    private$model$specification$reference,"relation"]
             if (length(relation)==0) {
