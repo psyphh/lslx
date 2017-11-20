@@ -2,18 +2,21 @@ lslx$set("private",
          "set_undirected",
          function(both,
                   group,
-                  type,
+                  action,
                   verbose = TRUE) {
-           if (group == "default") {
+           if (length(both)==1) {
+             stop("Argument 'both' must contain more than one varaible.")
+           }
+           if (missing(group)) {
              group <-  private$model$name_group
-           } else if (!(group %in% private$model$name_group)) {
+           } else if (!all(group %in% private$model$name_group)) {
              stop(
                "Argument 'group' contains unknown group name.",
                "\n  Group name(s) currently recognized by 'lslx' is ",
                do.call(paste, as.list(private$model$name_group)),
                ".",
                "\n  Group name specified in 'group' is ",
-               group,
+               do.call(paste, as.list(group)),
                "."
              )
            } else {}
@@ -24,7 +27,7 @@ lslx$set("private",
            )
            private$set_coefficient(
              name = name,
-             type = type,
+             action = action,
              verbose = verbose
            )
          }
@@ -34,11 +37,11 @@ lslx$set("private",
 lslx$set("public",
          "free_undirected",
          function(both,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
-                                  type = "free",
+                                  action = "free",
                                   verbose = verbose)
          }
 )
@@ -47,11 +50,11 @@ lslx$set("public",
 lslx$set("public",
          "fix_undirected",
          function(both,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
-                                  type = "fixed",
+                                  action = "fix",
                                   verbose = verbose)
          }
 )
@@ -60,11 +63,11 @@ lslx$set("public",
 lslx$set("public",
          "penalize_undirected",
          function(both,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_undirected(both = both,
                                   group = group,
-                                  type = "pen",
+                                  action = "penalize",
                                   verbose = verbose)
          }
 )

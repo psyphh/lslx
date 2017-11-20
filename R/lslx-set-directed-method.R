@@ -3,7 +3,7 @@ lslx$set("private",
          function(left,
                   right,
                   group,
-                  type,
+                  action,
                   verbose = TRUE) {
            if (missing(left)) {
              stop("Argument 'left' must be given.")
@@ -11,16 +11,16 @@ lslx$set("private",
              stop("Argument 'right' must be given.")
            } else {}
            
-           if (group == "default") {
+           if (missing(group)) {
              group <-  private$model$name_group
-           } else if (!(group %in% private$model$name_group)) {
+           } else if (!all(group %in% private$model$name_group)) {
              stop(
                "Argument 'group' contains unknown group name.",
                "\n  Group name(s) currently recognized by 'lslx' is ",
                do.call(paste, as.list(private$model$name_group)),
                ".",
                "\n  Group name specified in 'group' is ",
-               group,
+               do.call(paste, as.list(group)),
                "."
              )
            } else {}
@@ -30,7 +30,7 @@ lslx$set("private",
                           "|",group)
            private$set_coefficient(
              name = name,
-             type = type,
+             action = action,
              verbose = verbose
            )
          }
@@ -41,13 +41,13 @@ lslx$set("public",
          "free_directed",
          function(left,
                   right,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
              group = group,
-             type = "free",
+             action = "free",
              verbose = verbose)
          }
 )
@@ -57,13 +57,13 @@ lslx$set("public",
          "fix_directed",
          function(left,
                   right,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
              group = group,
-             type = "fixed",
+             action = "fix",
              verbose = verbose)
          }
 )
@@ -73,13 +73,13 @@ lslx$set("public",
          "penalize_directed",
          function(left,
                   right,
-                  group = "default",
+                  group,
                   verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
              group = group,
-             type = "pen",
+             action = "penalize",
              verbose = verbose)
          }
 )

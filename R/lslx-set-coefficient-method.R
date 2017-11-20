@@ -6,7 +6,7 @@ lslx$set("public",
            private$set_coefficient(
              name = name,
              start = start,
-             type = "free",
+             action = "free",
              verbose = verbose
            )
          })
@@ -21,7 +21,7 @@ lslx$set("public",
            private$set_coefficient(
              name = name,
              start = start,
-             type = "fixed",
+             action = "fix",
              verbose = verbose
            )
          })
@@ -35,7 +35,7 @@ lslx$set("public",
            private$set_coefficient(
              name = name,
              start = start,
-             type = "pen",
+             action = "penalize",
              verbose = verbose
            )
          })
@@ -46,7 +46,7 @@ lslx$set("private",
          "set_coefficient",
          function(name,
                   start,
-                  type,
+                  action,
                   verbose = TRUE) {
            if (missing(name)) {
              stop("Argument 'name' must be given.")
@@ -137,7 +137,7 @@ lslx$set("private",
              )
            
            if (missing(start)) {
-             if (type == "free") {
+             if (action == "free") {
                start <- rep(NA_real_, length(name))
              } else {
                start <- rep(0, length(name))
@@ -156,6 +156,16 @@ lslx$set("private",
                )
              }
            }
+           
+           if (action == "free"){
+             type <- "free"
+           } else if (action == "fix") {
+             type <- "fixed"
+           } else if (action == "penalize") {
+             type <- "pen"
+           } else {
+           }
+           
            
            for (i in seq_len(length(name))) {
              if (name[i] %in% rownames(private$model$specification)) {
