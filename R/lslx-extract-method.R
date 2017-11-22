@@ -39,32 +39,32 @@ lslx$set("public",
          function(selector,
                   exclude_improper = TRUE) {
            if (missing(selector)) {
-             if (length(private$fitting$fitted_result$numerical_condition) == 1) {
-               selector <- "bic"
-             } else {
+             if (length(private$fitting$fitted_result$numerical_condition) > 1) {
                stop("Argument 'selector' is missing.")
+             } else {
+             }
+           } else {
+             if (length(selector) > 1) {
+               stop("The length of argument 'selector' can be only one.")
+             }
+             
+             if (!(selector %in% names(private$fitting$fitted_result$information_criterion[[1]]))) {
+               stop(
+                 "Argument 'selector' is unrecognized.",
+                 "\n  Selector currently recognized by 'lslx' is \n  ",
+                 do.call(paste, as.list(
+                   names(private$fitting$fitted_result$information_criterion[[1]])
+                 )),
+                 "."
+               )
+             }
+             if ((selector %in% c("raic", "raic3", "rcaic", "rbic", "rabic", "rhbic")) & 
+                 (!private$fitting$control$response)) {
+               stop("When lslx object is initialized via moments,",
+                    " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available.")
              }
            }
-           if (length(selector) > 1) {
-             stop("The length of argument 'selector' can be only one.")
-           }
-           
-           if (!(selector %in% names(private$fitting$fitted_result$information_criterion[[1]]))) {
-             stop(
-               "Argument 'selector' is unrecognized.",
-               "\n  Selector currently recognized by 'lslx' is \n  ",
-               do.call(paste, as.list(
-                 names(private$fitting$fitted_result$information_criterion[[1]])
-               )),
-               "."
-             )
-           }
-           if ((selector %in% c("raic", "raic3", "rcaic", "rbic", "rabic", "rhbic")) & 
-               (!private$fitting$control$response)) {
-             stop("When lslx object is initialized via moments,",
-                  " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available.")
-           }
-           
+
            if (exclude_improper) {
              idx_convergence <-
                which(
@@ -106,22 +106,27 @@ lslx$set("public",
            }
            idx_selection <-
              intersect(x = idx_convergence, y = idx_convexity)
-           penalty_level <-
-             sapply(
-               X = selector,
-               FUN = function(selector_i) {
-                 information_criterion_i <- sapply(
-                   X = private$fitting$fitted_result$information_criterion,
-                   FUN = function(information_criterion_j) {
-                     getElement(object = information_criterion_j,
-                                name = selector_i)
-                   }
-                 )
-                 penalty_level_i <-
-                   names(which.min(information_criterion_i[idx_selection]))
-                 return(penalty_level_i)
-               }
-             )
+           
+           if (length(private$fitting$fitted_result$numerical_condition) == 1) {
+             penalty_level <- names(private$fitting$fitted_result$numerical_condition[idx_selection])
+           } else {
+             penalty_level <-
+               sapply(
+                 X = selector,
+                 FUN = function(selector_i) {
+                   information_criterion_i <- sapply(
+                     X = private$fitting$fitted_result$information_criterion,
+                     FUN = function(information_criterion_j) {
+                       getElement(object = information_criterion_j,
+                                  name = selector_i)
+                     }
+                   )
+                   penalty_level_i <-
+                     names(which.min(information_criterion_i[idx_selection]))
+                   return(penalty_level_i)
+                 }
+               )
+           }
            return(penalty_level)
          })
 
