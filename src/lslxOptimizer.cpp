@@ -504,7 +504,7 @@ void lslxOptimizer::update_loss_value() {
     double sample_proportion_i = Rcpp::as<double>(sample_proportion[i]);
     double loss_value_i =
       (saturated_cov_i * sigma_inv_i).diagonal().sum() - 
-      log((saturated_cov_i * sigma_inv_i).determinant()) - n_response + 
+      std::log((saturated_cov_i * sigma_inv_i).determinant()) - n_response + 
       ((saturated_mean_i - mu_i).transpose() * sigma_inv_i * (saturated_mean_i - mu_i)).value();
     loss_value += sample_proportion_i * loss_value_i;
   }
@@ -643,7 +643,7 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
                   n_theta, n_theta);
   } else {
     for (i = 0; i < n_theta; i++) {
-      if (!(theta_is_free[i] || theta_is_pen[i])) {
+      if ((!(theta_is_free[i]) | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
       }
     }
