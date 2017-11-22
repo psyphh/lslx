@@ -173,11 +173,11 @@ lslx$set("public",
                       (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
                     return(idc_problem_i)
                   })
-           if (any(idc_problem)) {
-             cat("WARNING: The algorithm may not converge under some penalty level. ")
-             cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
-           } else {
-             if (verbose) {
+           if (verbose) {
+             if (any(idc_problem)) {
+               cat("WARNING: The algorithm may not converge under some penalty level. ")
+               cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
+             } else {
                cat("CONGRATS: The algorithm converged under all specified penalty levels. \n")
                cat("  Specified Tolerance for Convergence:",
                    private$fitting$control$tol_out,
@@ -186,5 +186,5 @@ lslx$set("public",
                    private$fitting$control$iter_out_max,
                    "\n")
              }
-           }
+           }           
          })
