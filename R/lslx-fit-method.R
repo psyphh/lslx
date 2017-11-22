@@ -165,6 +165,7 @@ lslx$set("public",
            names(private$fitting$fitted_result$information_criterion) <- name_grid
            names(private$fitting$fitted_result$fit_indice) <- name_grid
            names(private$fitting$fitted_result$coefficient) <- name_grid
+
            if (verbose) {
              idc_problem <-
                sapply(X = private$fitting$fitted_result$numerical_condition,
