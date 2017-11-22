@@ -633,7 +633,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
 void lslxOptimizer::update_loss_bfgs_hessian() {
   Eigen::VectorXd theta_diff = 
     Rcpp::as<Eigen::VectorXd>(theta_value) - Rcpp::as<Eigen::VectorXd>(theta_start);
-  double rho = 1.0 / (loss_gradient_diff.transpose() * theta_diff).value();
+  double rho;
   int i;
   if (iter_out <= 0) {
     loss_bfgs_hessian = loss_expected_hessian;
@@ -642,8 +642,9 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
                   theta_est_idx, theta_est_idx,
                   n_theta, n_theta);
   } else {
+    rho = 1.0 / std::max((loss_gradient_diff.transpose() * theta_diff).value(), tol_out);
     for (i = 0; i < n_theta; i++) {
-      if ((!(theta_is_free[i]) | theta_is_pen[i])) {
+      if (!(theta_is_free[i] | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
       }
     }
