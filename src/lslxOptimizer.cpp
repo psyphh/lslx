@@ -631,7 +631,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
 
 
 void lslxOptimizer::update_loss_bfgs_hessian() {
-  Eigen::VectorXd theta_diff = 
+  Eigen::MatrixXd theta_diff = 
     Rcpp::as<Eigen::VectorXd>(theta_value) - Rcpp::as<Eigen::VectorXd>(theta_start);
   double rho;
   int i;
@@ -642,7 +642,7 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
                   theta_est_idx, theta_est_idx,
                   n_theta, n_theta);
   } else {
-    rho = 1.0 / std::max((loss_gradient_diff.transpose() * theta_diff).value(), tol_out);
+    rho = 1.0 / std::max((loss_gradient_diff.transpose() * theta_diff).value(), DBL_EPSILON);
     for (i = 0; i < n_theta; i++) {
       if (!(theta_is_free[i] | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
@@ -816,7 +816,8 @@ void lslxOptimizer::update_theta_value() {
           Rcpp::ifelse((theta_value < 0) & (theta_is_diag), ridge_cov, theta_value);
       } else {
         theta_value = 
-          Rcpp::ifelse((theta_value < 0) & theta_is_diag & (theta_group_idx == 0), ridge_cov, theta_value);
+          Rcpp::ifelse(((theta_value < 0) & theta_is_diag & (theta_group_idx == 0)), 
+                       ridge_cov, theta_value);
       }
     }
     update_coefficient_matrice();
