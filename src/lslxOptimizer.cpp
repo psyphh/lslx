@@ -643,7 +643,7 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
                   n_theta, n_theta);
   } else {
     for (i = 0; i < n_theta; i++) {
-      if ((!(theta_is_free[i]) | theta_is_pen[i])) {
+      if (!(theta_is_free[i] | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
       }
     }
