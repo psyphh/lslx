@@ -1,7 +1,7 @@
 Package: lslx
 Type: Package
 Title: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
-Version: 0.6.0.9001
+Version: 0.6.0.9002
 Authors@R: c(person("Po-Hsien", "Huang", email = "psyphh@gmail.com", role = c("cre", "aut")), person("Wen-Hsin", "Hu", email = "loveakai@gmail.com", role = "aut"))
 Description: Fits semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) with lasso or minimax concave penalty (MCP).
 License: GPL-3

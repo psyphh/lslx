@@ -165,19 +165,19 @@ lslx$set("public",
            names(private$fitting$fitted_result$information_criterion) <- name_grid
            names(private$fitting$fitted_result$fit_indice) <- name_grid
            names(private$fitting$fitted_result$coefficient) <- name_grid
-           idc_problem <-
-             sapply(X = private$fitting$fitted_result$numerical_condition,
-                  FUN = function(numerical_condition_i) {
-                    idc_problem_i <- 
-                      (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
-                      (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
-                    return(idc_problem_i)
-                  })
-           if (any(idc_problem)) {
-             cat("WARNING: The algorithm may not converge under some penalty level. ")
-             cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
-           } else {
-             if (verbose) {
+           if (verbose) {
+             idc_problem <-
+               sapply(X = private$fitting$fitted_result$numerical_condition,
+                      FUN = function(numerical_condition_i) {
+                        idc_problem_i <- 
+                          (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
+                          (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
+                        return(idc_problem_i)
+                      })
+             if (any(idc_problem)) {
+               cat("WARNING: The algorithm may not converge under some penalty level. ")
+               cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
+             } else {
                cat("CONGRATS: The algorithm converged under all specified penalty levels. \n")
                cat("  Specified Tolerance for Convergence:",
                    private$fitting$control$tol_out,
@@ -186,5 +186,5 @@ lslx$set("public",
                    private$fitting$control$iter_out_max,
                    "\n")
              }
-           }
+           }           
          })
