@@ -418,6 +418,31 @@ lslx$set("public",
            return(expected_fisher)
          })
 
+lslx$set("public",
+         "extract_bfgs_hessian",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           bfgs_hessian <-
+             compute_bfgs_hessian_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           colnames(bfgs_hessian) <-
+             rownames(private$model$specification)
+           rownames(bfgs_hessian) <-
+             rownames(private$model$specification)
+           return(bfgs_hessian)
+         })
+
+
 
 lslx$set("public",
          "extract_observed_fisher",

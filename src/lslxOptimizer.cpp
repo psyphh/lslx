@@ -212,7 +212,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
   theta_direction = Rcpp::rep(0.0, n_theta);
   theta_value.attr("names") = theta_name;
-  Rcpp::LogicalVector theta_est_idc = theta_is_pen | theta_is_free;
+  Rcpp::LogicalVector theta_est_idc = (theta_is_pen | theta_is_free);
   for (i = 0; i < n_theta; i++) {
     if (theta_est_idc[i]) {
       theta_est_idx.push_back(i);
@@ -642,7 +642,8 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
                   theta_est_idx, theta_est_idx,
                   n_theta, n_theta);
   } else {
-    rho = 1.0 / std::max((loss_gradient_diff.transpose() * theta_diff).value(), DBL_EPSILON);
+    rho = 1.0 / (sign(((loss_gradient_diff.transpose() * theta_diff).value())) * 
+      std::max(std::fabs((loss_gradient_diff.transpose() * theta_diff).value()), DBL_EPSILON));
     for (i = 0; i < n_theta; i++) {
       if (!(theta_is_free[i] | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
@@ -652,9 +653,9 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
       (loss_bfgs_hessian * theta_diff * theta_diff.transpose() * loss_bfgs_hessian) /
         (theta_diff.transpose() * loss_bfgs_hessian * theta_diff).value() +
           rho * (loss_gradient_diff * loss_gradient_diff.transpose());
-    loss_bfgs_hessian_inv = (identity_theta - rho * theta_diff * loss_gradient_diff.transpose()) * 
-      loss_bfgs_hessian_inv * (identity_theta - rho * loss_gradient_diff * theta_diff.transpose()) + 
-      rho * theta_diff * theta_diff.transpose();
+    loss_bfgs_hessian_inv = (identity_theta - rho * (theta_diff * loss_gradient_diff.transpose())) * 
+      loss_bfgs_hessian_inv * (identity_theta - rho * (loss_gradient_diff * theta_diff.transpose())) + 
+      rho * (theta_diff * theta_diff.transpose());
   }
 }
 
@@ -1434,6 +1435,31 @@ Rcpp::NumericMatrix compute_moment_jacobian_cpp(
   }
   return Rcpp::wrap(moment_jacobian);
 }
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
+    Rcpp::NumericVector theta_value,
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result) {
+  Eigen::MatrixXd bfgs_hessian;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_theta_value(theta_value);
+  optimizer.update_coefficient_matrice();
+  optimizer.update_implied_moment();
+  
+  optimizer.update_residual_weight();
+  optimizer.update_moment_jacobian();
+  optimizer.update_loss_expected_hessian();
+  optimizer.update_loss_bfgs_hessian();
+  bfgs_hessian = optimizer.loss_bfgs_hessian;
+  return Rcpp::wrap(bfgs_hessian);
+}
+
 
 
 // [[Rcpp::export]]

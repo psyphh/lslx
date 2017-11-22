@@ -21,6 +21,10 @@ compute_moment_jacobian_cpp <- function(theta_value, reduced_data, reduced_model
     .Call('_lslx_compute_moment_jacobian_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
+compute_bfgs_hessian_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_bfgs_hessian_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+}
+
 compute_expected_fisher_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_expected_fisher_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
