@@ -24,11 +24,22 @@ lslx$set("public",
                                                                                       ,
                                                                                       drop = FALSE])
            condition <-
+             ifelse(
+               condition == "objective_gradient_abs_max",
+               "gradient",
+               ifelse(
+                 condition == "objective_hessian_convexity",
+                 "convexity",
+                 condition
+               )
+             )
+           condition <-
              gsub(
                pattern = "_",
                replacement = " ",
                x = rownames(df_for_plot)
              )
+           
            df_for_plot$condition <- condition
            df_for_plot <-
              reshape(
@@ -127,7 +138,7 @@ lslx$set("public",
              ))
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
-             ggplot2::facet_grid(. ~ delta, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(. ~ delta) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)
@@ -196,7 +207,7 @@ lslx$set("public",
              ))
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = indice)) +
-             ggplot2::facet_grid(. ~ delta, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(. ~ delta) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)
@@ -294,7 +305,7 @@ lslx$set("public",
              ))
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = estimate)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = relation)) +
-             ggplot2::facet_grid(group ~ delta, labeller = ggplot2::label_both) +
+             ggplot2::facet_grid(group ~ delta) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
                panel.grid.major = ggplot2::element_line(size = .2)
