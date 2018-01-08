@@ -1,12 +1,12 @@
 lslx$set("public",
          "plot_numerical_condition",
-         function(condition = "default") {
+         function(condition) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_numerical_condition' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (condition[[1]] == "default") {
+           if (missing(condition)) {
              condition <-
                c("n_iter_out",
                  "objective_gradient_abs_max",
@@ -29,7 +29,7 @@ lslx$set("public",
                "gradient",
                ifelse(
                  condition == "objective_hessian_convexity",
-                 "convexity",
+                 "hessian",
                  condition
                )
              )
@@ -37,7 +37,7 @@ lslx$set("public",
              gsub(
                pattern = "_",
                replacement = " ",
-               x = rownames(df_for_plot)
+               x = condition
              )
            
            df_for_plot$condition <- condition
@@ -87,13 +87,13 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_information_criterion",
-         function(criterion = "default") {
+         function(criterion) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (criterion[[1]] == "default") {
+           if (missing(criterion)) {
              criterion <- c("aic", "aic3", "caic", "bic", "abic", "hbic")
            } else {
              if (any(!(
@@ -155,13 +155,13 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_fit_indice",
-         function(indice = "default") {
+         function(indice) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (indice[[1]] == "default") {
+           if (missing(indice)) {
              indice <-
                names(private$fitting$fitted_result$fit_indice[[1]])
            } else {
@@ -223,25 +223,25 @@ lslx$set("public",
 
 lslx$set("public",
          "plot_coefficient",
-         function(block = "default",
-                  left = "default",
-                  right = "default",
-                  both = "default") {
+         function(block,
+                  left,
+                  right,
+                  both) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_coefficient' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (block[[1]] == "default") {
+           if (missing(block)) {
              block <- unique(private$model$specification$block)
            }
-           if (left[[1]] == "default") {
+           if (missing(left)) {
              left <- c(private$model$name_eta, "1")
            }
-           if (right[[1]] == "default") {
+           if (missing(right)) {
              right <- c(private$model$name_eta, "1")
            }
-           if (both[[1]] == "default") {
+           if (missing(both)) {
              both <- c(private$model$name_eta, "1")
            }
            df_for_plot <-

@@ -116,7 +116,7 @@ Although it is a very simple example, at least four important things behind this
 \item{For any endogenous veriable (i.e., an variable that is influenced by any other variable), its residual term is not required to be specified.
 In this example, \code{lslx} recognizes \code{y} is an endogenous variable and hence the variance of corresponding residual will be set as freely estimated parameter.
 It is also possible to explicitly specify the variance of residual of \code{y} by \code{y <=> y}.
-Here, the operator \code{"<=>"} indicates the covariance of the RHS and LHS variables should be freely estimated.}
+Here, the operator \code{<=>} indicates the covariance of the RHS and LHS variables should be freely estimated.}
 \item{If all of the specified equations do not contain the intercept variable \code{1}, then the intercept of each endogeneous and observed variable will be freely estimated.
 Since the intercept variable \code{1} doesn't appear in this example, the intercept for \code{y} will be set as a freely estimated parameter.
 We can explicitly set the intercept term by \code{y <= 1}.
@@ -135,8 +135,8 @@ It can be stated explicitly by \code{x1 + x2 <= 1}.
 Also, the \code{lslx} parser will know that the intercept variable \code{1} has effect on all of \code{x1} and \code{x2}.}
 }
 The previous regression example can be equivalently represented by \code{x1 + x2 => y}.
-In \pkg{lslx} all of the directed operators can be reversed.
-Users can choose operators according to their own preference.
+In \pkg{lslx} all of the directed operators can be reversed under the stage of model specification.
+Users can choose the directions of operators according to their own preference.
 
 The unique feature of \pkg{lslx} is that all of the parameters can be set as penalized.
 To penalize all of the regression coefficients, the equation can be modified as
@@ -157,8 +157,8 @@ Both \code{pen()} and \code{free()} are prefix to modify the \pkg{lslx} operator
 Inside the parentheses, starting values can be specified.
 Any prefix must present before some variable name and divided by asterisk \code{*}.
 Note that prefix can appear in the either RHS or LHS of operators and its function can be 'distributed' to the variables in the other side.
-For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be penalized.
-However, any prefix cannot simultaneously appears on both sides of operators, which results in an ambiguity specification.
+For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be freely estimated.
+However, any prefix cannot simultaneously appears on both sides of operators, which may result in an ambiguity specification.
 
 
 \bold{Example 2: Factor Analysis Model}
@@ -205,7 +205,7 @@ For example, we may respecify the model via
  \code{fix(1) * y7 + y8 + y9 <=: f3}
 
 The prefix \code{fix(1)} will fix the corresponding loadings to be one.
-Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by only using \code{1 * y1}.
+Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by simply using \code{1 * y1}.
 In \pkg{lslx}, \code{1 * y1} means that the starting value of coefficient corresponding to \code{y1} (which can be free or penalized parameter, depending on the specified operator) is set as one.
 The second way for scale setting is fixing the variance of latent factors, which can be achieved by specifying additional equations
 
@@ -214,6 +214,9 @@ The second way for scale setting is fixing the variance of latent factors, which
  \code{fix(1) * f2 <=> f2}
 
  \code{fix(1) * f3 <=> f3}
+
+Note that in the current version of \pkg{lslx}, scale setting will be not made automatically.
+Users must accomplish it manually.
 
 When conducting factor analysis, we may face the problem that each variable may not be influenced by only one latent factor.
 The semi-confirmatory factor analysis, which penalizes some part of loading matrix, can be applied in this situation.
@@ -330,7 +333,7 @@ The algorithm can be understood as a quasi-Newton method with inner loop and out
 The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
 To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
 Although the computational cost of BFGS approximation is much smaller than calculating expected hessian, 
-Our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
+our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
 The inner loop stops if the change of the derived direction is quite small.
 The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
 The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
@@ -545,6 +548,10 @@ $free_undirected(both, group, verbose = TRUE)
 $penalize_undirected(both, group, verbose = TRUE)
 $fix_undirected(both, group, verbose = TRUE)
 
+$free_block(block, group, type, verbose = TRUE)
+$penalize_block(block, group, type, verbose = TRUE)
+$fix_block(block, group, type, verbose = TRUE)
+
 $free_heterogeneity(block, group, verbose = TRUE)
 $penalize_heterogeneity(block, group, verbose = TRUE)
 $fix_heterogeneity(block, group, verbose = TRUE)}
@@ -563,6 +570,8 @@ If \code{start} is missing, the starting value will be set as
 \item{\code{group}}{A \code{character} to indicate group names that the specified relations belong to.}
 \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
 Its value must be \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
+\item{\code{type}}{A \code{character} to indicate which type og parameter should be changed in the given block.
+Its value must be \code{free}, \code{fixed}, or \code{pen}.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 }
 \bold{Details}
@@ -579,6 +588,8 @@ In the case of single group analysis, argument \code{name} can be replaced by re
 
 \code{$free_undirected()} / \code{$penalize_undirected()} / \code{$fix_undirected()} sets all the covariances among variables in \code{both} at groups in \code{group} as FREE / PENALIZED / FIXED.
 Note that this method all always not modify the variance of variables specified in \code{both}.
+
+\code{$free_block()} / \code{$penalize_block()} / \code{$fix_block()} sets all the parameters belonging to \code{block} at \code{group} with \code{type} as FREE / PENALIZED / FIXED.
 
 \code{$free_heterogeneity()} / \code{$penalize_heterogeneity()} / \code{$fix_heterogeneity()} sets every target coefficient as FREE / PENALIZED / FIXED.
 A target coefficient should satisfy that (1) it belongs to \code{block} at \code{group}, and
@@ -608,7 +619,7 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
 
 
 \preformatted{$fit(penalty_method = "none", lambda_grid = "default", delta_grid = "default",
-      algorithm = "default", missing_method = "default", start_method = "default",
+     algorithm = "default", missing_method = "default", start_method = "default",
      iter_out_max = 100L, iter_in_max = 50L, iter_other_max = 500L, 
      iter_armijo_max = 100L, tol_out = 1e-3, tol_in = 1e-3, tol_other = 1e-7, 
      step_size = 0.5, armijo = 1e-5, ridge_cov = 1e-4, ridge_hessian = 1e-4, 
@@ -671,7 +682,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
 \section{Summarize Method}{
 
 \preformatted{$summarize(selector, standard_error = "default", alpha_level = .05, 
-           digit = 3, simplify = FALSE, exclude_improper = TRUE)}
+           digit = 3, interval = TRUE, simplify = FALSE, exclude_improper = TRUE)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -685,6 +696,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
   (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
 \item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
 \item{\code{digit}}{An \code{interger} to specify the number of digits to be displayed.}
+\item{\code{interval}}{A \code{logical} to specify whether the confidence interval should be printed.}
 \item{\code{simplify}}{A \code{logical} to specify whether the result should be simplified.}
 \item{\code{exclude_improper}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection. 
   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration. 
@@ -740,11 +752,10 @@ For details of standard error formula for LR, see the section of \emph{Coefficie
 
 \section{Plot-Related Methods}{
 
-\preformatted{$plot_numerical_condition(condition= "default")
-$plot_information_criterion(criterion = "default")
-$plot_fit_indice(indice = "default")
-$plot_coefficient(block = "default", left = "default", 
-                  right = "default", both = "default")}
+\preformatted{$plot_numerical_condition(condition)
+$plot_information_criterion(criterion)
+$plot_fit_indice(indice)
+$plot_coefficient(block, left, right, both)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -954,7 +965,7 @@ speed   <=> fix(1)* speed
 r6_lslx <- lslx$new(model = model,
                     data = lavaan::HolzingerSwineford1939)
 r6_lslx$fit(penalty_method = "mcp",
-            lambda_grid = seq(.02, .30, .02),
+            lambda_grid = seq(.01, .30, .01),
             delta_grid = c(5, 10))
 r6_lslx$summarize(selector = "bic")
 
@@ -983,7 +994,7 @@ r6_lslx$penalize_coefficient(name = c("y1<->y5",
                                       "y4<->y8",
                                       "y6<->y8"))
 
-r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+r6_lslx$fit_mcp(lambda_grid = seq(.01, .30, .01),
                 delta_grid = Inf)
 r6_lslx$summarize(selector = "aic")
 
@@ -1013,7 +1024,7 @@ r6_lslx$penalize_heterogeneity(block = "y<-1", group = "Grant-White")
 r6_lslx$free_directed(left = c("visual", "textual", "speed"),
                       right = "1",
                       group = "Grant-White")
-r6_lslx$fit_lasso(lambda_grid = seq(.02, .30, .02))
+r6_lslx$fit_lasso(lambda_grid = seq(.01, .30, .01))
 r6_lslx$summarize(selector = "bic")
 
 
@@ -1042,7 +1053,7 @@ speed   <=> fix(1) * speed
 r6_lslx <- lslx$new(model = model,
                     data = data,
                     auxiliary_variable = c("ageyr", "agemo"))
-r6_lslx$fit_mcp(lambda_grid = seq(.02, .30, .02),
+r6_lslx$fit_mcp(lambda_grid = seq(.01, .30, .01),
                 delta_grid = c(5, 10))
 r6_lslx$summarize(selector = "bic")
 
