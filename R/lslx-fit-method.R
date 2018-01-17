@@ -1,25 +1,4 @@
-lslx$set("public",
-         "fit_mcp",
-         function(lambda_grid = 0,
-                  delta_grid = "default",
-                  ...) {
-           self$fit(
-             penalty_method = "mcp",
-             lambda_grid = lambda_grid,
-             delta_grid = delta_grid,
-             ...
-           )
-         })
-
-lslx$set("public",
-         "fit_lasso",
-         function(lambda_grid = 0,
-                  ...) {
-           self$fit(penalty_method = "lasso",
-                    lambda_grid = lambda_grid,
-                    ...)
-         })
-
+## \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function. ##
 lslx$set("public",
          "fit",
          function(penalty_method = "none",
@@ -110,7 +89,7 @@ lslx$set("public",
                  (length(positive_diag) = 1))) {
              stop("Argument 'positive_diag' must be a logical vector with length one.")
            }
-
+           
            control <-
              list(
                penalty_method = penalty_method,
@@ -165,7 +144,7 @@ lslx$set("public",
            names(private$fitting$fitted_result$information_criterion) <- name_grid
            names(private$fitting$fitted_result$fit_indice) <- name_grid
            names(private$fitting$fitted_result$coefficient) <- name_grid
-
+           
            if (verbose) {
              idc_problem <-
                sapply(X = private$fitting$fitted_result$numerical_condition,
@@ -189,3 +168,30 @@ lslx$set("public",
              }
            }           
          })
+
+## \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996). ##
+lslx$set("public",
+         "fit_lasso",
+         function(lambda_grid = 0,
+                  ...) {
+           self$fit(penalty_method = "lasso",
+                    lambda_grid = lambda_grid,
+                    ...)
+         })
+
+## \code{$fit_mcp()} method fits the specified model to data by minimizing a ML loss function with mcp (Zhang, 2010). ##
+lslx$set("public",
+         "fit_mcp",
+         function(lambda_grid = 0,
+                  delta_grid = "default",
+                  ...) {
+           self$fit(
+             penalty_method = "mcp",
+             lambda_grid = lambda_grid,
+             delta_grid = delta_grid,
+             ...
+           )
+         })
+
+
+

@@ -1,3 +1,4 @@
+## \code{$extract_specification()} returns a \code{data.frame} of model specification. ##
 lslx$set("public",
          "extract_specification",
          function() {
@@ -6,7 +7,7 @@ lslx$set("public",
            return(specification)
          })
 
-
+## \code{$extract_saturated_cov()} returns a \code{list} of saturated sample covariance matrice(s). ##
 lslx$set("public",
          "extract_saturated_cov",
          function() {
@@ -15,7 +16,7 @@ lslx$set("public",
            return(saturated_cov)
          })
 
-
+## \code{$extract_saturated_mean()} returns a \code{list} of saturated sample mean vector(s). ##
 lslx$set("public",
          "extract_saturated_mean",
          function() {
@@ -24,7 +25,7 @@ lslx$set("public",
            return(saturated_mean)
          })
 
-
+## \code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments. ##
 lslx$set("public",
          "extract_saturated_moment_acov",
          function() {
@@ -33,7 +34,7 @@ lslx$set("public",
            return(saturated_moment_acov)
          })
 
-
+## \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level. ##
 lslx$set("public",
          "extract_penalty_level",
          function(selector,
@@ -42,6 +43,7 @@ lslx$set("public",
              if (length(private$fitting$fitted_result$numerical_condition) > 1) {
                stop("Argument 'selector' is missing.")
              } else {
+               
              }
            } else {
              if (length(selector) > 1) {
@@ -58,13 +60,15 @@ lslx$set("public",
                  "."
                )
              }
-             if ((selector %in% c("raic", "raic3", "rcaic", "rbic", "rabic", "rhbic")) & 
+             if ((selector %in% c("raic", "raic3", "rcaic", "rbic", "rabic", "rhbic")) &
                  (!private$fitting$control$response)) {
-               stop("When lslx object is initialized via moments,",
-                    " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available.")
+               stop(
+                 "When lslx object is initialized via moments,",
+                 " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available."
+               )
              }
            }
-
+           
            if (exclude_improper) {
              idx_convergence <-
                which(
@@ -108,7 +112,8 @@ lslx$set("public",
              intersect(x = idx_convergence, y = idx_convexity)
            
            if (length(private$fitting$fitted_result$numerical_condition) == 1) {
-             penalty_level <- names(private$fitting$fitted_result$numerical_condition[idx_selection])
+             penalty_level <-
+               names(private$fitting$fitted_result$numerical_condition[idx_selection])
            } else {
              penalty_level <-
                sapply(
@@ -130,7 +135,7 @@ lslx$set("public",
            return(penalty_level)
          })
 
-
+## \code{$extract_numerical_condition()} returns a \code{numeric} of the numerical conditions. ##
 lslx$set("public",
          "extract_numerical_condition",
          function(selector,
@@ -143,7 +148,7 @@ lslx$set("public",
            return(numerical_condition)
          })
 
-
+## \code{$extract_information_criterion()} returns a \code{numeric} of the values of information criteria. ##
 lslx$set("public",
          "extract_information_criterion",
          function(selector,
@@ -156,6 +161,7 @@ lslx$set("public",
            return(information_criterion)
          })
 
+## \code{$extract_fit_indice()} returns a \code{numeric} of the values of fit indices. ##
 lslx$set("public",
          "extract_fit_indice",
          function(selector,
@@ -168,7 +174,7 @@ lslx$set("public",
            return(fit_indice)
          })
 
-
+## \code{$extract_coefficient()} returns a \code{numeric} of estimates of the coefficients. ##
 lslx$set("public",
          "extract_coefficient",
          function(selector,
@@ -181,7 +187,7 @@ lslx$set("public",
            return(coefficient)
          })
 
-
+## \code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrice(s). ##
 lslx$set("public",
          "extract_implied_cov",
          function(selector,
@@ -213,6 +219,7 @@ lslx$set("public",
            return(implied_cov)
          })
 
+## \code{$extract_implied_mean()} returns a \code{list} of model-implied mean vector(s). ##
 lslx$set("public",
          "extract_implied_mean",
          function(selector,
@@ -242,7 +249,7 @@ lslx$set("public",
            return(implied_mean)
          })
 
-
+## \code{$extract_residual_cov()} returns a \code{list} of residual matrice(s) of covariance. ##
 lslx$set("public",
          "extract_residual_cov",
          function(selector,
@@ -266,6 +273,7 @@ lslx$set("public",
            return(residual_cov)
          })
 
+## \code{$extract_residual_mean()} returns a \code{list} of residual vector(s) of mean. ##
 lslx$set("public",
          "extract_residual_mean",
          function(selector,
@@ -289,6 +297,7 @@ lslx$set("public",
            return(residual_mean)
          })
 
+## \code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}. ##
 lslx$set("public",
          "extract_coefficient_matrice",
          function(selector,
@@ -330,8 +339,10 @@ lslx$set("public",
              }
              col_names <- private$model$name_eta
            }
-           row_select <- strsplit(block, split = "<-|<->|->")[[1]][1]
-           col_select <- strsplit(block, split = "<-|<->|->")[[1]][2]
+           row_select <-
+             strsplit(block, split = "<-|<->|->")[[1]][1]
+           col_select <-
+             strsplit(block, split = "<-|<->|->")[[1]][2]
            if (row_select == "f") {
              row_select <- private$model$name_factor
            } else if (row_select == "y") {
@@ -367,9 +378,7 @@ lslx$set("public",
            return(coefficient_matrice_block)
          })
 
-
-
-
+## \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure. ##
 lslx$set("public",
          "extract_moment_jacobian",
          function(selector,
@@ -392,8 +401,7 @@ lslx$set("public",
            return(moment_jacobian)
          })
 
-
-
+## \code{$extract_expected_fisher()} returns a \code{matrix} of the expected Fisher information matrix. ##
 lslx$set("public",
          "extract_expected_fisher",
          function(selector,
@@ -418,32 +426,7 @@ lslx$set("public",
            return(expected_fisher)
          })
 
-lslx$set("public",
-         "extract_bfgs_hessian",
-         function(selector,
-                  exclude_improper = TRUE) {
-           penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        exclude_improper = exclude_improper)
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           bfgs_hessian <-
-             compute_bfgs_hessian_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           colnames(bfgs_hessian) <-
-             rownames(private$model$specification)
-           rownames(bfgs_hessian) <-
-             rownames(private$model$specification)
-           return(bfgs_hessian)
-         })
-
-
-
+## \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix. ##
 lslx$set("public",
          "extract_observed_fisher",
          function(selector,
@@ -468,7 +451,32 @@ lslx$set("public",
            return(observed_fisher)
          })
 
+## \code{$extract_bfgs_hessian()} returns a \code{matrix} of the BFGS Hessian matrix. ##
+lslx$set("public",
+         "extract_bfgs_hessian",
+         function(selector,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           bfgs_hessian <-
+             compute_bfgs_hessian_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           colnames(bfgs_hessian) <-
+             rownames(private$model$specification)
+           rownames(bfgs_hessian) <-
+             rownames(private$model$specification)
+           return(bfgs_hessian)
+         })
 
+## \code{$extract_score_acov()} returns a \code{matrix} of the asymptotic covariance of scores. ##
 lslx$set("public",
          "extract_score_acov",
          function(selector,
@@ -493,7 +501,7 @@ lslx$set("public",
            return(score_acov)
          })
 
-
+## \code{$extract_coefficient_acov()} returns a \code{matrix} of the asymptotic covariance of coefficients. ##
 lslx$set("public",
          "extract_coefficient_acov",
          function(selector,
@@ -554,14 +562,14 @@ lslx$set("public",
                solve(observed_fisher[idc_effective, idc_effective]) /
                private$fitting$reduced_data$n_observation
            } else {
+             
            }
-           attr(coefficient_acov, "standard_error") <- standard_error
+           attr(coefficient_acov, "standard_error") <-
+             standard_error
            return(coefficient_acov)
          })
 
-
-
-
+## \code{$extract_loss_gradient()} returns a \code{matrix} of the gradient of loss function. ##
 lslx$set("public",
          "extract_loss_gradient",
          function(selector,
@@ -584,8 +592,7 @@ lslx$set("public",
            return(loss_gradient)
          })
 
-
-
+## \code{$extract_regularizer_gradient()} returns a \code{matrix} of the sub-gradient of regularizer. ##
 lslx$set("public",
          "extract_regularizer_gradient",
          function(selector,
@@ -614,6 +621,7 @@ lslx$set("public",
            return(regularizer_gradient)
          })
 
+## \code{$extract_objective_gradient()} returns a \code{matrix} of the sub-gradient of objective function. ##
 lslx$set("public",
          "extract_objective_gradient",
          function(selector,
