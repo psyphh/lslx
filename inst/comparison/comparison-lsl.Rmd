@@ -1,6 +1,9 @@
 ---
 title: "Comparison with lsl Package"
 output: github_document
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
