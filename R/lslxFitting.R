@@ -1,3 +1,4 @@
+## define R6 class \code{lslxFitting} to store fitting result. ##
 lslxFitting <-
   R6::R6Class(
     classname = "lslxFitting",
@@ -10,6 +11,7 @@ lslxFitting <-
     )
   )
 
+## \code{$new()} initializes a new \code{lslxFitting} object. ##
 lslxFitting$set("public",
                 "initialize",
                 function(model,
@@ -23,7 +25,6 @@ lslxFitting$set("public",
                   private$initialize_supplied_result()
                   private$initialize_fitted_result()
                 })
-
 
 lslxFitting$set("private",
                 "initialize_control",
@@ -104,7 +105,6 @@ lslxFitting$set("private",
                     self$control$start_method <- "mh"
                   }
                 })
-
 
 lslxFitting$set("private",
                 "initialize_reduced_model",
@@ -193,7 +193,6 @@ lslxFitting$set("private",
                     )
                 })
 
-
 lslxFitting$set("private",
                 "initialize_reduced_data",
                 function(data) {
@@ -247,7 +246,7 @@ lslxFitting$set("private",
                             FUN = function(pattern_i,
                                            auxiliary_i,
                                            idc_use_i) {
-                              return(cbind(pattern_i[idc_use_i, , drop = FALSE],!is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
+                              return(cbind(pattern_i[idc_use_i, , drop = FALSE], !is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
                             },
                             data$pattern,
                             data$auxiliary,
@@ -283,7 +282,7 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_use_i) {
-                            weight_i <- weight_i[idc_use_i, ]
+                            weight_i <- weight_i[idc_use_i,]
                             weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
@@ -319,7 +318,7 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_complete_i) {
-                            weight_i <- weight_i[idc_complete_i, ]
+                            weight_i <- weight_i[idc_complete_i,]
                             weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
@@ -608,7 +607,6 @@ lslxFitting$set("private",
                   }
                 })
 
-
 lslxFitting$set("private",
                 "initialize_supplied_result",
                 function() {
@@ -617,7 +615,6 @@ lslxFitting$set("private",
                   private$compute_saturated_model()
                   private$compute_fitted_start()
                 })
-
 
 lslxFitting$set("private",
                 "compute_fitted_start",
@@ -927,7 +924,6 @@ lslxFitting$set("private",
                     self$reduced_model$theta_name
                 })
 
-
 lslxFitting$set("private",
                 "compute_baseline_model",
                 function() {
@@ -968,7 +964,6 @@ lslxFitting$set("private",
                   )
                 })
 
-
 lslxFitting$set("private",
                 "compute_saturated_model",
                 function() {
@@ -979,7 +974,6 @@ lslxFitting$set("private",
                     degree_of_freedom = 0
                   )
                 })
-
 
 lslxFitting$set("private",
                 "initialize_fitted_result",

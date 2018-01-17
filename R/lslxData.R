@@ -1,3 +1,4 @@
+## define R6 class \code{lslxData} to store data. ##
 lslxData <-
   R6::R6Class(
     classname = "lslxData",
@@ -12,8 +13,7 @@ lslxData <-
     )
   )
 
-
-
+## \code{$new()} initializes a new \code{lslxData} object. ##
 lslxData$set("public",
              "initialize",
              function(response,
@@ -26,11 +26,13 @@ lslxData$set("public",
                  self$response <- response
                  self$weight <- weight
                  self$auxiliary <- auxiliary
-                 self$pattern <- 
-                   lapply(X = self$response,
-                          FUN = function(response_i) {
-                            return(!is.na(response_i))
-                          })
+                 self$pattern <-
+                   lapply(
+                     X = self$response,
+                     FUN = function(response_i) {
+                       return(!is.na(response_i))
+                     }
+                   )
                  self$sample_cov <- list()
                  self$sample_mean <- list()
                  self$sample_size <- list()
