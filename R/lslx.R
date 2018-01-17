@@ -734,7 +734,7 @@
 #' For details of confidence interval construction for RMSEA, see the section of \emph{Model Fit Evaluation}.
 #' 
 #' \code{$test_coefficient()} returns a \code{data.frame} of result for coefficient significance and confidence interval.
-#' For details of standard error formula for LR, see the section of \emph{Coefficient Evaluation}.
+#' For details of standard error formula for coefficients, see the section of \emph{Coefficient Evaluation}.
 #' 
 #' @section Plot-Related Methods:
 #' \preformatted{$plot_numerical_condition(condition)

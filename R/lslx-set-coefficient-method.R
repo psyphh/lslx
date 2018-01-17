@@ -1,3 +1,4 @@
+## \code{$free_coefficient()} / \code{$penalize_coefficient()} / \code{$fix_coefficient()} sets the coefficient named \code{name} as FREE / PENALIZED / FIXED with starting value \code{start}. ##
 lslx$set("public",
          "free_coefficient",
          function(name,
@@ -10,8 +11,6 @@ lslx$set("public",
              verbose = verbose
            )
          })
-
-
 
 lslx$set("public",
          "fix_coefficient",
@@ -26,7 +25,6 @@ lslx$set("public",
            )
          })
 
-
 lslx$set("public",
          "penalize_coefficient",
          function(name,
@@ -39,8 +37,6 @@ lslx$set("public",
              verbose = verbose
            )
          })
-
-
 
 lslx$set("private",
          "set_coefficient",
@@ -157,13 +153,14 @@ lslx$set("private",
              }
            }
            
-           if (action == "free"){
+           if (action == "free") {
              type <- "free"
            } else if (action == "fix") {
              type <- "fixed"
            } else if (action == "penalize") {
              type <- "pen"
            } else {
+             
            }
            
            
@@ -293,7 +290,7 @@ lslx$set("private",
                match(private$model$specification$left, private$model$name_eta),
                decreasing = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
                method = "radix"
-             ),]
+             ), ]
            
            private$model$name_endogenous <-
              unique(private$model$specification$left[private$model$specification$matrice == "beta"])

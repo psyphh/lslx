@@ -1,3 +1,4 @@
+## \code{$free_directed()} / \code{$penalize_directed()} / \code{$fix_directed()} sets all the regression coefficients from \code{right} to \code{left} as FREE / PENALIZED / FIXED. ##
 lslx$set("private",
          "set_directed",
          function(left,
@@ -7,9 +8,10 @@ lslx$set("private",
                   verbose = TRUE) {
            if (missing(left)) {
              stop("Argument 'left' must be given.")
-           } else if(missing(right)) {
+           } else if (missing(right)) {
              stop("Argument 'right' must be given.")
-           } else {}
+           } else {
+           }
            
            if (missing(group)) {
              group <-  private$model$name_group
@@ -23,19 +25,19 @@ lslx$set("private",
                do.call(paste, as.list(group)),
                "."
              )
-           } else {}
-           name <- paste0(expand.grid(left,"<-",right)[,1],
-                          expand.grid(left,"<-",right)[,2],
-                          expand.grid(left,"<-",right)[,3],
-                          "|",group)
-           private$set_coefficient(
-             name = name,
-             action = action,
-             verbose = verbose
+           } else {
+           }
+           name <- paste0(
+             expand.grid(left, "<-", right)[, 1],
+             expand.grid(left, "<-", right)[, 2],
+             expand.grid(left, "<-", right)[, 3],
+             "|",
+             group
            )
-         }
-)
-
+           private$set_coefficient(name = name,
+                                   action = action,
+                                   verbose = verbose)
+         })
 
 lslx$set("public",
          "free_directed",
@@ -48,10 +50,9 @@ lslx$set("public",
              right = right,
              group = group,
              action = "free",
-             verbose = verbose)
-         }
-)
-
+             verbose = verbose
+           )
+         })
 
 lslx$set("public",
          "fix_directed",
@@ -64,10 +65,9 @@ lslx$set("public",
              right = right,
              group = group,
              action = "fix",
-             verbose = verbose)
-         }
-)
-
+             verbose = verbose
+           )
+         })
 
 lslx$set("public",
          "penalize_directed",
@@ -80,6 +80,6 @@ lslx$set("public",
              right = right,
              group = group,
              action = "penalize",
-             verbose = verbose)
-         }
-)
+             verbose = verbose
+           )
+         })

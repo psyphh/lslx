@@ -1,10 +1,11 @@
+## \code{$free_undirected()} / \code{$penalize_undirected()} / \code{$fix_undirected()} sets all the covariances among \code{both} as FREE / PENALIZED / FIXED. ##
 lslx$set("private",
          "set_undirected",
          function(both,
                   group,
                   action,
                   verbose = TRUE) {
-           if (length(both)==1) {
+           if (length(both) == 1) {
              stop("Argument 'both' must contain more than one varaible.")
            }
            if (missing(group)) {
@@ -19,55 +20,53 @@ lslx$set("private",
                do.call(paste, as.list(group)),
                "."
              )
-           } else {}
-           name <- paste0(
-             expand.grid(combn(both,2,function(x) paste0(x[1],"<->",x[2])),group)[,1],
+           } else {
+           }
+           name <- paste0(expand.grid(combn(both, 2, function(x)
+             paste0(x[1], "<->", x[2])), group)[, 1],
              "|",
-             expand.grid(combn(both,2,function(x) paste0(x[1],"<->",x[2])),group)[,2]
-           )
-           private$set_coefficient(
-             name = name,
-             action = action,
-             verbose = verbose
-           )
-         }
-)
-
+             expand.grid(combn(both, 2, function(x)
+               paste0(x[1], "<->", x[2])), group)[, 2])
+           private$set_coefficient(name = name,
+                                   action = action,
+                                   verbose = verbose)
+         })
 
 lslx$set("public",
          "free_undirected",
          function(both,
                   group,
                   verbose = TRUE) {
-           private$set_undirected(both = both,
-                                  group = group,
-                                  action = "free",
-                                  verbose = verbose)
-         }
-)
-
+           private$set_undirected(
+             both = both,
+             group = group,
+             action = "free",
+             verbose = verbose
+           )
+         })
 
 lslx$set("public",
          "fix_undirected",
          function(both,
                   group,
                   verbose = TRUE) {
-           private$set_undirected(both = both,
-                                  group = group,
-                                  action = "fix",
-                                  verbose = verbose)
-         }
-)
-
+           private$set_undirected(
+             both = both,
+             group = group,
+             action = "fix",
+             verbose = verbose
+           )
+         })
 
 lslx$set("public",
          "penalize_undirected",
          function(both,
                   group,
                   verbose = TRUE) {
-           private$set_undirected(both = both,
-                                  group = group,
-                                  action = "penalize",
-                                  verbose = verbose)
-         }
-)
+           private$set_undirected(
+             both = both,
+             group = group,
+             action = "penalize",
+             verbose = verbose
+           )
+         })

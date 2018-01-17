@@ -1,3 +1,4 @@
+## \code{$test_lr()} returns a \code{data.frame} of result for likelihood ratio test. ##
 lslx$set("public",
          "test_lr",
          function(selector,
@@ -37,8 +38,7 @@ lslx$set("public",
            return(lr_test)
          })
 
-
-
+## \code{$test_rmsea()} returns a \code{data.frame} of result for rmsea confidence intervals. ##
 lslx$set("public",
          "test_rmsea",
          function(selector,
@@ -162,8 +162,7 @@ lslx$set("public",
            return(rmsea_test)
          })
 
-
-
+## \code{$test_coefficient()} returns a \code{data.frame} of result for coefficient significance and confidence interval. ##
 lslx$set("public",
          "test_coefficient",
          function(selector,
