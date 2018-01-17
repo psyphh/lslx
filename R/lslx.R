@@ -817,6 +817,7 @@
 #' 
 #' $extract_expected_fisher(selector, exclude_improper = TRUE)
 #' $extract_observed_fisher(selector, exclude_improper = TRUE)
+#' $extract_bfgs_hessian(selector, exclude_improper = TRUE)
 #' $extract_score_acov(selector, exclude_improper = TRUE)
 #' $extract_coefficient_acov(selector, standard_error = "default", 
 #'                           exclude_improper = TRUE)
@@ -854,9 +855,9 @@
 #' 
 #' \code{$extract_specification()} returns a \code{data.frame} of model specification.
 #' 
-#' \code{$extract_saturated_mean()} returns a \code{list} of saturated sample covariance matrice(s).
+#' \code{$extract_saturated_cov()} returns a \code{list} of saturated sample covariance matrice(s).
 #' 
-#' \code{$extract_saturated_cov()} returns a \code{list} of saturated sample mean vector(s).
+#' \code{$extract_saturated_mean()} returns a \code{list} of saturated sample mean vector(s).
 #' 
 #' \code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments.
 #' Note that if raw data is not available, asymptotic covariance matrice is calculated by assuming normality for data.
@@ -887,6 +888,8 @@
 #' 
 #' \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix.
 #' Note that the observed information matrix is calculated via numerical differentiation for the gradient of loss.
+#' 
+#' \code{$extract_bfgs_fisher()} returns a \code{matrix} of the BFGS Hessian matrix.
 #' 
 #' \code{$extract_score_acov()} returns a \code{matrix} of the asymptotic covariance of scores.
 #' 
