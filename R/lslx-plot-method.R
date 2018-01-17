@@ -1,3 +1,4 @@
+## \code{$plot_numerical_condition()} plots the values of selected numerical conditions. ##
 lslx$set("public",
          "plot_numerical_condition",
          function(condition) {
@@ -34,11 +35,9 @@ lslx$set("public",
                )
              )
            condition <-
-             gsub(
-               pattern = "_",
-               replacement = " ",
-               x = condition
-             )
+             gsub(pattern = "_",
+                  replacement = " ",
+                  x = condition)
            
            df_for_plot$condition <- condition
            df_for_plot <-
@@ -85,6 +84,7 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
+## \code{$plot_information_criterion()} shows how the values of information criteria vary with penalty levels. ##
 lslx$set("public",
          "plot_information_criterion",
          function(criterion) {
@@ -151,8 +151,7 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
-
-
+## \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels. ##
 lslx$set("public",
          "plot_fit_indice",
          function(indice) {
@@ -220,7 +219,7 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
-
+## \code{$plot_coefficient()} visualizes the solution paths of coefficients. ##
 lslx$set("public",
          "plot_coefficient",
          function(block,

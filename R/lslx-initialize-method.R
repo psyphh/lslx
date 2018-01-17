@@ -1,3 +1,4 @@
+## \code{$new()} initialzes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM). ##
 lslx$set("public",
          "initialize",
          function(model,
