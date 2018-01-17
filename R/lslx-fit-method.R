@@ -22,13 +22,15 @@ lslx$set("public",
                   verbose = TRUE) {
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
              stop("Argument 'penalty_method' can be only either 'none', 'lasso', or 'mcp'.")
-           } 
+           }
            if (!is.numeric(lambda_grid)) {
              if (!is.character(lambda_grid)) {
                stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(lambda_grid) & (length(lambda_grid) != 1)) {
+             } else if (is.character(lambda_grid) &
+                        (length(lambda_grid) != 1)) {
                stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(lambda_grid) & (length(lambda_grid) == 1)) {
+             } else if (is.character(lambda_grid) &
+                        (length(lambda_grid) == 1)) {
                if (lambda_grid != "default") {
                  stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
                }
@@ -37,16 +39,20 @@ lslx$set("public",
            if (!is.numeric(delta_grid)) {
              if (!is.character(delta_grid)) {
                stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(delta_grid) & (length(delta_grid) != 1)) {
+             } else if (is.character(delta_grid) &
+                        (length(delta_grid) != 1)) {
                stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(delta_grid) & (length(delta_grid) == 1)) {
+             } else if (is.character(delta_grid) &
+                        (length(delta_grid) == 1)) {
                if (delta_grid != "default") {
                  stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
                }
              }
            }
            if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
-             stop("Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'.")
+             stop(
+               "Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
+             )
            }
            if (!(start_method %in% c("default", "mh", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'mh', or 'heuristic'.")
@@ -140,20 +146,26 @@ lslx$set("public",
                  }
                )
              )
-           names(private$fitting$fitted_result$numerical_condition) <- name_grid
-           names(private$fitting$fitted_result$information_criterion) <- name_grid
-           names(private$fitting$fitted_result$fit_indice) <- name_grid
-           names(private$fitting$fitted_result$coefficient) <- name_grid
+           names(private$fitting$fitted_result$numerical_condition) <-
+             name_grid
+           names(private$fitting$fitted_result$information_criterion) <-
+             name_grid
+           names(private$fitting$fitted_result$fit_indice) <-
+             name_grid
+           names(private$fitting$fitted_result$coefficient) <-
+             name_grid
            
            if (verbose) {
              idc_problem <-
-               sapply(X = private$fitting$fitted_result$numerical_condition,
-                      FUN = function(numerical_condition_i) {
-                        idc_problem_i <- 
-                          (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
-                          (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
-                        return(idc_problem_i)
-                      })
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(numerical_condition_i) {
+                   idc_problem_i <-
+                     (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
+                     (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
+                   return(idc_problem_i)
+                 }
+               )
              if (any(idc_problem)) {
                cat("WARNING: The algorithm may not converge under some penalty level. ")
                cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
@@ -162,11 +174,13 @@ lslx$set("public",
                cat("  Specified Tolerance for Convergence:",
                    private$fitting$control$tol_out,
                    "\n")
-               cat("  Specified Maximal Number of Iterations:",
-                   private$fitting$control$iter_out_max,
-                   "\n")
+               cat(
+                 "  Specified Maximal Number of Iterations:",
+                 private$fitting$control$iter_out_max,
+                 "\n"
+               )
              }
-           }           
+           }
          })
 
 ## \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996). ##
@@ -192,6 +206,3 @@ lslx$set("public",
              ...
            )
          })
-
-
-
