@@ -259,7 +259,7 @@ lslx$set("public",
                c(
                  "root mean square error of approximation (rmsea)",
                  "comparative fit index (cfi)",
-                 "unnormed fit index (nnfi)",
+                 "non-normed fit index (nnfi)",
                  "standardized root mean of residual (srmr)"
                )
            } else {
