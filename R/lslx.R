@@ -314,7 +314,7 @@
 #'
 #' In the current version of \pkg{lslx}, coefficient constraints cannot be imposed.
 #' It seems that testing coefficient invariance across groups is impossible in \pkg{lslx}.
-#' However, the present package parameterizes group coefficients in different way compared to other SEM software.
+#' However, the present package parameterizes group coefficients in different way compared to other SEM software (Huang, in press).
 #' Under \pkg{lslx}, each group coefficient is decomposed into a sum of a reference component and an increment component.
 #' If the reference component is assumed to be zero, the increment component represents the group coefficient, which is equivalent to the usual parameterization in other softwares.
 #' On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of \emph{Initialize Method}), 
@@ -922,6 +922,8 @@
 #'
 #' Haughton, D. M. A., Oud, J. H. L., & Jansen, R. A. R. G. (1997). Information and other criteria in structural equation model selection. Communications in Statistics - Simulation and Computation, 26(4), 1477–1516.
 #'
+#' Huang PH (in press). A Penalized Likelihood Method for Multi-Group Structural Equation Modeling. British Journal of Mathematical and Statistical Psychology.
+#' 
 #' Huang, P. H., Chen, H., & Weng, L. J. (2017). A Penalized Likelihood Method for Structural Equation Modeling. Psychometrika, 82(2), 329–354.
 #'
 #' Brosseau-Liard, P. E., Savalei, V., & Li, L. (2012). An Investigation of the Sample Performance of Two Nonnormality Corrections for RMSEA. Multivariate Behavioral Research, 47(6), 904-930.
