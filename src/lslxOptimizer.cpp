@@ -1,3 +1,6 @@
+// Cpp class lslxOptimizer for minimizing PL criterion
+// written by Po-Hsien Huang psyphh@gmail.com
+
 #include <RcppEigen.h>
 #include <limits>
 #include <cmath>
@@ -9,6 +12,7 @@ using namespace Eigen;
 
 
 // [[Rcpp::depends(RcppEigen)]]
+// define lslxOptimizer
 class lslxOptimizer {
 public:
   std::string algorithm;
@@ -122,6 +126,7 @@ public:
   int sign(double x);
 };
 
+// define initialization method
 lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
                              Rcpp::List reduced_model,
                              Rcpp::List control,
@@ -228,6 +233,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   objective_gradient= Eigen::MatrixXd::Zero(n_theta, 1);
 }
 
+// method for setting regularizer type
 void lslxOptimizer::set_regularizer(Rcpp::CharacterVector regularizer_type_,
                                     double lambda_, 
                                     double delta_) {
@@ -236,10 +242,12 @@ void lslxOptimizer::set_regularizer(Rcpp::CharacterVector regularizer_type_,
   delta = delta_;
 }
 
+// method for setting theta value
 void lslxOptimizer::set_theta_value(Rcpp::NumericVector theta_value_) {
   theta_value = Rcpp::clone(theta_value_);
 }
 
+// method for updating coefficient values
 void lslxOptimizer::update_coefficient_matrice() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
   
@@ -376,8 +384,7 @@ void lslxOptimizer::update_coefficient_matrice() {
   }
 }
 
-
-
+// method for updating model implied moment
 void lslxOptimizer::update_implied_moment() {
   int i;
   for (i = 0; i < n_group; i++) {
@@ -397,7 +404,7 @@ void lslxOptimizer::update_implied_moment() {
   }
 }
 
-
+// method for updating residual weight
 void lslxOptimizer::update_residual_weight() {
   int i;
   double sample_proportion_i;
@@ -415,7 +422,7 @@ void lslxOptimizer::update_residual_weight() {
   }
 }
 
-
+// method for updating model moment jacobian
 void lslxOptimizer::update_moment_jacobian() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
   Rcpp::IntegerVector theta_flat_idx_j;
@@ -493,6 +500,7 @@ void lslxOptimizer::update_moment_jacobian() {
   }
 }
 
+// method for updating loss function value
 void lslxOptimizer::update_loss_value() {
   loss_value = 0;
   int i;
@@ -510,6 +518,7 @@ void lslxOptimizer::update_loss_value() {
   }
 }
 
+// method for directly updating loss function gradient
 void lslxOptimizer::update_loss_gradient_direct() {
   Eigen::MatrixXd weight_mu_i, weight_sigma_i;
   double sample_proportion_i;
@@ -573,8 +582,7 @@ void lslxOptimizer::update_loss_gradient_direct() {
   loss_gradient_diff = loss_gradient - loss_gradient_diff;
 }
 
-
-
+// method for indirectly updating loss function gradient
 void lslxOptimizer::update_loss_gradient() {
   loss_gradient_diff = loss_gradient;
   loss_gradient = Eigen::MatrixXd::Zero(n_theta, 1);
@@ -600,7 +608,7 @@ void lslxOptimizer::update_loss_gradient() {
   loss_gradient_diff = loss_gradient - loss_gradient_diff;
 }
 
-
+// method for updating expected hessian of loss function
 void lslxOptimizer::update_loss_expected_hessian() {
   loss_expected_hessian = Eigen::MatrixXd::Zero(n_theta, n_theta);
   int i;
@@ -611,7 +619,7 @@ void lslxOptimizer::update_loss_expected_hessian() {
   }
 }
 
-
+// method for updating observed hessian of loss function
 void lslxOptimizer::update_loss_observed_hessian() {
   loss_observed_hessian = Eigen::MatrixXd::Zero(n_theta, n_theta);
   Eigen::MatrixXd loss_gradient_0 = loss_gradient;
@@ -629,7 +637,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
   loss_gradient = loss_gradient_0;
 }
 
-
+// method for updating BFGS hessian of loss function
 void lslxOptimizer::update_loss_bfgs_hessian() {
   Eigen::MatrixXd theta_diff = 
     Rcpp::as<Eigen::VectorXd>(theta_value) - Rcpp::as<Eigen::VectorXd>(theta_start);
@@ -659,6 +667,7 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
   }
 }
 
+// method for updating regularizer value
 void lslxOptimizer::update_regularizer_value() {
   regularizer_value = 0.0;
   int i;
@@ -685,6 +694,7 @@ void lslxOptimizer::update_regularizer_value() {
   }
 }
 
+// method for updating the gradient of regularizer 
 void lslxOptimizer::update_regularizer_gradient() {
   int i;
   if (lambda > DBL_EPSILON) {
@@ -708,10 +718,12 @@ void lslxOptimizer::update_regularizer_gradient() {
   }
 }
 
+// method for updating objective value
 void lslxOptimizer::update_objective_value() {
   objective_value = loss_value + regularizer_value;
 }
 
+// method for updating gradient of objective function
 void lslxOptimizer::update_objective_gradient() {
   int i;
   for (i = 0; i < n_theta; i++) {
@@ -724,6 +736,7 @@ void lslxOptimizer::update_objective_gradient() {
   }
 }
 
+// method for updating quasi newton's direction
 void lslxOptimizer::update_theta_direction() {
   theta_direction = Rcpp::rep(0.0, n_theta);
   Rcpp::NumericVector z = Rcpp::rep(0.0, n_theta);
@@ -800,7 +813,7 @@ void lslxOptimizer::update_theta_direction() {
   }
 }
 
-
+// method for updating thata value
 void lslxOptimizer::update_theta_value() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
   double objective_value_old = objective_value;
@@ -838,12 +851,12 @@ void lslxOptimizer::update_theta_value() {
   }
 }
 
-
+// method for updating starting value for theta
 void lslxOptimizer::update_theta_start() {
   theta_start = Rcpp::clone(theta_value);
 }
 
-
+// method for updating final coefficient
 void lslxOptimizer::update_coefficient() {
   Rcpp::NumericVector objective_gradient_abs(n_theta);
   if (iter_out == -1) {
@@ -893,6 +906,7 @@ void lslxOptimizer::update_coefficient() {
   }
 }
 
+// method for updating final numerical condition
 void lslxOptimizer::update_numerical_condition() {
   Rcpp::NumericVector objective_hessian_diagonal(n_theta);
   Rcpp::IntegerVector idx_is_effective(0);
@@ -961,9 +975,7 @@ void lslxOptimizer::update_numerical_condition() {
   }
 }
 
-
-
-
+// method for updating final information criterion
 void lslxOptimizer::update_information_criterion() {
   aic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom);
   aic3 = loss_value - (3.0 / double(n_observation)) * double(degree_of_freedom);
@@ -983,7 +995,7 @@ void lslxOptimizer::update_information_criterion() {
   
 }
 
-
+// method for updating final fit indice
 void lslxOptimizer::update_fit_indice() {
   if ((degree_of_freedom == 0) & (loss_value > std::sqrt(DBL_EPSILON))) {
     rmsea = NAN;
@@ -1045,6 +1057,7 @@ void lslxOptimizer::update_fit_indice() {
   }
 }
 
+// method for extracting final numerical condition
 Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
   Rcpp::NumericVector numerical_condition = 
     Rcpp::NumericVector::create(
@@ -1062,6 +1075,7 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
   return Rcpp::clone(numerical_condition);
 }
 
+// method for extracting final information criterion
 Rcpp::NumericVector lslxOptimizer::extract_information_criterion() {
   Rcpp::NumericVector information_criterion = 
     Rcpp::NumericVector::create(
@@ -1080,6 +1094,7 @@ Rcpp::NumericVector lslxOptimizer::extract_information_criterion() {
   return Rcpp::clone(information_criterion);
 }
 
+// method for extracting final fit indice
 Rcpp::NumericVector lslxOptimizer::extract_fit_indice() {
   Rcpp::NumericVector fit_indice = 
     Rcpp::NumericVector::create(
@@ -1090,12 +1105,12 @@ Rcpp::NumericVector lslxOptimizer::extract_fit_indice() {
   return Rcpp::clone(fit_indice);
 }
 
+// method for extracting final coefficient
 Rcpp::NumericVector lslxOptimizer::extract_coefficient() {
   return Rcpp::clone(theta_value);
 }
 
-
-
+// method for slicing columns
 Eigen::MatrixXd lslxOptimizer::slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx) {
   Eigen::MatrixXd y(x.rows(), col_idx.size());
   int i;
@@ -1105,8 +1120,7 @@ Eigen::MatrixXd lslxOptimizer::slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector 
   return(y);
 }
 
-
-
+// method for slicing both rows and columns
 Eigen::MatrixXd lslxOptimizer::slice_both(Eigen::MatrixXd x, 
                                           Rcpp::IntegerVector row_idx, 
                                           Rcpp::IntegerVector col_idx) {
@@ -1120,6 +1134,7 @@ Eigen::MatrixXd lslxOptimizer::slice_both(Eigen::MatrixXd x,
   return y;
 }
 
+// method for expanding both rows and columns
 Eigen::MatrixXd lslxOptimizer::expand_both(Eigen::MatrixXd x, 
                                            Rcpp::IntegerVector row_idx, 
                                            Rcpp::IntegerVector col_idx,
@@ -1136,8 +1151,7 @@ Eigen::MatrixXd lslxOptimizer::expand_both(Eigen::MatrixXd x,
   return y;
 }
 
-
-
+// method for vech operator
 Eigen::MatrixXd lslxOptimizer::vech(Eigen::MatrixXd x) {
   int n_col = x.cols();
   Eigen::MatrixXd y((n_col * (n_col + 1)) / 2, 1);
@@ -1152,6 +1166,7 @@ Eigen::MatrixXd lslxOptimizer::vech(Eigen::MatrixXd x) {
   return y;
 }
 
+// method for creating commutation matrix
 Eigen::SparseMatrix<double> lslxOptimizer::create_commutation(int n) {
   int n2 = n * n;
   Eigen::SparseMatrix<double> commutation(n2, n2);
@@ -1165,6 +1180,7 @@ Eigen::SparseMatrix<double> lslxOptimizer::create_commutation(int n) {
   return commutation;
 }
 
+// method for creating duplication matrix
 Eigen::SparseMatrix<double> lslxOptimizer::create_duplication(int n) {
   SparseMatrix<double> duplication(n * n, (n * (n + 1)) / 2);
   int i, j, idx, row_idx, col_idx;
@@ -1187,10 +1203,7 @@ Eigen::SparseMatrix<double> lslxOptimizer::create_duplication(int n) {
   return duplication;
 }
 
-
-
-
-
+// method for sign function
 int lslxOptimizer::sign(double x) {
   int y;
   if (x > DBL_EPSILON) {
@@ -1203,109 +1216,7 @@ int lslxOptimizer::sign(double x) {
   return(y);
 }
 
-
-Eigen::MatrixXd slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx) {
-  Eigen::MatrixXd y(x.rows(), col_idx.size());
-  int i;
-  for (i = 0; i < col_idx.size(); i++) {
-    y.col(i) = x.col(col_idx[i]);
-  }
-  return(y);
-}
-
-
-Eigen::MatrixXd slice_row(Eigen::MatrixXd x, Rcpp::IntegerVector row_idx) {
-  Eigen::MatrixXd y(row_idx.size(), x.cols());
-  int i;
-  for (i = 0; i < row_idx.size(); i++) {
-    y.row(i) = x.row(row_idx[i]);
-  }
-  return(y);
-}
-
-
-Eigen::MatrixXd slice_both(Eigen::MatrixXd x, 
-                           Rcpp::IntegerVector row_idx, 
-                           Rcpp::IntegerVector col_idx) {
-  Eigen::MatrixXd y(row_idx.size(), col_idx.size());
-  int i, j;
-  for (i = 0; i < row_idx.size(); i++) {
-    for (j = 0; j < col_idx.size(); j++) {
-      y(i, j) = x(row_idx[i], col_idx[j]);
-    }
-  }
-  return(y);
-}
-
-
-Eigen::MatrixXd expand_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx, int n_col) {
-  Eigen::MatrixXd y;
-  y = Eigen::MatrixXd::Zero(x.rows(), n_col);
-  int i;
-  for (i = 0; i < col_idx.size(); i++) {
-    y.col(col_idx[i]) = x.col(i);
-  }
-  return(y);
-}
-
-
-
-Eigen::MatrixXd expand_both(Eigen::MatrixXd x, 
-                            Rcpp::IntegerVector row_idx, 
-                            Rcpp::IntegerVector col_idx,
-                            int n_row,
-                            int n_col) {
-  Eigen::MatrixXd y;
-  y = Eigen::MatrixXd::Zero(n_row, n_col);
-  int i, j;
-  for (i = 0; i < row_idx.size(); i++) {
-    for (j = 0; j < col_idx.size(); j++) {
-      y(row_idx[i], col_idx[j]) = x(i, j);
-    }
-  }
-  return(y);
-}
-
-
-Eigen::MatrixXd vech(Eigen::MatrixXd x) {
-  int n_col = x.cols();
-  Eigen::MatrixXd y((n_col * (n_col + 1)) / 2, 1);
-  int idx = 0;
-  int i, j;
-  for (i = 0; i < n_col; i ++ ) {
-    for (j = i; j < n_col; j ++ ) {
-      y(idx, 0) = x(j, i);
-      idx += 1;
-    }
-  }
-  return(y);
-}
-
-
-Eigen::SparseMatrix<double> create_duplication(int n) {
-  SparseMatrix<double> duplication(n * n, (n * (n + 1)) / 2);
-  int i, j, idx, row_idx, col_idx;
-  idx = 0;
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j++) {
-      if (j >= i) {
-        row_idx = n * i + j - i * (i + 1) / 2;
-        col_idx = n * i + j - i * (i + 1) / 2;
-      } else {
-        row_idx = n * j + i - j * (j + 1) / 2;
-        col_idx = n * j + i - j * (j + 1) / 2;
-      }
-      if (row_idx == col_idx) {
-        duplication.insert(idx, col_idx) = 1;
-      }
-      idx += 1;
-    }
-  }
-  return duplication;
-}
-
-
-
+// compute solution path
 // [[Rcpp::export]]
 void compute_regularized_path_cpp(
     Rcpp::List reduced_data,
@@ -1343,6 +1254,7 @@ void compute_regularized_path_cpp(
   }
 }
 
+// compute coefficient matrice
 // [[Rcpp::export]]
 Rcpp::List compute_coefficient_matrice_cpp(
     Rcpp::NumericVector theta_value,
@@ -1366,6 +1278,7 @@ Rcpp::List compute_coefficient_matrice_cpp(
   return Rcpp::wrap(coefficient_matrice);
 }
 
+// compute implied covariance
 // [[Rcpp::export]]
 Rcpp::List compute_implied_cov_cpp(
     Rcpp::NumericVector theta_value,
@@ -1386,6 +1299,7 @@ Rcpp::List compute_implied_cov_cpp(
   return Rcpp::wrap(implied_cov);
 }
 
+// compute implied mean
 // [[Rcpp::export]]
 Rcpp::List compute_implied_mean_cpp(
     Rcpp::NumericVector theta_value,
@@ -1406,8 +1320,7 @@ Rcpp::List compute_implied_mean_cpp(
   return Rcpp::wrap(implied_mean);
 }
 
-
-
+// compute moment jacobian
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_moment_jacobian_cpp(
     Rcpp::NumericVector theta_value,
@@ -1436,6 +1349,7 @@ Rcpp::NumericMatrix compute_moment_jacobian_cpp(
   return Rcpp::wrap(moment_jacobian);
 }
 
+// compute bfgs hessian
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
     Rcpp::NumericVector theta_value,
@@ -1460,9 +1374,7 @@ Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
   return Rcpp::wrap(bfgs_hessian);
 }
 
-
-
-
+// compute expected fisher
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_expected_fisher_cpp(
     Rcpp::NumericVector theta_value,
@@ -1486,7 +1398,7 @@ Rcpp::NumericMatrix compute_expected_fisher_cpp(
   return Rcpp::wrap(expected_fisher);
 }
 
-
+// compute observed fisher
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_observed_fisher_cpp(
     Rcpp::NumericVector theta_value,
@@ -1512,8 +1424,7 @@ Rcpp::NumericMatrix compute_observed_fisher_cpp(
   return Rcpp::wrap(observed_fisher);
 }
 
-
-
+// compute asymptotic covariance of score
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_score_acov_cpp(
     Rcpp::NumericVector theta_value,
@@ -1546,8 +1457,7 @@ Rcpp::NumericMatrix compute_score_acov_cpp(
   return Rcpp::wrap(score_acov);
 }
 
-
-
+// compute loss value
 // [[Rcpp::export]]
 double compute_loss_value_cpp(
     Rcpp::NumericVector theta_value,
@@ -1569,8 +1479,7 @@ double compute_loss_value_cpp(
   return loss_value;
 }
 
-
-
+// compute loss gradient indirectly
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_loss_gradient_cpp(
     Rcpp::NumericVector theta_value,
@@ -1594,7 +1503,7 @@ Rcpp::NumericMatrix compute_loss_gradient_cpp(
   return Rcpp::wrap(loss_gradient);
 }
 
-
+// compute loss gradient directly
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(
     Rcpp::NumericVector theta_value,
@@ -1615,7 +1524,7 @@ Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(
   return Rcpp::wrap(loss_gradient);
 }
 
-
+// compute regularizer gradient
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
     Rcpp::NumericVector theta_value,
@@ -1637,7 +1546,7 @@ Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
   return Rcpp::wrap(regularizer_gradient);
 }
 
-
+// compute objective gradient
 // [[Rcpp::export]]
 Rcpp::NumericMatrix compute_objective_gradient_cpp(
     Rcpp::NumericVector theta_value,
@@ -1663,247 +1572,4 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
   optimizer.update_objective_gradient();
   objective_gradient = optimizer.objective_gradient;
   return Rcpp::wrap(objective_gradient);
-}
-
-
-// [[Rcpp::export]]
-void compute_saturated_moment_cpp(
-    Rcpp::List y_obs,
-    Rcpp::List w,
-    Rcpp::List m_idx,
-    Rcpp::List saturated_mean,
-    Rcpp::List saturated_cov,
-    int iter_other_max,
-    double tol_other) {
-  Rcpp::List y_obs_i;
-  Rcpp::List w_i;
-  Rcpp::List m_idx_i;
-  Eigen::MatrixXd saturated_mean_i, saturated_cov_i;
-  Rcpp::IntegerVector m_idx_ik;
-  Eigen::MatrixXd saturated_cov_ik, saturated_cov_ik_inv;
-  Eigen::MatrixXd e_sum_i, c_sum_i;
-  Eigen::MatrixXd a_ik, b_ik;
-  Eigen::MatrixXd y_ik, y_ik_w;
-  double moment_diff_max;
-  
-  int i, j, k;
-  int n_group = y_obs.size();
-  for (i = 0; i < n_group; i++) {
-    y_obs_i = Rcpp::as<List>(y_obs[i]);
-    m_idx_i = Rcpp::as<List>(m_idx[i]);
-    w_i = Rcpp::as<List>(w[i]);
-    for (j = 0; j < iter_other_max; j++) {
-      saturated_cov_i = Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]);
-      saturated_mean_i = Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]);
-      e_sum_i = Eigen::MatrixXd::Zero(saturated_mean_i.rows(), 1);
-      c_sum_i = Eigen::MatrixXd::Zero(saturated_cov_i.rows(), saturated_cov_i.cols());
-      for (k = 0; k < y_obs_i.size(); k++) {
-        Eigen::Map<Eigen::MatrixXd> y_obs_ik(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(y_obs_i[k]));
-        Eigen::Map<Eigen::VectorXd> w_ik(Rcpp::as< Eigen::Map <Eigen::VectorXd> >(w_i[k]));
-        m_idx_ik = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[k]);
-        saturated_cov_ik = slice_both(saturated_cov_i, m_idx_ik, m_idx_ik);
-        saturated_cov_ik_inv = saturated_cov_ik.inverse();
-        
-        a_ik = saturated_mean_i.transpose() - 
-          slice_row(saturated_mean_i, m_idx_ik).transpose() * 
-          saturated_cov_ik_inv * slice_row(saturated_cov_i, m_idx_ik);
-        b_ik = saturated_cov_ik_inv * slice_row(saturated_cov_i, m_idx_ik);
-        y_ik = y_obs_ik * b_ik + Eigen::MatrixXd::Ones(y_obs_ik.rows(), 1)  * a_ik;
-        y_ik_w = (y_ik.array().colwise() * w_ik.array()).matrix();
-        e_sum_i += y_ik_w.colwise().sum().transpose();
-        c_sum_i += w_ik.sum() * saturated_cov_i -
-          w_ik.sum() * slice_col(saturated_cov_i, m_idx_ik) * b_ik +
-          y_ik_w.transpose() * y_ik;
-      }
-      saturated_mean[i] = e_sum_i;
-      saturated_cov[i] = c_sum_i - e_sum_i * e_sum_i.transpose();
-      moment_diff_max = 
-        std::max((Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]) - saturated_mean_i).array().abs().maxCoeff(),
-                 (Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]) - saturated_cov_i).array().abs().maxCoeff());
-      if (moment_diff_max < tol_other) {
-        break;
-      }
-    }
-  }
-}
-
-
-
-
-// [[Rcpp::export]]
-void compute_saturated_moment_acov_response_cpp(
-    Rcpp::List y_obs,
-    Rcpp::List w,
-    Rcpp::List m_idx,
-    Rcpp::List m2_idx,
-    Rcpp::List saturated_mean,
-    Rcpp::List saturated_cov,
-    Rcpp::List saturated_moment_acov) {
-  int n_response_i, n_moment_i, sample_size_i;
-  Rcpp::List y_obs_i;
-  Rcpp::List w_i;
-  Rcpp::List m_idx_i;
-  Rcpp::List m2_idx_i;
-  Eigen::MatrixXd saturated_mean_i, saturated_cov_i;
-  Eigen::SparseMatrix<double> duplication_i;
-  Eigen::MatrixXd score2_sum_i;
-  Eigen::MatrixXd hessian_sum_i, hessian_sum_i_inv;
-  Eigen::MatrixXd saturated_mean_ij, saturated_cov_ij, saturated_cov_ij_vech, saturated_cov_ij_inv;
-  Eigen::MatrixXd y_obs_ij;
-  Eigen::VectorXd w_ij;
-  Eigen::MatrixXd yc_obs_ij, yc_obs_ij_w;
-  Eigen::MatrixXd yc2c_obs_ij, yc2c_obs_ijk;
-  Eigen::MatrixXd score_ij, score_ij_w;
-  Eigen::MatrixXd saturated_moment_acov_i;
-  Rcpp::IntegerVector m_idx_ij, m2_idx_ij;
-  int n_response_ij, n_moment_ij, sample_size_ij;
-  Eigen::SparseMatrix<double> duplication_ij;
-  
-  int i, j, k;
-  int n_group = y_obs.size();
-  for (i = 0; i < n_group; i++) {
-    sample_size_i = 0;
-    y_obs_i = Rcpp::as<List>(y_obs[i]);
-    m_idx_i = Rcpp::as<List>(m_idx[i]);
-    m2_idx_i = Rcpp::as<List>(m2_idx[i]);
-    w_i = Rcpp::as<List>(w[i]);
-    saturated_cov_i = Rcpp::as< Eigen::MatrixXd >(saturated_cov[i]);
-    saturated_mean_i = Rcpp::as< Eigen::MatrixXd >(saturated_mean[i]);
-    n_response_i = saturated_mean_i.rows();
-    n_moment_i = (n_response_i * (n_response_i + 3)) / 2;
-    score2_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
-    hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
-    
-    duplication_i = create_duplication(n_response_i);
-    if ((y_obs_i.size() == 1) & ((Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i)) {
-      y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[0]);
-      w_ij = Rcpp::as<Eigen::VectorXd>(w_i[0]);
-      sample_size_ij = y_obs_ij.rows();
-      sample_size_i += sample_size_ij;
-      saturated_mean_ij = saturated_mean_i;
-      saturated_cov_ij = saturated_cov_i;
-      saturated_cov_ij_vech = vech(saturated_cov_ij); 
-      n_response_ij = saturated_mean_ij.rows();
-      n_moment_ij = (n_response_ij * (n_response_ij + 3)) / 2;
-      
-      yc_obs_ij = y_obs_ij - 
-        Eigen::MatrixXd::Ones(sample_size_ij, 1) * saturated_mean_ij.transpose();
-      yc2c_obs_ij.resize(sample_size_ij, n_moment_ij - n_response_ij);
-      
-      for (k = 0; k < sample_size_ij; k++) {
-        yc2c_obs_ijk = vech(yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k));
-        yc2c_obs_ij.row(k) = (yc2c_obs_ijk - saturated_cov_ij_vech).transpose();
-      }
-      saturated_cov_ij_inv = saturated_cov_ij.inverse();
-      duplication_ij = create_duplication(n_response_ij);
-      
-      score_ij.resize(sample_size_ij, n_moment_i);
-      score_ij.leftCols(n_response_i) = yc_obs_ij;
-      score_ij.rightCols((n_moment_i - n_response_i)) = yc2c_obs_ij;
-      
-      score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
-      score2_sum_i += score_ij_w.transpose() * score_ij;
-      saturated_moment_acov_i = score2_sum_i / double(sample_size_i);
-    } else {
-      for (j = 0; j < y_obs_i.size(); j++) {
-        y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[j]);
-        w_ij = Rcpp::as<Eigen::VectorXd>(w_i[j]);
-        m_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m_idx_i[j]);
-        m2_idx_ij = Rcpp::as< Rcpp::IntegerVector >(m2_idx_i[j]);
-        sample_size_ij = y_obs_ij.rows();
-        sample_size_i += sample_size_ij;
-        saturated_mean_ij = slice_row(saturated_mean_i, m_idx_ij);
-        saturated_cov_ij = slice_both(saturated_cov_i, m_idx_ij, m_idx_ij);
-        saturated_cov_ij_vech = vech(saturated_cov_ij); 
-        n_response_ij = saturated_mean_ij.rows();
-        n_moment_ij = (n_response_ij * (n_response_ij + 3)) / 2;
-        
-        yc_obs_ij = y_obs_ij - 
-          Eigen::MatrixXd::Ones(sample_size_ij, 1) * saturated_mean_ij.transpose();
-        yc2c_obs_ij.resize(sample_size_ij, n_moment_ij - n_response_ij);
-        
-        for (k = 0; k < sample_size_ij; k++) {
-          yc2c_obs_ijk = vech(yc_obs_ij.row(k).transpose() * yc_obs_ij.row(k));
-          yc2c_obs_ij.row(k) = (yc2c_obs_ijk - saturated_cov_ij_vech).transpose();
-        }
-        saturated_cov_ij_inv = saturated_cov_ij.inverse();
-        duplication_ij = create_duplication(n_response_ij);
-        
-        score_ij.resize(sample_size_ij, n_moment_i);
-        score_ij.leftCols(n_response_i) = 
-          expand_col((yc_obs_ij * saturated_cov_ij_inv), m_idx_ij, n_response_i);
-        score_ij.rightCols((n_moment_i - n_response_i)) = 
-          expand_col((0.5 * yc2c_obs_ij * duplication_ij.transpose() *
-          Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij), 
-          m2_idx_ij, (n_moment_i - n_response_i));
-        
-        score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
-        score2_sum_i += score_ij_w.transpose() * score_ij;
-        
-        yc_obs_ij = expand_col(yc_obs_ij, m_idx_ij, n_response_i);
-        yc_obs_ij_w = (yc_obs_ij.array().colwise() * w_ij.array()).matrix();
-        yc2c_obs_ij = expand_col(yc2c_obs_ij, m2_idx_ij, (n_moment_i - n_response_i));
-        saturated_cov_ij_inv = expand_both(saturated_cov_ij_inv, m_idx_ij, m_idx_ij,
-                                           n_response_i, n_response_i);
-        
-        hessian_sum_i.block(0, 0, n_response_i, n_response_i) +=
-          w_ij.sum() * saturated_cov_ij_inv;
-        hessian_sum_i.block(n_response_i, n_response_i, 
-                            (n_moment_i - n_response_i), 
-                            (n_moment_i - n_response_i)) += 
-                              duplication_i.transpose() * 
-                              (Eigen::kroneckerProduct(saturated_cov_ij_inv,
-                                                       (saturated_cov_ij_inv * 
-                                                         (yc_obs_ij_w.transpose() * yc_obs_ij) * 
-                                                         saturated_cov_ij_inv - 0.5 * w_ij.sum() * 
-                                                         saturated_cov_ij_inv))) * duplication_i;
-        hessian_sum_i.block(0, n_response_i, 
-                            n_response_i, 
-                            (n_moment_i - n_response_i)) += 
-                              (Eigen::kroneckerProduct(saturated_cov_ij_inv, 
-                                                       yc_obs_ij_w.colwise().sum() * saturated_cov_ij_inv)) * duplication_i;
-        hessian_sum_i.block(n_response_i, 0, 
-                            (n_moment_i - n_response_i), 
-                            n_response_i) = 
-                              hessian_sum_i.block(0, n_response_i, 
-                                                  n_response_i, 
-                                                  (n_moment_i - n_response_i)).transpose(); 
-      }
-      hessian_sum_i_inv = hessian_sum_i.inverse();
-      saturated_moment_acov_i = (hessian_sum_i_inv * score2_sum_i * hessian_sum_i_inv) / double(sample_size_i);
-    }
-    saturated_moment_acov[i] = saturated_moment_acov_i;
-  }
-}
-
-
-// [[Rcpp::export]]
-void compute_saturated_moment_acov_moment_cpp(
-    int n_observation,
-    Rcpp::List sample_proportion,
-    Rcpp::List saturated_cov,
-    Rcpp::List saturated_moment_acov) {
-  Eigen::MatrixXd saturated_cov_i_inv, saturated_moment_acov_i;
-  Eigen::SparseMatrix<double> duplication_i;
-  double sample_proportion_i;
-  int n_response_i, n_moment_i;
-  int i;
-  for (i = 0; i < saturated_cov.size(); i++) {
-    Eigen::Map<MatrixXd> saturated_cov_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(saturated_cov[i]));
-    sample_proportion_i = Rcpp::as<double>(sample_proportion[i]);
-    saturated_cov_i_inv = saturated_cov_i.inverse();
-    n_response_i = saturated_cov_i.cols();
-    n_moment_i = n_response_i * (n_response_i + 3) / 2;
-    duplication_i = create_duplication(n_response_i);
-    saturated_moment_acov_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
-    saturated_moment_acov_i.block(0, 0, n_response_i, n_response_i) = saturated_cov_i_inv;
-    saturated_moment_acov_i.block(n_response_i, n_response_i,
-                                  n_moment_i - n_response_i, n_moment_i - n_response_i) =
-                                    0.5 * duplication_i.transpose() * 
-                                    Eigen::kroneckerProduct(saturated_cov_i_inv, saturated_cov_i_inv) *
-                                    duplication_i;
-    saturated_moment_acov_i = saturated_moment_acov_i.inverse() / 
-      (sample_proportion_i *double(n_observation));
-    saturated_moment_acov[i] = saturated_moment_acov_i;
-  }
 }
