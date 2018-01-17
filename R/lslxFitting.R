@@ -26,6 +26,7 @@ lslxFitting$set("public",
                   private$initialize_fitted_result()
                 })
 
+## \code{$initialize_control()} initializes control options. ##
 lslxFitting$set("private",
                 "initialize_control",
                 function(model,
@@ -106,6 +107,7 @@ lslxFitting$set("private",
                   }
                 })
 
+## \code{$initialize_reduced_model()} initializes a reduced model. ##
 lslxFitting$set("private",
                 "initialize_reduced_model",
                 function(model) {
@@ -193,6 +195,7 @@ lslxFitting$set("private",
                     )
                 })
 
+## \code{$initialize_reduced_data()} initializes a reduced data. ##
 lslxFitting$set("private",
                 "initialize_reduced_data",
                 function(data) {
@@ -607,6 +610,7 @@ lslxFitting$set("private",
                   }
                 })
 
+## \code{$initialize_supplied_result()} initializes a supplied result. ##
 lslxFitting$set("private",
                 "initialize_supplied_result",
                 function() {
@@ -616,6 +620,7 @@ lslxFitting$set("private",
                   private$compute_fitted_start()
                 })
 
+## \code{$compute_fitted_start()} computes starting value. ##
 lslxFitting$set("private",
                 "compute_fitted_start",
                 function() {
@@ -924,6 +929,7 @@ lslxFitting$set("private",
                     self$reduced_model$theta_name
                 })
 
+## \code{$compute_baseline_model()} computes baseline model. ##
 lslxFitting$set("private",
                 "compute_baseline_model",
                 function() {
@@ -964,6 +970,7 @@ lslxFitting$set("private",
                   )
                 })
 
+## \code{$compute_saturated_model()} computes saturated model. ##
 lslxFitting$set("private",
                 "compute_saturated_model",
                 function() {
@@ -975,6 +982,7 @@ lslxFitting$set("private",
                   )
                 })
 
+## \code{$initialize_fitted_result()} initializes a fitted result. ##
 lslxFitting$set("private",
                 "initialize_fitted_result",
                 function() {

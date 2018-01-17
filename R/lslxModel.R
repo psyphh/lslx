@@ -56,6 +56,7 @@ lslxModel$set("public",
                   ), ]
               })
 
+## \code{$parse_model()} parses specified model. ##
 lslxModel$set("private",
               "parse_model",
               function(model) {
@@ -281,6 +282,7 @@ lslxModel$set("private",
                 return(model_parsed)
               })
 
+## \code{$initialize_specification()} initializes a specification table. ##
 lslxModel$set("private",
               "initialize_specification",
               function(model_parsed) {
@@ -449,6 +451,7 @@ lslxModel$set("private",
                 self$specification$prefix <- NULL
               })
 
+## \code{$expand_specification_alpha()} expand the specification table for intercepts. ##
 lslxModel$set("private",
               "expand_specification_alpha",
               function() {
@@ -525,6 +528,7 @@ lslxModel$set("private",
                         stringsAsFactors = FALSE)
               })
 
+## \code{$expand_specification_psi()} expand the specification table for covariances. ##
 lslxModel$set("private",
               "expand_specification_psi",
               function() {
