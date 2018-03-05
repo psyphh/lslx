@@ -46,3 +46,5 @@ lslxData$set("public",
                  self$sample_size <- sample_size
                }
              })
+
+
