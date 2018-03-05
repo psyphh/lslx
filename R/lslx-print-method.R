@@ -83,4 +83,6 @@ lslx$set("public",
              cat("    $extract_score_acov() / $extract_coefficient_acov()\n")
              cat("    $extract_loss_gradient() / $extract_regularizer_gradient() / $extract_objective_gradient()\n")
            }
+           cat("\n")
+           cat("To learn more about 'lslx' object, please try 'help(lslx)' or see GitHub wiki (https://github.com/psyphh/lslx/wiki).")
          })
