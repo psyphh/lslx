@@ -70,7 +70,8 @@ lslx$set("public",
                  rmsea_test[row_name_i, "estimate"] <- NA
                  rmsea_test[row_name_i, "lower"] <- NA
                  rmsea_test[row_name_i, "upper"] <- NA
-               } else if ((lr_df == 0) & (lr_statistic > sqrt(.Machine$double.eps)) ) {
+               } else if ((lr_df == 0) &
+                          (lr_statistic > sqrt(.Machine$double.eps))) {
                  rmsea_test[row_name_i, "estimate"] <- NA
                  rmsea_test[row_name_i, "lower"] <- NA
                  rmsea_test[row_name_i, "upper"] <- NA
@@ -82,6 +83,7 @@ lslx$set("public",
                  lower_ncp <- 0
                  if (pchisq(lr_statistic,
                             lr_df, lower_ncp) < (1 - alpha_level / 2)) {
+                   
                  } else {
                    lower_ncp_1 <- lower_ncp
                    lower_ncp_2 <- 0
@@ -108,6 +110,7 @@ lslx$set("public",
                  upper_ncp <- 0
                  if (pchisq(lr_statistic,
                             lr_df, upper_ncp) < (alpha_level / 2)) {
+                   
                  } else {
                    upper_ncp_1 <- upper_ncp
                    upper_ncp_2 <- 0
@@ -144,17 +147,21 @@ lslx$set("public",
                          (private$fitting$reduced_data$n_observation * lr_df)
                      ))
                    rmsea_test[row_name_i, "lower"]  <-
-                     sqrt(max(
-                       0,
-                       scaling_factor * private$fitting$reduced_model$n_group * lower_ncp /
-                         (private$fitting$reduced_data$n_observation * lr_df)
-                     ))
+                     sqrt(
+                       max(
+                         0,
+                         scaling_factor * private$fitting$reduced_model$n_group * lower_ncp /
+                           (private$fitting$reduced_data$n_observation * lr_df)
+                       )
+                     )
                    rmsea_test[row_name_i, "upper"]  <-
-                     sqrt(max(
-                       0,
-                       scaling_factor * private$fitting$reduced_model$n_group * upper_ncp /
-                         (private$fitting$reduced_data$n_observation * lr_df)
-                     ))
+                     sqrt(
+                       max(
+                         0,
+                         scaling_factor * private$fitting$reduced_model$n_group * upper_ncp /
+                           (private$fitting$reduced_data$n_observation * lr_df)
+                       )
+                     )
                  }
                }
              }
@@ -168,6 +175,8 @@ lslx$set("public",
          function(selector,
                   standard_error = "default",
                   alpha_level = .05,
+                  debias = "default",
+                  post = "default",
                   exclude_improper = TRUE) {
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
@@ -183,6 +192,36 @@ lslx$set("public",
                standard_error <- "observed_fisher"
              }
            }
+           if (!(
+             post %in% c("default", "none", "polyhedral", "scheffe")
+           )) {
+             stop(
+               "Argument 'post' can be only either 'default', 'none', 'polyhedral', or 'scheffe'."
+             )
+           }
+           if (!(
+             debias %in% c("default", "none", "one_step")
+           )) {
+             stop(
+               "Argument 'debias' can be only either 'default', 'none', or 'one_step'."
+             )
+           }
+           
+           if (post == "default") {
+             post <- "none"
+             if (debias == "default") {
+               debias <- "none"
+             }
+           } else if (post == "polyhedral") {
+             if (debias == "default") {
+               debias <- "one_step"
+             }
+             if (debias == "none") {
+               stop(
+                 "'debias' cannot be 'none' under 'post' == 'polyhedral'."
+               )
+             }
+           }
            coefficient <-
              self$extract_coefficient(selector = selector,
                                       exclude_improper = exclude_improper)
@@ -192,18 +231,90 @@ lslx$set("public",
                standard_error = standard_error,
                exclude_improper = exclude_improper
              )
-           coefficient_test <-
-             data.frame(estimate = coefficient,
-                        standard_error = sqrt(diag(coefficient_acov)))
+           if (debias == "none") {
+             coefficient_test <-
+               data.frame(estimate = coefficient,
+                          standard_error = sqrt(diag(coefficient_acov)))             
+           } else if (debias == "one_step") {
+             debiased_coefficient <-
+               self$extract_debiased_coefficient(selector = selector,
+                                                 exclude_improper = exclude_improper)
+             coefficient_test <-
+               data.frame(estimate = debiased_coefficient,
+                          standard_error = sqrt(diag(coefficient_acov)))
+           }
            coefficient_test$z_value <-
              coefficient_test$estimate / coefficient_test$standard_error
-           coefficient_test$p_value <-
-             pnorm(-abs(coefficient_test$z_value))
-           coefficient_test$lower <-
-             coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
-           coefficient_test$upper <-
-             coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
-           attr(coefficient_test, "standard_error") <-
-             standard_error
+           if (post == "none") {
+             coefficient_test$p_value <-
+               pnorm(-abs(coefficient_test$z_value))
+             coefficient_test$lower <-
+               coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
+             coefficient_test$upper <-
+               coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
+             attr(coefficient_test, "standard_error") <-
+               standard_error
+           } else if (post == "polyhedral") {
+             is_active <-
+               private$fitting$reduced_model$theta_is_free |
+               (private$fitting$reduced_model$theta_is_pen &
+                  coefficient != 0)
+             is_pen <- private$fitting$reduced_model$theta_is_pen
+             is_selected <- is_pen & (coefficient != 0)
+             if (!any(is_selected)) {
+               stop(
+                 "No non-zero parameters are selected and hence post-selection inference cannot be implemented."
+               )
+             }
+             a_ph <- - diag(sign(coefficient))
+             b_ph <-
+               matrix((sign(coefficient) * (coefficient - debiased_coefficient)))
+             tnorm_inference <-
+               lapply(
+                 X = 1:length(debiased_coefficient),
+                 FUN = function(i) {
+                   tnorm_quantity <- 
+                     compute_tnorm_quantity(i, a_ph, b_ph, 
+                                            debiased_coefficient, coefficient_acov,
+                                            is_pen, is_active, is_selected) 
+                   tnorm_p_value <-  
+                     compute_tnorm_p_value(theta = tnorm_quantity$theta, 
+                                           mu = 0, sigma = tnorm_quantity$sigma, 
+                                           left = tnorm_quantity$left, 
+                                           right = tnorm_quantity$right)
+                   tnorm_interval <- 
+                     compute_tnorm_interval(theta = tnorm_quantity$theta, 
+                                          sigma = tnorm_quantity$sigma, 
+                                          left = tnorm_quantity$left, 
+                                          right = tnorm_quantity$right, 
+                                          alpha_level = alpha_level, 
+                                          grid_range = c(-100, 100), 
+                                          grid_length = 100, 
+                                          depth_max = 3) 
+                   return(c(p_value = tnorm_p_value,
+                            lower = tnorm_interval[["lower"]],
+                            upper = tnorm_interval[["upper"]]))
+                 }
+               )
+             coefficient_test$p_value <- 
+               sapply(X = tnorm_inference, 
+                      FUN = function(tnorm_inference_i) {
+                        getElement(tnorm_inference_i, "p_value")
+                      })
+             coefficient_test$lower <-
+               sapply(X = tnorm_inference, 
+                      FUN = function(tnorm_inference_i) {
+                        getElement(tnorm_inference_i, "lower")
+                      })
+             coefficient_test$upper <- 
+               sapply(X = tnorm_inference, 
+                      FUN = function(tnorm_inference_i) {
+                        getElement(tnorm_inference_i, "upper")
+                      })
+           } else {
+             
+           }
            return(coefficient_test)
          })
+
+

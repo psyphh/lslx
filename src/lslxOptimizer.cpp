@@ -707,7 +707,7 @@ void lslxOptimizer::update_regularizer_gradient() {
         } else if ((theta_value[i] > (lambda * delta)) | ((- theta_value[i]) > (lambda * delta))) {
           regularizer_gradient(i, 0) = 0;
         } else {
-          regularizer_gradient(i, 0) = lambda;
+          regularizer_gradient(i, 0) = sign(theta_is_pen[i]) * lambda;
         }
       } else {
         regularizer_gradient(i, 0) = 0;

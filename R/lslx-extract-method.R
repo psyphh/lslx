@@ -187,6 +187,57 @@ lslx$set("public",
            return(coefficient)
          })
 
+
+
+## \code{$extract_debiased_coefficient()} returns a \code{numeric} of debiased estimates of the coefficients. ##
+lslx$set("public",
+         "extract_debiased_coefficient",
+         function(selector,
+                  exclude_improper = TRUE) {
+           coefficient <-
+             self$extract_coefficient(selector = selector,
+                                      exclude_improper = exclude_improper)
+           is_active <-
+             private$fitting$reduced_model$theta_is_free |
+             (private$fitting$reduced_model$theta_is_pen &
+                coefficient != 0)
+           is_selected <- 
+             private$fitting$reduced_model$theta_is_pen & (coefficient != 0)
+           debiased_coefficient <- coefficient
+           if (any(is_selected)) {
+             penalty_level <-
+               self$extract_penalty_level(selector = selector,
+                                          exclude_improper = exclude_improper)
+             lambda <- as.numeric(strsplit(x = penalty_level,
+                                           split = "=|/")[[1]][2])
+             delta <- as.numeric(strsplit(x = penalty_level,
+                                          split = "=|/")[[1]][4])
+             regularizer_gradient <-
+               compute_regularizer_gradient_cpp(
+                 theta_value = coefficient,
+                 lambda = lambda,
+                 delta = delta,
+                 reduced_data = private$fitting$reduced_data,
+                 reduced_model = private$fitting$reduced_model,
+                 control = private$fitting$control,
+                 supplied_result = private$fitting$supplied_result
+               )
+             observed_fisher <-
+               2 * self$extract_observed_fisher(selector = selector,
+                                                exclude_improper = exclude_improper)
+             observed_fisher_inv <-
+               matrix(0, length(coefficient), length(coefficient))
+             observed_fisher_inv[is_active, is_active] <-
+               solve(observed_fisher[is_active, is_active])
+             debiased_coefficient[is_selected] <- 
+               coefficient[is_selected] + 
+               observed_fisher_inv[is_selected, is_selected, drop = FALSE] %*% 
+               (regularizer_gradient[is_selected, 1, drop = FALSE])
+           } 
+           return(debiased_coefficient)
+         })
+
+
 ## \code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrice(s). ##
 lslx$set("public",
          "extract_implied_cov",
@@ -524,7 +575,7 @@ lslx$set("public",
            coefficient <-
              self$extract_coefficient(selector = selector,
                                       exclude_improper = exclude_improper)
-           idc_effective <-
+           is_active <-
              private$fitting$reduced_model$theta_is_free |
              (private$fitting$reduced_model$theta_is_pen &
                 coefficient != 0)
@@ -542,24 +593,24 @@ lslx$set("public",
                self$extract_observed_fisher(selector = selector,
                                             exclude_improper = exclude_improper)
              observed_fisher_pinv <-
-               solve(observed_fisher[idc_effective, idc_effective])
-             coefficient_acov[idc_effective, idc_effective] <-
+               solve(observed_fisher[is_active, is_active])
+             coefficient_acov[is_active, is_active] <-
                (observed_fisher_pinv %*%
-                  score_acov[idc_effective, idc_effective] %*%
+                  score_acov[is_active, is_active] %*%
                   observed_fisher_pinv)
            } else if (standard_error == "expected_fisher") {
              expected_fisher <-
                self$extract_expected_fisher(selector = selector,
                                             exclude_improper = exclude_improper)
-             coefficient_acov[idc_effective, idc_effective] <-
-               solve(expected_fisher[idc_effective, idc_effective]) /
+             coefficient_acov[is_active, is_active] <-
+               solve(expected_fisher[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
            } else if (standard_error == "observed_fisher") {
              observed_fisher <-
                self$extract_observed_fisher(selector = selector,
                                             exclude_improper = exclude_improper)
-             coefficient_acov[idc_effective, idc_effective] <-
-               solve(observed_fisher[idc_effective, idc_effective]) /
+             coefficient_acov[is_active, is_active] <-
+               solve(observed_fisher[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
            } else {
              

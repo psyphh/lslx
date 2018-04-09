@@ -1,13 +1,13 @@
 Package: lslx
 Type: Package
 Title: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
-Version: 0.6.1
+Version: 0.6.2
 Authors@R: c(person("Po-Hsien", "Huang", email = "psyphh@gmail.com", role = c("cre", "aut")), person("Wen-Hsin", "Hu", email = "loveakai@gmail.com", role = "aut"))
 Description: Fits semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) with lasso or minimax concave penalty (MCP).
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Collate: lslxData.R lslxModel.R lslxFitting.R lslx.R lslx-initialize-method.R lslx-print-method.R lslx-set-coefficient-method.R lslx-set-block-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R 
+Collate: lslxData.R lslxModel.R lslxFitting.R lslx.R lslx-initialize-method.R lslx-print-method.R lslx-set-coefficient-method.R lslx-set-block-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R polyhedral.R 
 Depends:
     R (>= 3.1.0)
 Imports: Rcpp,
