@@ -4,6 +4,8 @@ lslx$set("public",
          function(selector,
                   standard_error = "default",
                   alpha_level = .05,
+                  debias = "default",
+                  post = "default",
                   digit = 3,
                   interval = TRUE,
                   simplify = FALSE,
@@ -60,7 +62,21 @@ lslx$set("public",
                standard_error <- "observed_fisher"
              }
            }
-           
+           if (post == "default") {
+             post <- "none"
+             if (debias == "default") {
+               debias <- FALSE
+             }
+           } else if (post == "polyhedral") {
+             if (debias == "default") {
+               debias <- TRUE
+             }
+             if (!debias) {
+               stop(
+                 "'debias' cannot be FALSE under 'post' == 'polyhedral'."
+               )
+             }
+           }
            ##generating output informations
            if (setting$general_information) {
              general_information <-
@@ -382,6 +398,8 @@ lslx$set("public",
                  selector = selector,
                  standard_error = standard_error,
                  alpha_level = alpha_level,
+                 debias = debias,
+                 post = post,
                  exclude_improper = exclude_improper
                )
              relation_as_groupname <-
