@@ -1,3 +1,6 @@
+# functions for package lslx to implement post-selection inference
+# written by Po-Hsien Huang psyphh@gmail.com
+# some functions are based on codes in package selectiveInference
 
 compute_tnorm_quantity <- function(i, a_ph, b_ph, 
                                    debiased_coefficient, coefficient_acov,
