@@ -192,6 +192,7 @@ lslx$set("public",
                standard_error <- "observed_fisher"
              }
            }
+<<<<<<< HEAD
            if (!(
              post %in% c("default", "none", "polyhedral", "scheffe")
            )) {
@@ -219,6 +220,20 @@ lslx$set("public",
              if (debias == "none") {
                stop(
                  "'debias' cannot be 'none' under 'post' == 'polyhedral'."
+=======
+           if (post == "default") {
+             post <- "none"
+             if (debias == "default") {
+               debias <- FALSE
+             }
+           } else if (post == "polyhedral") {
+             if (debias == "default") {
+               debias <- TRUE
+             }
+             if (!debias) {
+               stop(
+                 "'debias' cannot be FALSE under 'post' == 'polyhedral'."
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
                )
              }
            }
@@ -231,11 +246,19 @@ lslx$set("public",
                standard_error = standard_error,
                exclude_improper = exclude_improper
              )
+<<<<<<< HEAD
            if (debias == "none") {
              coefficient_test <-
                data.frame(estimate = coefficient,
                           standard_error = sqrt(diag(coefficient_acov)))             
            } else if (debias == "one_step") {
+=======
+           if (!debias) {
+             coefficient_test <-
+               data.frame(estimate = coefficient,
+                          standard_error = sqrt(diag(coefficient_acov)))             
+           } else {
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
              debiased_coefficient <-
                self$extract_debiased_coefficient(selector = selector,
                                                  exclude_improper = exclude_improper)
@@ -263,25 +286,40 @@ lslx$set("public",
              is_selected <- is_pen & (coefficient != 0)
              if (!any(is_selected)) {
                stop(
+<<<<<<< HEAD
                  "No non-zero parameters are selected and hence post-selection inference cannot be implemented."
+=======
+                 "No non-zero parameters are selected and hence selective inference cannot be implemented."
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
                )
              }
              a_ph <- - diag(sign(coefficient))
              b_ph <-
                matrix((sign(coefficient) * (coefficient - debiased_coefficient)))
+<<<<<<< HEAD
              tnorm_inference <-
                lapply(
+=======
+             coefficient_test$p_value <-
+               sapply(
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
                  X = 1:length(debiased_coefficient),
                  FUN = function(i) {
                    tnorm_quantity <- 
                      compute_tnorm_quantity(i, a_ph, b_ph, 
+<<<<<<< HEAD
                                             debiased_coefficient, coefficient_acov,
                                             is_pen, is_active, is_selected) 
+=======
+                                         debiased_coefficient, coefficient_acov,
+                                         is_pen, is_active, is_selected) 
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
                    tnorm_p_value <-  
                      compute_tnorm_p_value(theta = tnorm_quantity$theta, 
                                            mu = 0, sigma = tnorm_quantity$sigma, 
                                            left = tnorm_quantity$left, 
                                            right = tnorm_quantity$right)
+<<<<<<< HEAD
                    tnorm_interval <- 
                      compute_tnorm_interval(theta = tnorm_quantity$theta, 
                                           sigma = tnorm_quantity$sigma, 
@@ -311,6 +349,15 @@ lslx$set("public",
                       FUN = function(tnorm_inference_i) {
                         getElement(tnorm_inference_i, "upper")
                       })
+=======
+                   return(tnorm_p_value)
+                 },
+                 simplify = TRUE,
+                 USE.NAMES = TRUE
+               )
+             coefficient_test$lower <- NA_real_
+             coefficient_test$upper <- NA_real_
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de
            } else {
              
            }
@@ -318,3 +365,115 @@ lslx$set("public",
          })
 
 
+<<<<<<< HEAD
+=======
+
+compute_tnorm_quantity <- function(i, a_ph, b_ph, 
+                                debiased_coefficient, coefficient_acov,
+                                is_pen, is_active, is_selected) {
+  theta_i <- debiased_coefficient[i]
+  sigma_i <- sqrt(coefficient_acov[i, i])
+  if (is_pen[i]) {
+    if (is_selected[i]) {
+      coefficient_acov[is.na(coefficient_acov)] <- 0
+      a_ph <- a_ph[is_selected, is_active, drop = FALSE]
+      b_ph <- b_ph[is_selected, 1, drop = FALSE]
+      n_is_active <- sum(is_active)
+      cumsum_is_active <- cumsum(is_active)
+      c_i <- (coefficient_acov[is_active, i, drop = FALSE]) / (sigma_i^2)
+      c_i_expand <- diag(0, n_is_active)
+      c_i_expand[, cumsum_is_active[i]] <- c_i
+      z_i <-
+        (diag(n_is_active) - c_i_expand) %*% matrix(debiased_coefficient[is_active])
+      w_i <- c(a_ph %*% c_i)
+      r_i <- c(b_ph - (a_ph %*% z_i)) / w_i
+      left_i <- ifelse(any(w_i < 0), yes = max(r_i[w_i < 0]), no = - Inf) 
+      right_i <- ifelse(any(w_i > 0), yes = min(r_i[w_i > 0]), no = Inf) 
+    } else {
+      left_i <- NA
+      right_i <- NA
+    }
+  } else {
+    left_i <- - Inf
+    right_i <- Inf
+  }
+  tnorm_quantity <- 
+    list(theta = theta_i, sigma = sigma_i, left = left_i, right = right_i)
+  return(tnorm_quantity)
+}
+
+compute_tnorm_p_value <- function(theta, mu, sigma, left, right) {
+  if (is.na(left) | is.na(right) | is.na(sigma)) {
+    p_value <- NA
+  } else {
+    if ((left == -Inf) & (right == Inf)) {
+      p_value <- pnorm(- abs((theta - mu) / sigma))
+    } else {
+      if (theta != 0) {
+        if (theta > 0) {
+          p_value <- compute_tnorm_prob(-theta, -mu, sigma, -right, -left)
+        } else {
+          p_value <- compute_tnorm_prob(theta, mu, sigma, left, right)
+        }
+      } else {
+        p_value <- NA
+      }
+    }
+  }
+  return(p_value)
+}
+
+
+compute_tnorm_interval <- function(theta, mu, sigma, left, right, alpha, 
+                                   grid_range, grid_length) {
+  grid_point <- 
+    seq(from = grid_range[1] * sigma, to = grid_range[2] * sigma, length.out = grid_length)
+  grid_prob <- 
+    sapply(X = grid_point, FUN = function(mu_i) {
+      compute_tnorm_prob(theta, mu_i, sigma, left, right) 
+      },
+      simplify = TRUE, 
+      USE.NAMES = TRUE)
+  grid_upper <- which(grid_prob >= 1 - alpha / 2)
+  grid_lower <- which(grid_prob <= alpha / 2)
+}
+
+
+search_limit <- function(theta, mu, sigma, left, right, alpha, grid_point) {
+
+}
+
+compute_tnorm_prob <- function(theta, mu, sigma, left, right) {
+  z_center <- (theta - mu) / sigma
+  z_left <- (left - mu) / sigma
+  z_right <- (right - mu) / sigma
+  if (z_center <= z_left) {
+    tnorm_prob <- 0
+  } else if (z_center >= z_right) {
+    tnorm_prob <- 1
+  } else {
+    tnorm_prob <- (pnorm(z_center) - pnorm(z_left)) / (pnorm(z_right) - pnorm(z_left)) 
+  }
+  if (is.na(tnorm_prob)) {
+    if (z_left > -Inf) {
+      term_left <- compute_bryc(z_left) * exp(-(z_left^2 - z_center^2) / 2)
+    } else {
+      term_left <- exp(z_center^2)
+    }
+    if (z_right < Inf) {
+      term_right <- compute_bryc(z_right) * exp(-(z_right^2 - z_center^2) / 2)
+    } else {
+      term_right <- 0
+    }
+    tnorm_prob <- (term_left - compute_bryc(z_center)) / (term_left - term_right)
+  }
+  return(tnorm_prob)
+}
+
+
+compute_bryc <- function(x) {
+  y <- (x^2 + 5.575192695 * x + 12.7743632) / 
+    (sqrt(2 * pi) *x^3 + 14.38718147 * x^2 + 31.53531977 * x + 2 * 12.77436324)
+  return(y)
+}
+>>>>>>> 8398bee975273c181cb4dc4dc458750a3e6235de

@@ -62,6 +62,7 @@ lslx$set("public",
                standard_error <- "observed_fisher"
              }
            }
+           
            if (!(
              post %in% c("default", "none", "polyhedral", "scheffe")
            )) {
