@@ -38,7 +38,7 @@ compute_tnorm_p_value <- function(theta, mu, sigma, left, right) {
     p_value <- NA_real_
   } else {
     if ((left == -Inf) & (right == Inf)) {
-      p_value <- pnorm(- abs((theta - mu) / sigma))
+      p_value <- stats::pnorm(- abs((theta - mu) / sigma))
     } else {
       if (theta != 0) {
         if (theta > 0) {
@@ -62,8 +62,8 @@ compute_tnorm_interval <- function(theta, sigma, left, right, alpha_level,
     upper <- NA_real_
   } else {
     if ((left == -Inf) & (right == Inf)) {
-      lower <- theta + qnorm(alpha_level / 2) * sigma
-      upper <- theta + qnorm(1 - alpha_level / 2) * sigma
+      lower <- theta + stats::qnorm(alpha_level / 2) * sigma
+      upper <- theta + stats::qnorm(1 - alpha_level / 2) * sigma
     } else {
       grid_point <- 
         seq(from = grid_range[1] * sigma, 
@@ -147,7 +147,7 @@ compute_tnorm_prob <- function(theta, mu, sigma, left, right) {
   } else if (z_center >= z_right) {
     tnorm_prob <- 1
   } else {
-    tnorm_prob <- (pnorm(z_center) - pnorm(z_left)) / (pnorm(z_right) - pnorm(z_left)) 
+    tnorm_prob <- (stats::pnorm(z_center) - stats::pnorm(z_left)) / (stats::pnorm(z_right) - stats::pnorm(z_left)) 
   }
   if (is.na(tnorm_prob)) {
     if (z_left > -Inf) {
