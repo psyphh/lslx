@@ -54,8 +54,8 @@ lslx$set("public",
                "Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
              )
            }
-           if (!(start_method %in% c("default", "mh", "heuristic"))) {
-             stop("Argument 'start_method' can be only 'default', 'mh', or 'heuristic'.")
+           if (!(start_method %in% c("default", "none", "mh", "heuristic"))) {
+             stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
            }
            if (!(algorithm %in% c("default", "bfgs", "fisher"))) {
              stop("Argument 'algorithm' can be only 'default', 'bfgs', or 'fisher'.")

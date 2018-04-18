@@ -54,15 +54,13 @@ lslx$set("public",
              coefficient_test_setting$upper <- FALSE
              coefficient_test_setting$lower <- FALSE
            }
-
-           if (standard_error == "default") {
-             if (private$fitting$control$response) {
-               standard_error <- "sandwich"
-             } else {
-               standard_error <- "observed_fisher"
-             }
+           if (!(
+             standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
+           )) {
+             stop(
+               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_fisher', or 'expected_fisher'."
+             )
            }
-           
            if (!(
              post %in% c("default", "none", "polyhedral", "scheffe")
            )) {
@@ -77,7 +75,13 @@ lslx$set("public",
                "Argument 'debias' can be only either 'default', 'none', or 'one_step'."
              )
            }
-           
+           if (standard_error == "default") {
+             if (private$fitting$control$response) {
+               standard_error <- "sandwich"
+             } else {
+               standard_error <- "observed_fisher"
+             }
+           }
            if (post == "default") {
              post <- "none"
              if (debias == "default") {
@@ -91,6 +95,10 @@ lslx$set("public",
                stop(
                  "'debias' cannot be 'none' under 'post' == 'polyhedral'."
                )
+             }
+           } else {
+             if (debias == "default") {
+               debias <- "none"
              }
            }
            ##generating output informations
@@ -236,8 +244,8 @@ lslx$set("public",
                       numerical_condition[["delta"]])
              names(numerical_condition) <-
                c(
-                 "lambda",
-                 "delta",
+                 "selected lambda",
+                 "selected delta",
                  "objective value",
                  "objective gradient absolute maximum",
                  "objective Hessian convexity",
@@ -511,7 +519,7 @@ lslx$set("public",
                  c(
                    "type",
                    "estimate",
-                   "std.error",
+                   "st.error",
                    "z-value",
                    "p-value",
                    "lower",
@@ -531,24 +539,24 @@ lslx$set("public",
                      "Coefficient Test (Group = \"",
                      private$model$name_group[[i_group]],
                      "\"",
-                     ", Standard Error = \"",
+                     ", St.Error = \"",
                      standard_error,
                      "\"",
-                     ", Alpha Level = ",
-                     alpha_level,
-                     ")\n"
+                     ", Post = \"",
+                     post,
+                     "\")\n"
                    )
                  )
                } else {
                  cat(
                    paste0(
                      "Coefficient Test",
-                     " (Standard Error = \"",
+                     " (St.Error = \"",
                      standard_error,
                      "\"",
-                     ", Alpha Level = ",
-                     alpha_level,
-                     ")\n"
+                     ", Post = \"",
+                     post,
+                     "\")\n"
                    )
                  )
                }

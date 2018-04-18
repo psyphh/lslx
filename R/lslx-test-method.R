@@ -185,13 +185,6 @@ lslx$set("public",
                "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_fisher', or 'expected_fisher'."
              )
            }
-           if (standard_error == "default") {
-             if (private$fitting$control$response) {
-               standard_error <- "sandwich"
-             } else {
-               standard_error <- "observed_fisher"
-             }
-           }
            if (!(
              post %in% c("default", "none", "polyhedral", "scheffe")
            )) {
@@ -206,7 +199,13 @@ lslx$set("public",
                "Argument 'debias' can be only either 'default', 'none', or 'one_step'."
              )
            }
-           
+           if (standard_error == "default") {
+             if (private$fitting$control$response) {
+               standard_error <- "sandwich"
+             } else {
+               standard_error <- "observed_fisher"
+             }
+           }
            if (post == "default") {
              post <- "none"
              if (debias == "default") {
@@ -220,6 +219,10 @@ lslx$set("public",
                stop(
                  "'debias' cannot be 'none' under 'post' == 'polyhedral'."
                )
+             }
+           } else {
+             if (debias == "default") {
+               debias <- "none"
              }
            }
            coefficient <-
@@ -235,7 +238,7 @@ lslx$set("public",
              coefficient_test <-
                data.frame(estimate = coefficient,
                           standard_error = sqrt(diag(coefficient_acov)))             
-           } else if (debias == "one_step") {
+           } else {
              debiased_coefficient <-
                self$extract_debiased_coefficient(selector = selector,
                                                  exclude_improper = exclude_improper)
@@ -245,6 +248,8 @@ lslx$set("public",
            }
            coefficient_test$z_value <-
              coefficient_test$estimate / coefficient_test$standard_error
+           attr(coefficient_test, "standard_error") <-
+             standard_error
            if (post == "none") {
              coefficient_test$p_value <-
                pnorm(-abs(coefficient_test$z_value))
@@ -252,8 +257,6 @@ lslx$set("public",
                coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
              coefficient_test$upper <-
                coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
-             attr(coefficient_test, "standard_error") <-
-               standard_error
            } else if (post == "polyhedral") {
              is_active <-
                private$fitting$reduced_model$theta_is_free |
@@ -312,7 +315,14 @@ lslx$set("public",
                         getElement(tnorm_inference_i, "upper")
                       })
            } else {
-             
+             df_scheffe <- sum(private$fitting$reduced_model$theta_is_pen)
+             c_scheffe <- sqrt(qchisq(1 - alpha_level, df = df_scheffe))
+             coefficient_test$p_value <-
+               1 - pchisq((coefficient_test$z_value)^2, df = df_scheffe)
+             coefficient_test$lower <-
+               coefficient_test$estimate + c_scheffe * coefficient_test$standard_error
+             coefficient_test$upper <-
+               coefficient_test$estimate - c_scheffe * coefficient_test$standard_error
            }
            return(coefficient_test)
          })

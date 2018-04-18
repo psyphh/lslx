@@ -3,8 +3,11 @@ lslxModel <-
   R6::R6Class(
     classname = "lslxModel",
     public = list(
-      name_group = "character",
+      group_variable = "character",
       reference_group = "character",
+      weight_variable = "character",
+      auxiliary_variable = "character",
+      name_group = "character",
       name_response = "character",
       name_factor = "character",
       name_eta = "character",
@@ -18,10 +21,16 @@ lslxModel <-
 lslxModel$set("public",
               "initialize",
               function(model,
-                       name_group,
-                       reference_group) {
-                self$name_group <- name_group
+                       group_variable,
+                       reference_group,
+                       weight_variable,
+                       auxiliary_variable,
+                       name_group) {
+                self$group_variable <- group_variable
                 self$reference_group <- reference_group
+                self$weight_variable <- weight_variable
+                self$auxiliary_variable <- auxiliary_variable
+                self$name_group <- name_group
                 model_parsed <-
                   private$parse_model(model = model)
                 self$name_factor <-
@@ -30,6 +39,9 @@ lslxModel$set("public",
                 self$name_response <-
                   setdiff(x = unique(unlist(model_parsed[, c("left", "right")])),
                           y = c(self$name_factor, "1"))
+                self$auxiliary_variable <-
+                  setdiff(x = self$auxiliary_variable, 
+                          y = self$name_response)
                 self$name_eta <-
                   c(self$name_response, self$name_factor)
                 self$name_endogenous <-
