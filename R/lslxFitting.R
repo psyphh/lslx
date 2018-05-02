@@ -66,7 +66,6 @@ lslxFitting$set("private",
                         )
                       }
                     } else {
-                      
                     }
                   }
                   if (self$control$delta_grid[[1]] == "default") {
@@ -105,12 +104,46 @@ lslxFitting$set("private",
                   if (self$control$start_method == "default") {
                     self$control$start_method <- "mh"
                   }
+                  if (!is.null(self$control$subset)) {
+                    if (self$control$response) {
+                      if (is.logical(self$control$subset)) {
+                        self$control$subset <- which(self$control$subset)
+                      } 
+                    } else {
+                      stop(
+                        "When only moment data is available, argument 'subset' cannot be specified."
+                      )
+                    }
+                  } else {
+                    if (self$control$response) {
+                      self$control$subset <- 
+                        1:sum(sapply(data$response, FUN = nrow))
+                    } else {
+                      self$control$subset <- 
+                        1:sum(unlist(data$sample_size))
+                    }
+                  }
+                  if (!is.integer(self$control$cv_fold)) {
+                    self$control$cv_fold <- as.integer(self$control$cv_fold)
+                  }
+                  if (self$control$cv_fold > 1L) {
+                    if (self$control$response) {
+                      cv_idx <-
+                        sample(
+                          x = 1:self$control$cv_fold,
+                          size = length(self$control$subset),
+                          replace = TRUE
+                        )
+                      self$control$cv_idx <- cv_idx
+                    }
+                  }
                 })
 
 ## \code{$initialize_reduced_model()} initializes a reduced model. ##
 lslxFitting$set("private",
                 "initialize_reduced_model",
-                function(model) {
+                function(model,
+                         control) {
                   self$reduced_model <-
                     list(
                       n_response = length(model$name_response),
@@ -198,7 +231,8 @@ lslxFitting$set("private",
 ## \code{$initialize_reduced_data()} initializes a reduced data. ##
 lslxFitting$set("private",
                 "initialize_reduced_data",
-                function(data) {
+                function(data,
+                         control) {
                   self$reduced_data <-
                     list(
                       n_observation = integer(),
@@ -210,6 +244,13 @@ lslxFitting$set("private",
                       saturated_moment_acov = list()
                     )
                   if (self$control$response) {
+                    idc_subset <-
+                      lapply(data$response, 
+                             FUN = function(response_i) {
+                               idc_subset_i <- 
+                                 (row.names(response_i) %in% self$control$subset)
+                               return(idc_subset_i)
+                             })
                     idc_complete <-
                       lapply(
                         X = data$pattern,
@@ -223,11 +264,17 @@ lslxFitting$set("private",
                       )
                     if (self$control$missing_method == "two_stage") {
                       idc_use <-
-                        lapply(
-                          X = data$pattern,
-                          FUN = function(pattern_i) {
-                            return(rowSums(pattern_i) > 0)
-                          }
+                        mapply(
+                          FUN = function(pattern_i,
+                                         idc_subset_i) {
+                            idc_use_i <- 
+                              ((rowSums(pattern_i) > 0) & idc_subset_i)
+                            return(idc_use_i)
+                          },
+                          data$pattern,
+                          idc_subset,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
                         )
                       if (self$control$auxiliary) {
                         response <-
@@ -249,7 +296,8 @@ lslxFitting$set("private",
                             FUN = function(pattern_i,
                                            auxiliary_i,
                                            idc_use_i) {
-                              return(cbind(pattern_i[idc_use_i, , drop = FALSE], !is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
+                              return(cbind(pattern_i[idc_use_i, , drop = FALSE], 
+                                           !is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
                             },
                             data$pattern,
                             data$auxiliary,
@@ -295,38 +343,50 @@ lslxFitting$set("private",
                           USE.NAMES = TRUE
                         )
                     } else if (self$control$missing_method == "listwise_deletion") {
+                      idc_use <-
+                        mapply(
+                          FUN = function(idc_complete_i,
+                                         idc_subset_i) {
+                            idc_use_i <- idc_complete_i & idc_subset_i
+                            return(idc_use_i)
+                          },
+                          idc_complete,
+                          idc_subset,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
                       response <-
                         mapply(
                           FUN = function(response_i,
-                                         idc_complete_i) {
-                            return(response_i[idc_complete_i, , drop = FALSE])
+                                         idc_use_i) {
+                            return(response_i[idc_use_i, , drop = FALSE])
                           },
                           data$response,
-                          idc_complete,
+                          idc_use,
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
                       pattern <-
                         mapply(
                           FUN = function(pattern_i,
-                                         idc_complete_i) {
-                            return(pattern_i[idc_complete_i, , drop = FALSE])
+                                         idc_use_i) {
+                            return(pattern_i[idc_use_i, , drop = FALSE])
                           },
                           data$pattern,
-                          idc_complete,
+                          idc_use,
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
                       weight <-
                         mapply(
                           FUN = function(weight_i,
-                                         idc_complete_i) {
-                            weight_i <- weight_i[idc_complete_i,]
+                                         idc_use_i) {
+                            weight_i <- weight_i[idc_use_i,]
                             weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
                           data$weight,
-                          idc_complete,
+                          idc_use,
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
@@ -336,7 +396,7 @@ lslxFitting$set("private",
                     self$reduced_data$n_observation <-
                       sum(sapply(X = response, FUN = nrow))
                     self$reduced_data$n_complete_observation <-
-                      sum(unlist(idc_complete))
+                      sum(unlist(idc_complete) & unlist(idc_use))
                     self$reduced_data$sample_proportion <-
                       lapply(
                         X = lapply(X = response, FUN = nrow),
@@ -1001,6 +1061,12 @@ lslxFitting$set("private",
                         length(self$control$delta_grid)
                     )
                   self$fitted_result$fit_indice <-
+                    vector(
+                      mode = "list",
+                      length = length(self$control$lambda_grid) *
+                        length(self$control$delta_grid)
+                    )
+                  self$fitted_result$cv_error <-
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *

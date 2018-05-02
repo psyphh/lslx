@@ -7,6 +7,8 @@ lslx$set("public",
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
+                  subset = NULL,
+                  cv_fold = 1L,
                   iter_out_max = 100L,
                   iter_in_max = 30L,
                   iter_other_max = 500L,
@@ -49,6 +51,9 @@ lslx$set("public",
                }
              }
            }
+           if (!(algorithm %in% c("default", "bfgs", "fisher"))) {
+             stop("Argument 'algorithm' can be only 'default', 'bfgs', or 'fisher'.")
+           }
            if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
              stop(
                "Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
@@ -57,8 +62,13 @@ lslx$set("public",
            if (!(start_method %in% c("default", "none", "mh", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
            }
-           if (!(algorithm %in% c("default", "bfgs", "fisher"))) {
-             stop("Argument 'algorithm' can be only 'default', 'bfgs', or 'fisher'.")
+           if (!is.null(subset)) {
+             if (!(is.integer(subset) | is.logical(subset))) {
+               stop("Argument 'subset' must be a integer or logical vector.")
+             }
+           }
+           if (!(is.numeric(cv_fold) & (cv_fold > 0))) {
+             stop("Argument 'cv_fold' must be a positive integer.")
            }
            if (!(is.numeric(iter_out_max) &
                  (length(iter_out_max) = 1))) {
@@ -104,6 +114,8 @@ lslx$set("public",
                algorithm = algorithm,
                missing_method = missing_method,
                start_method = start_method,
+               subset = subset,
+               cv_fold = cv_fold,
                iter_out_max = iter_out_max,
                iter_in_max = iter_in_max,
                iter_other_max = iter_other_max,
@@ -128,6 +140,7 @@ lslx$set("public",
              private$fitting$supplied_result,
              private$fitting$fitted_result
            )
+           
            name_grid <-
              paste0(
                "ld=",
@@ -146,11 +159,71 @@ lslx$set("public",
                  }
                )
              )
+           
+           if (private$fitting$control$cv_fold > 1L) {
+             if (private$fitting$control$response) {
+               control <- private$fitting$control
+               control$start_method <- "none"       
+               control$cv_fold <- 1L
+               cv_error <-
+                 sapply(
+                   X = 1:private$fitting$control$cv_fold,
+                   FUN = function(i) {
+                     subset_train_i <- 
+                       private$fitting$control$subset[private$fitting$control$cv_idx != i]
+                     control$subset <- subset_train_i
+                     fitting_train_i <-
+                       lslxFitting$new(model = private$model,
+                                       data = private$data,
+                                       control = control)
+                     fitting_train_i$supplied_result$fitted_start <- 
+                       private$fitting$fitted_result$coefficient[[1]]
+                     compute_regularized_path_cpp(
+                       fitting_train_i$reduced_data,
+                       fitting_train_i$reduced_model,
+                       fitting_train_i$control,
+                       fitting_train_i$supplied_result,
+                       fitting_train_i$fitted_result
+                     )
+                     subset_test_i <-
+                       private$fitting$control$subset[private$fitting$control$cv_idx == i]
+                     control$subset <- subset_test_i
+                     fitting_test_i <-
+                       lslxFitting$new(model = private$model,
+                                       data = private$data,
+                                       control = control)
+                     cv_error_i <-
+                       sapply(
+                         X = 1:length(name_grid),
+                         FUN = function(j) {
+                           cv_error_ij <-
+                             compute_loss_value_cpp(
+                               theta_value = fitting_train_i$fitted_result$coefficient[[j]],
+                               reduced_data = fitting_test_i$reduced_data,
+                               reduced_model = fitting_test_i$reduced_model,
+                               control = fitting_test_i$control,
+                               supplied_result = fitting_test_i$supplied_result)
+                           return(cv_error_ij)
+                         }
+                       )
+                   }
+                 )
+               private$fitting$fitted_result$cv_error <- 
+                 lapply(X = apply(cv_error, 1, mean),
+                        FUN = function(cv_error_i) {
+                          names(cv_error_i) <- "cv_loss"
+                          return(cv_error_i)
+                        })
+             }
+           }
+           
            names(private$fitting$fitted_result$numerical_condition) <-
              name_grid
            names(private$fitting$fitted_result$information_criterion) <-
              name_grid
            names(private$fitting$fitted_result$fit_indice) <-
+             name_grid
+           names(private$fitting$fitted_result$cv_error) <-
              name_grid
            names(private$fitting$fitted_result$coefficient) <-
              name_grid

@@ -875,21 +875,12 @@ void lslxOptimizer::update_coefficient() {
   update_objective_value();
   
   int i;  
-  for (iter_out = 1; iter_out <= iter_out_max; iter_out++) {
-    update_theta_direction();
-    update_theta_value();
-    if (algorithm == "bfgs") {
-      update_loss_gradient_direct();
-      update_loss_bfgs_hessian();
-    } else if (algorithm == "fisher") {
-      update_residual_weight();
-      update_moment_jacobian();
-      update_loss_gradient();
-      update_loss_expected_hessian();
-    } else {}
+  if (iter_out_max == -1) {
     update_regularizer_gradient();
     update_objective_gradient();
     update_theta_start();
+    n_iter_out = 0;
+    iter_out = 0;
     for (i = 0; i < n_theta; i++) {
       if (theta_is_free[i] | theta_is_pen[i]) {
         objective_gradient_abs[i] = std::fabs(objective_gradient(i, 0));
@@ -898,10 +889,35 @@ void lslxOptimizer::update_coefficient() {
       }
     }
     objective_gradient_abs_max = Rcpp::max(objective_gradient_abs);
-    n_iter_out = iter_out;
-    if ((objective_gradient_abs_max < tol_out) | (iter_out == iter_out_max)) {
-      iter_out = 0;
-      break;
+  } else {
+    for (iter_out = 1; iter_out <= iter_out_max; iter_out++) {
+      update_theta_direction();
+      update_theta_value();
+      if (algorithm == "bfgs") {
+        update_loss_gradient_direct();
+        update_loss_bfgs_hessian();
+      } else if (algorithm == "fisher") {
+        update_residual_weight();
+        update_moment_jacobian();
+        update_loss_gradient();
+        update_loss_expected_hessian();
+      } else {}
+      update_regularizer_gradient();
+      update_objective_gradient();
+      update_theta_start();
+      for (i = 0; i < n_theta; i++) {
+        if (theta_is_free[i] | theta_is_pen[i]) {
+          objective_gradient_abs[i] = std::fabs(objective_gradient(i, 0));
+        } else {
+          objective_gradient_abs[i] = - INFINITY;
+        }
+      }
+      objective_gradient_abs_max = Rcpp::max(objective_gradient_abs);
+      n_iter_out = iter_out;
+      if ((objective_gradient_abs_max < tol_out) | (iter_out == iter_out_max)) {
+        iter_out = 0;
+        break;
+      }
     }
   }
 }

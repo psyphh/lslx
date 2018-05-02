@@ -2,9 +2,13 @@
 lslx$set("public",
          "test_lr",
          function(selector,
+                  lambda,
+                  delta,
                   exclude_improper = TRUE) {
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
+                                              lambda = lambda,
+                                              delta = delta,
                                               exclude_improper = exclude_improper)
            lr_test <-
              data.frame(
@@ -42,16 +46,24 @@ lslx$set("public",
 lslx$set("public",
          "test_rmsea",
          function(selector,
+                  lambda,
+                  delta,
                   alpha_level = .05,
                   exclude_improper = TRUE) {
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
+                                              lambda = lambda,
+                                              delta = delta,
                                               exclude_improper = exclude_improper)
            fit_indice <-
              self$extract_fit_indice(selector = selector,
+                                     lambda = lambda,
+                                     delta = delta,
                                      exclude_improper = exclude_improper)
            lr_test <-
              self$test_lr(selector = selector,
+                          lambda = lambda,
+                          delta = delta,
                           exclude_improper = exclude_improper)
            rmsea_test <-
              data.frame(
@@ -173,6 +185,8 @@ lslx$set("public",
 lslx$set("public",
          "test_coefficient",
          function(selector,
+                  lambda = lambda,
+                  delta = delta,
                   standard_error = "default",
                   alpha_level = .05,
                   debias = "default",
@@ -227,10 +241,14 @@ lslx$set("public",
            }
            coefficient <-
              self$extract_coefficient(selector = selector,
+                                      lambda = lambda,
+                                      delta = delta,
                                       exclude_improper = exclude_improper)
            coefficient_acov <-
              self$extract_coefficient_acov(
                selector = selector,
+               lambda = lambda,
+               delta = delta,
                standard_error = standard_error,
                exclude_improper = exclude_improper
              )
@@ -241,6 +259,8 @@ lslx$set("public",
            } else {
              debiased_coefficient <-
                self$extract_debiased_coefficient(selector = selector,
+                                                 lambda = lambda,
+                                                 delta = delta,
                                                  exclude_improper = exclude_improper)
              coefficient_test <-
                data.frame(estimate = debiased_coefficient,

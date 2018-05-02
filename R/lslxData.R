@@ -3,6 +3,7 @@ lslxData <-
   R6::R6Class(
     classname = "lslxData",
     public = list(
+      index = "list",
       response = "list",
       pattern = "list",
       weight = "list",
@@ -38,11 +39,15 @@ lslxData$set("public",
                    )
                  } else {
                    if (is.null(group_variable)) {
+                     index <- 1:nrow(data)
+                     row.names(data) <- index
                      response <-
                        list(data[, name_response, drop = FALSE])
                      names(response) <- name_group
                      if (is.null(weight_variable)) {
-                       weight <- list(data.frame(weight = rep(1, nrow(data))))
+                       weight <- 
+                         data.frame(weight = rep(1, nrow(data)), row.names = index)
+                       weight <- list(weight)
                      } else {
                        weight <- list(data[, weight_variable, drop = FALSE])
                      }
@@ -57,15 +62,19 @@ lslxData$set("public",
                        }
                      }
                    } else {
+                     index <- 1:nrow(data)
+                     row.names(data) <- index
                      data <-
-                       data[order(as.character(getElement(data, group_variable))),]
+                       data[order(as.character(getElement(data, group_variable))), , drop = FALSE]
                      data[, group_variable] <-
                        as.character(getElement(data, group_variable))
                      response <-
                        split(data[, name_response, drop = FALSE],
                              getElement(data, group_variable))
                      if (is.null(weight_variable)) {
-                       weight <- split(data.frame(weight = rep(1, nrow(data))),
+                       weight <- data.frame(weight = rep(1, nrow(data)),
+                                            row.names = row.names(data))
+                       weight <- split(weight,
                                        getElement(data, group_variable))
                      } else {
                        weight <-
