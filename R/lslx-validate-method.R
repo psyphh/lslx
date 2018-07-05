@@ -48,10 +48,7 @@ lslx$set("public",
 
            lslx_cv <- self$clone(deep = TRUE)
            if (!missing(data)) {
-             lslx_cv$set_data(data = data,
-                              sample_cov = sample_cov,
-                              sample_mean = sample_mean,
-                              sample_size = sample_size)
+             lslx_cv$set_data(data = data)
            }
            coefficient <-
              self$extract_coefficient(selector = selector,

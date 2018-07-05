@@ -219,6 +219,81 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
+
+## \code{$plot_cv_error()} shows how the values of cv error vary with penalty levels. ##
+lslx$set("public",
+         "plot_cv_error",
+         function(criterion) {
+           if (length(private$fitting$control$lambda_grid) <= 1) {
+             stop(
+               "The 'plot_cv_error()' method is only available for the case of 'length(lambda_grid) > 1'"
+             )
+           }
+           if (private$fitting$control$cv_fold == 1L) {
+             stop(
+               "The 'plot_cv_error()' method is only available for the case of 'cv_fold > 1'."
+             )
+           }
+           
+           if (missing(criterion)) {
+             criterion <- c("test_loss")
+           } else {
+             if (any(!(
+               criterion %in% names(private$fitting$fitted_result$cv_error[[1]])
+             ))) {
+               stop("Argument `criterion` contains unrecognized cross-validation error.")
+             }
+           }
+           df_for_plot <-
+             as.data.frame(do.call(
+               cbind,
+               private$fitting$fitted_result$cv_error
+             )[criterion, , drop = FALSE])
+           df_for_plot$criterion <- criterion
+           df_for_plot <-
+             reshape(
+               data = df_for_plot,
+               idvar = "criterion",
+               v.names = "value",
+               timevar = "penalty_level",
+               varying = colnames(df_for_plot)[-ncol(df_for_plot)],
+               times = colnames(df_for_plot)[-ncol(df_for_plot)],
+               direction = "long"
+             )
+           penalty_level_split <-
+             strsplit(x = df_for_plot$penalty_level,
+                      split = "=|/")
+           df_for_plot$penalty_level <- NULL
+           df_for_plot$lambda <-
+             as.numeric(sapply(
+               X = penalty_level_split,
+               FUN = function(x) {
+                 x[2]
+               }
+             ))
+           df_for_plot$delta <-
+             as.numeric(sapply(
+               X = penalty_level_split,
+               FUN = function(x) {
+                 x[4]
+               }
+             ))
+           ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
+             ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
+             ggplot2::facet_grid(. ~ delta) +
+             ggplot2::theme(
+               panel.grid.minor = ggplot2::element_line(size = .1),
+               panel.grid.major = ggplot2::element_line(size = .2)
+             )  +
+             ggplot2::labs(
+               title = paste0("Values of CV Errors across Penalty Levels"),
+               x = "lambda",
+               y = "value"
+             ) +
+             ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+         })
+
+
 ## \code{$plot_coefficient()} visualizes the solution paths of coefficients. ##
 lslx$set("public",
          "plot_coefficient",

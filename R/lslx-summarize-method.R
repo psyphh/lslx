@@ -78,7 +78,8 @@ lslx$set("public",
              baseline_model_information = TRUE,
              numerical_condition = TRUE,
              information_criterion = TRUE,
-             fit_indices = TRUE,
+             fit_indice = TRUE,
+             cv_error = TRUE,
              lr_test = TRUE,
              rmsea_test = TRUE,
              coefficient_test = TRUE
@@ -88,10 +89,17 @@ lslx$set("public",
              setting$saturated_model_information <- FALSE
              setting$baseline_model_information <- FALSE
              setting$information_criterion <- FALSE
+             setting$fit_indice <- FALSE
+             setting$cv_error <- FALSE
              setting$lr_test <- FALSE
              setting$rmsea_test <- FALSE
              setting$coefficient_test <- FALSE
            }
+           if (private$fitting$control$cv_fold == 1L) {
+             setting$cv_error <- FALSE
+           }
+           
+           
            ##generating output informations
            if (setting$general_information) {
              general_information <-
@@ -303,6 +311,22 @@ lslx$set("public",
              fit_indice <- NULL
            }
            
+           if (setting$cv_error) {
+             cv_error <-
+               formatC(
+                 x = self$extract_cv_error(selector = selector,
+                                           lambda = lambda,
+                                           delta = delta,
+                                           exclude_improper = exclude_improper),
+                 digits = digit,
+                 format = "f"
+               )
+             names(cv_error) <- c("test loss value")
+           } else {
+             cv_error <- NULL
+           }
+           
+           
            summary_list <-
              list(
                general_information,
@@ -311,7 +335,8 @@ lslx$set("public",
                baseline_model_information,
                numerical_condition,
                information_criterion,
-               fit_indice
+               fit_indice,
+               cv_error
              )
            names(summary_list) <- c(
              "General Information",
@@ -320,7 +345,8 @@ lslx$set("public",
              "Baseline Model Information",
              "Numerical Condition",
              "Information Criteria",
-             "Fit Indices"
+             "Fit Indices",
+             "Cross-Validation Error"
            )
            summary_list <-
              summary_list[!sapply(summary_list, is.null)]

@@ -201,6 +201,24 @@ lslx$set("public",
            return(fit_indice)
          })
 
+## \code{$extract_cv_error()} returns a \code{numeric} of the values of cv errors. ##
+lslx$set("public",
+         "extract_cv_error",
+         function(selector,
+                  lambda,
+                  delta,
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        lambda = lambda,
+                                        delta = delta,
+                                        exclude_improper = exclude_improper)
+           cv_error <-
+             private$fitting$fitted_result$cv_error[[penalty_level]]
+           return(cv_error)
+         })
+
+
 ## \code{$extract_coefficient()} returns a \code{numeric} of estimates of the coefficients. ##
 lslx$set("public",
          "extract_coefficient",
@@ -268,10 +286,10 @@ lslx$set("public",
                matrix(0, length(coefficient), length(coefficient))
              observed_fisher_inv[is_active, is_active] <-
                solve(observed_fisher[is_active, is_active])
-             debiased_coefficient[is_selected] <- 
-               coefficient[is_selected] + 
-               observed_fisher_inv[is_selected, is_selected, drop = FALSE] %*% 
-               (regularizer_gradient[is_selected, 1, drop = FALSE])
+             debiased_coefficient[is_active] <- 
+               coefficient[is_active] + 
+               observed_fisher_inv[is_active, is_active, drop = FALSE] %*% 
+               (regularizer_gradient[is_active, 1, drop = FALSE])
            } 
            return(debiased_coefficient)
          })

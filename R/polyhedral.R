@@ -171,6 +171,6 @@ compute_tnorm_prob <- function(theta, mu, sigma, left, right) {
 
 compute_bryc <- function(x) {
   y <- (x^2 + 5.575192695 * x + 12.7743632) / 
-    (sqrt(2 * pi) *x^3 + 14.38718147 * x^2 + 31.53531977 * x + 2 * 12.77436324)
+    (sqrt(2 * pi) * x^3 + 14.38718147 * x^2 + 31.53531977 * x + 2 * 12.77436324)
   return(y)
 }

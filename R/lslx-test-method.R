@@ -277,7 +277,7 @@ lslx$set("public",
                coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
              coefficient_test$upper <-
                coefficient_test$estimate + qnorm(1 - alpha_level / 2) * coefficient_test$standard_error
-           } else if (post == "polyhedral") {
+           } else {
              is_active <-
                private$fitting$reduced_model$theta_is_free |
                (private$fitting$reduced_model$theta_is_pen &
@@ -289,60 +289,63 @@ lslx$set("public",
                  "No non-zero parameters are selected and hence post-selection inference cannot be implemented."
                )
              }
-             a_ph <- - diag(sign(coefficient))
-             b_ph <-
-               matrix((sign(coefficient) * (coefficient - debiased_coefficient)))
-             tnorm_inference <-
-               lapply(
-                 X = 1:length(debiased_coefficient),
-                 FUN = function(i) {
-                   tnorm_quantity <- 
-                     compute_tnorm_quantity(i, a_ph, b_ph, 
-                                            debiased_coefficient, coefficient_acov,
-                                            is_pen, is_active, is_selected) 
-                   tnorm_p_value <-  
-                     compute_tnorm_p_value(theta = tnorm_quantity$theta, 
-                                           mu = 0, sigma = tnorm_quantity$sigma, 
-                                           left = tnorm_quantity$left, 
-                                           right = tnorm_quantity$right)
-                   tnorm_interval <- 
-                     compute_tnorm_interval(theta = tnorm_quantity$theta, 
-                                          sigma = tnorm_quantity$sigma, 
-                                          left = tnorm_quantity$left, 
-                                          right = tnorm_quantity$right, 
-                                          alpha_level = alpha_level, 
-                                          grid_range = c(-100, 100), 
-                                          grid_length = 100, 
-                                          depth_max = 3) 
-                   return(c(p_value = tnorm_p_value,
-                            lower = tnorm_interval[["lower"]],
-                            upper = tnorm_interval[["upper"]]))
-                 }
-               )
-             coefficient_test$p_value <- 
-               sapply(X = tnorm_inference, 
-                      FUN = function(tnorm_inference_i) {
-                        getElement(tnorm_inference_i, "p_value")
-                      })
-             coefficient_test$lower <-
-               sapply(X = tnorm_inference, 
-                      FUN = function(tnorm_inference_i) {
-                        getElement(tnorm_inference_i, "lower")
-                      })
-             coefficient_test$upper <- 
-               sapply(X = tnorm_inference, 
-                      FUN = function(tnorm_inference_i) {
-                        getElement(tnorm_inference_i, "upper")
-                      })
-           } else {
-             df_scheffe <- sum(private$fitting$reduced_model$theta_is_pen)
-             c_scheffe <- sqrt(qchisq(1 - alpha_level, df = df_scheffe))
-             coefficient_test$p_value <-
-               1 - pchisq((coefficient_test$z_value)^2, df = df_scheffe)
-             coefficient_test$lower <-
-               coefficient_test$estimate + c_scheffe * coefficient_test$standard_error
-             coefficient_test$upper <-
-               coefficient_test$estimate - c_scheffe * coefficient_test$standard_error
+             
+             if (post == "polyhedral") {
+               a_ph <- - diag(sign(coefficient))
+               b_ph <-
+                 matrix((sign(coefficient) * (coefficient - debiased_coefficient)))
+               tnorm_inference <-
+                 lapply(
+                   X = 1:length(debiased_coefficient),
+                   FUN = function(i) {
+                     tnorm_quantity <- 
+                       compute_tnorm_quantity(i, a_ph, b_ph, 
+                                              debiased_coefficient, coefficient_acov,
+                                              is_pen, is_active, is_selected) 
+                     tnorm_p_value <-  
+                       compute_tnorm_p_value(theta = tnorm_quantity$theta, 
+                                             mu = 0, sigma = tnorm_quantity$sigma, 
+                                             left = tnorm_quantity$left, 
+                                             right = tnorm_quantity$right)
+                     tnorm_interval <- 
+                       compute_tnorm_interval(theta = tnorm_quantity$theta, 
+                                              sigma = tnorm_quantity$sigma, 
+                                              left = tnorm_quantity$left, 
+                                              right = tnorm_quantity$right, 
+                                              alpha_level = alpha_level, 
+                                              grid_range = c(-100, 100), 
+                                              grid_length = 100, 
+                                              depth_max = 3) 
+                     return(c(p_value = tnorm_p_value,
+                              lower = tnorm_interval[["lower"]],
+                              upper = tnorm_interval[["upper"]]))
+                   }
+                 )
+               coefficient_test$p_value <- 
+                 sapply(X = tnorm_inference, 
+                        FUN = function(tnorm_inference_i) {
+                          getElement(tnorm_inference_i, "p_value")
+                        })
+               coefficient_test$lower <-
+                 sapply(X = tnorm_inference, 
+                        FUN = function(tnorm_inference_i) {
+                          getElement(tnorm_inference_i, "lower")
+                        })
+               coefficient_test$upper <- 
+                 sapply(X = tnorm_inference, 
+                        FUN = function(tnorm_inference_i) {
+                          getElement(tnorm_inference_i, "upper")
+                        })
+             }  else if (post == "scheffe") {
+               df_scheffe <- sum(private$fitting$reduced_model$theta_is_pen)
+               c_scheffe <- sqrt(qchisq(1 - alpha_level, df = df_scheffe))
+               coefficient_test$p_value <-
+                 1 - pchisq((coefficient_test$z_value)^2, df = df_scheffe)
+               coefficient_test$lower <-
+                 coefficient_test$estimate - c_scheffe * coefficient_test$standard_error
+               coefficient_test$upper <-
+                 coefficient_test$estimate + c_scheffe * coefficient_test$standard_error
+             }
            }
            return(coefficient_test)
          })

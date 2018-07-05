@@ -211,7 +211,7 @@ lslx$set("public",
                private$fitting$fitted_result$cv_error <- 
                  lapply(X = apply(cv_error, 1, mean),
                         FUN = function(cv_error_i) {
-                          names(cv_error_i) <- "cv_loss"
+                          names(cv_error_i) <- "test_loss"
                           return(cv_error_i)
                         })
              }
