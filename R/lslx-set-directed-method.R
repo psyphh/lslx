@@ -31,7 +31,7 @@ lslx$set("private",
              expand.grid(left, "<-", right)[, 1],
              expand.grid(left, "<-", right)[, 2],
              expand.grid(left, "<-", right)[, 3],
-             "|",
+             "/",
              group
            )
            private$set_coefficient(name = name,
