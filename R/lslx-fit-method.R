@@ -228,17 +228,23 @@ lslx$set("public",
            names(private$fitting$fitted_result$coefficient) <-
              name_grid
            
+           idc_problem <-
+             sapply(
+               X = private$fitting$fitted_result$numerical_condition,
+               FUN = function(numerical_condition_i) {
+                 idc_problem_i <-
+                   (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
+                   (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
+                 return(idc_problem_i)
+               }
+             )
+           
+           if (all(is.na(idc_problem))) {
+             stop("Optimization result is incorrect under all specified penalty levels.\n",
+                  "  Please check model identifiability or try other optimization parameters.\n")
+           }
+           
            if (verbose) {
-             idc_problem <-
-               sapply(
-                 X = private$fitting$fitted_result$numerical_condition,
-                 FUN = function(numerical_condition_i) {
-                   idc_problem_i <-
-                     (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
-                     (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
-                   return(idc_problem_i)
-                 }
-               )
              if (any(idc_problem)) {
                cat("WARNING: The algorithm may not converge under some penalty level. ")
                cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
