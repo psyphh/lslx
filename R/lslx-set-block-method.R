@@ -31,7 +31,7 @@ lslx$set("private",
                "\n  Group name(s) currently recognized by 'lslx' is ",
                do.call(paste, as.list(private$model$name_group)),
                ".",
-               "\n  Group name specified in 'group' is ",
+               "\n  Group name(s) specified in 'group' is ",
                do.call(paste, as.list(group)),
                "."
              )
@@ -58,13 +58,13 @@ lslx$set("private",
            }
            
            if (length(type_fixed) > 0) {
-             relation_all <- lapply(block, function(i_block) {
+             relation_all <- lapply(block, function(block_i) {
                variable_type <-
-                 substring(block, 1:nchar(i_block), 1:nchar(i_block))[c(1, nchar(i_block))]
+                 substring(block, 1:nchar(block_i), 1:nchar(block_i))[c(1, nchar(block_i))]
                operator <-
                  do.call(paste0, as.list(substring(
-                   i_block, 1:nchar(i_block), 1:nchar(i_block)
-                 )[-c(1, nchar(i_block))]))
+                   block_i, 1:nchar(block_i), 1:nchar(block_i)
+                 )[-c(1, nchar(block_i))]))
                right_variable <- switch(
                  variable_type[1],
                  "y" = private$model$name_response,
@@ -87,7 +87,7 @@ lslx$set("private",
              })
              relation_all <-
                paste0(expand.grid(unlist(relation_all), group)[, 1],
-                      "|",
+                      "/",
                       expand.grid(unlist(relation_all), group)[, 2])
              
              to_be_fixed <-

@@ -86,7 +86,7 @@ public:
   
   void set_regularizer(Rcpp::CharacterVector regularizer_type_, double lambda_, double delta_);
   void set_theta_value(Rcpp::NumericVector theta_value_);
-  void update_coefficient_matrice();
+  void update_coefficient_matrix();
   void update_implied_moment();
   void update_residual_weight();
   void update_moment_jacobian();
@@ -105,11 +105,11 @@ public:
   void update_theta_start();
   void update_numerical_condition();
   void update_information_criterion();
-  void update_fit_indice();
+  void update_fit_index();
   void update_coefficient();
   Rcpp::NumericVector extract_numerical_condition();
   Rcpp::NumericVector extract_information_criterion();
-  Rcpp::NumericVector extract_fit_indice();
+  Rcpp::NumericVector extract_fit_index();
   Rcpp::NumericVector extract_coefficient();
   Eigen::MatrixXd slice_col(Eigen::MatrixXd x, Rcpp::IntegerVector col_idx);
   Eigen::MatrixXd slice_both(Eigen::MatrixXd x, 
@@ -248,7 +248,7 @@ void lslxOptimizer::set_theta_value(Rcpp::NumericVector theta_value_) {
 }
 
 // method for updating coefficient values
-void lslxOptimizer::update_coefficient_matrice() {
+void lslxOptimizer::update_coefficient_matrix() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
   
   Rcpp::IntegerVector theta_left_idx_i0;
@@ -627,7 +627,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
   for (i = 0; i < n_theta; i++) {
     theta_value = Rcpp::clone(theta_start);
     theta_value[i] = theta_value[i] + tol_other;
-    update_coefficient_matrice();
+    update_coefficient_matrix();
     update_implied_moment();
     update_loss_gradient_direct(); 
     loss_observed_hessian.col(i) = (loss_gradient - loss_gradient_0) / tol_other;
@@ -834,7 +834,7 @@ void lslxOptimizer::update_theta_value() {
                        ridge_cov, theta_value);
       }
     }
-    update_coefficient_matrice();
+    update_coefficient_matrix();
     update_implied_moment();
     update_loss_value();
     update_regularizer_value();
@@ -860,7 +860,7 @@ void lslxOptimizer::update_theta_start() {
 void lslxOptimizer::update_coefficient() {
   Rcpp::NumericVector objective_gradient_abs(n_theta);
   if (iter_out == -1) {
-    update_coefficient_matrice();
+    update_coefficient_matrix();
     update_implied_moment();
     update_loss_value();
     update_residual_weight();
@@ -1011,8 +1011,8 @@ void lslxOptimizer::update_information_criterion() {
   
 }
 
-// method for updating final fit indice
-void lslxOptimizer::update_fit_indice() {
+// method for updating final fit index
+void lslxOptimizer::update_fit_index() {
   if ((degree_of_freedom == 0) & (loss_value > std::sqrt(DBL_EPSILON))) {
     rmsea = NAN;
   } else {
@@ -1110,15 +1110,15 @@ Rcpp::NumericVector lslxOptimizer::extract_information_criterion() {
   return Rcpp::clone(information_criterion);
 }
 
-// method for extracting final fit indice
-Rcpp::NumericVector lslxOptimizer::extract_fit_indice() {
-  Rcpp::NumericVector fit_indice = 
+// method for extracting final fit index
+Rcpp::NumericVector lslxOptimizer::extract_fit_index() {
+  Rcpp::NumericVector fit_index = 
     Rcpp::NumericVector::create(
       _["rmsea"] = rmsea,
       _["cfi"] = cfi,
       _["nnfi"] = nnfi,
       _["srmr"] = srmr);
-  return Rcpp::clone(fit_indice);
+  return Rcpp::clone(fit_index);
 }
 
 // method for extracting final coefficient
@@ -1248,7 +1248,7 @@ void compute_regularized_path_cpp(
   Rcpp::NumericVector delta_grid = Rcpp::as<Rcpp::NumericVector>(control["delta_grid"]);
   Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
   Rcpp::List information_criterion = Rcpp::as<Rcpp::List>(fitted_result["information_criterion"]);
-  Rcpp::List fit_indice = Rcpp::as<Rcpp::List>(fitted_result["fit_indice"]);
+  Rcpp::List fit_index = Rcpp::as<Rcpp::List>(fitted_result["fit_index"]);
   Rcpp::List coefficient = Rcpp::as<Rcpp::List>(fitted_result["coefficient"]);
   
   int i, j, idx;
@@ -1260,38 +1260,38 @@ void compute_regularized_path_cpp(
       optimizer.update_coefficient();
       optimizer.update_numerical_condition();
       optimizer.update_information_criterion();
-      optimizer.update_fit_indice();
+      optimizer.update_fit_index();
       idx = i * delta_grid.size() + j;
       coefficient[idx] = optimizer.extract_coefficient();
       numerical_condition[idx] = optimizer.extract_numerical_condition();
       information_criterion[idx] = optimizer.extract_information_criterion();
-      fit_indice[idx] = optimizer.extract_fit_indice();
+      fit_index[idx] = optimizer.extract_fit_index();
     }
   }
 }
 
 // compute coefficient matrice
 // [[Rcpp::export]]
-Rcpp::List compute_coefficient_matrice_cpp(
+Rcpp::List compute_coefficient_matrix_cpp(
     Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Rcpp::List coefficient_matrice;
+  Rcpp::List coefficient_matrix;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   
-  coefficient_matrice = 
+  coefficient_matrix = 
     Rcpp::List::create(Rcpp::Named("alpha") = optimizer.alpha,
                        Rcpp::Named("beta") = optimizer.beta,
                        Rcpp::Named("psi") = optimizer.psi);
   
-  return Rcpp::wrap(coefficient_matrice);
+  return Rcpp::wrap(coefficient_matrix);
 }
 
 // compute implied covariance
@@ -1308,7 +1308,7 @@ Rcpp::List compute_implied_cov_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   implied_cov = optimizer.sigma;
@@ -1329,7 +1329,7 @@ Rcpp::List compute_implied_mean_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   implied_mean = optimizer.mu;
@@ -1352,7 +1352,7 @@ Rcpp::NumericMatrix compute_moment_jacobian_cpp(
     Eigen::MatrixXd::Zero(optimizer.n_group * optimizer.n_moment, 
                           optimizer.n_theta);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   optimizer.update_moment_jacobian();
   int i;
@@ -1379,7 +1379,7 @@ Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   optimizer.update_residual_weight();
@@ -1404,7 +1404,7 @@ Rcpp::NumericMatrix compute_expected_fisher_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   optimizer.update_residual_weight();
@@ -1429,7 +1429,7 @@ Rcpp::NumericMatrix compute_observed_fisher_cpp(
                           supplied_result);
   optimizer.set_theta_value(theta_value);
   optimizer.update_theta_start();
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   optimizer.update_residual_weight();
@@ -1456,7 +1456,7 @@ Rcpp::NumericMatrix compute_score_acov_cpp(
     Eigen::MatrixXd::Zero(optimizer.n_theta, 
                           optimizer.n_theta);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   optimizer.update_residual_weight();
   optimizer.update_moment_jacobian();
@@ -1488,7 +1488,7 @@ double compute_loss_value_cpp(
                           supplied_result);
   optimizer.set_theta_value(theta_value);
   
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   optimizer.update_loss_value();
   loss_value = optimizer.loss_value;
@@ -1509,7 +1509,7 @@ Rcpp::NumericMatrix compute_loss_gradient_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   optimizer.update_residual_weight();
@@ -1533,7 +1533,7 @@ Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   optimizer.update_loss_gradient_direct();
   loss_gradient = optimizer.loss_gradient;
@@ -1580,7 +1580,7 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
   optimizer.set_theta_value(theta_value);
   optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, delta);
   
-  optimizer.update_coefficient_matrice();
+  optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   
   optimizer.update_loss_gradient_direct();

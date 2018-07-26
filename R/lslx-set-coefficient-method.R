@@ -83,15 +83,15 @@ lslx$set("private",
                  if (!grepl(pattern = "<-[^>]|<->", x = name_i)) {
                    stop("Some coefficient name doesn't contain valid operator ('<-' and '<->').")
                  }
-                 if (!grepl(pattern = "\\|", x = name_i)) {
+                 if (!grepl(pattern = "/", x = name_i)) {
                    if (length(private$model$name_group) == 1) {
-                     name_i <- paste0(name_i, "|", private$model$name_group)
+                     name_i <- paste0(name_i, "/", private$model$name_group)
                    } else {
                      stop("Some coefficient name doesn't contain group name.")
                    }
                  }
                  name_i_split <-
-                   strsplit(x = name_i, split = c("<-|\\||<->"))[[1]]
+                   strsplit(x = name_i, split = c("<-|/|<->"))[[1]]
                  if (length(name_i_split) != 3) {
                    stop("The format of some coefficient name is incorrect.")
                  }
@@ -148,7 +148,7 @@ lslx$set("private",
                      match(right_i, private$model$name_eta)
                    )) {
                      name_i <-
-                       paste0(right_i, "<->", left_i, "|", group_i)
+                       paste0(right_i, "<->", left_i, "/", group_i)
                    }
                  }
                  return(name_i)
@@ -230,9 +230,9 @@ lslx$set("private",
                  relation_i <-
                    substr(name[i],
                           start = 1,
-                          stop = regexpr("\\|", name[i]) - 1)
+                          stop = regexpr("/", name[i]) - 1)
                  name_i_split <-
-                   strsplit(x = name[i], split = c("<-|\\||<->"))[[1]]
+                   strsplit(x = name[i], split = c("<-|/|<->"))[[1]]
                  left_i <- name_i_split[1]
                  right_i <- name_i_split[2]
                  group_i <- name_i_split[3]

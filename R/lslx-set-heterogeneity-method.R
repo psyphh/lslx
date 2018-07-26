@@ -46,7 +46,7 @@ lslx$set("private",
                " is found. Please check the settings."
              )
            } else {
-             name <- paste0(relation, "|", group)
+             name <- paste0(relation, "/", group)
              private$set_coefficient(name = name,
                                      action = action,
                                      verbose = verbose)

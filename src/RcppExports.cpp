@@ -20,9 +20,9 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// compute_coefficient_matrice_cpp
-Rcpp::List compute_coefficient_matrice_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
-RcppExport SEXP _lslx_compute_coefficient_matrice_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+// compute_coefficient_matrix_cpp
+Rcpp::List compute_coefficient_matrix_cpp(Rcpp::NumericVector theta_value, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_coefficient_matrix_cpp(SEXP theta_valueSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -31,7 +31,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_coefficient_matrice_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
+    rcpp_result_gen = Rcpp::wrap(compute_coefficient_matrix_cpp(theta_value, reduced_data, reduced_model, control, supplied_result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -267,7 +267,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_lslx_compute_regularized_path_cpp", (DL_FUNC) &_lslx_compute_regularized_path_cpp, 5},
-    {"_lslx_compute_coefficient_matrice_cpp", (DL_FUNC) &_lslx_compute_coefficient_matrice_cpp, 5},
+    {"_lslx_compute_coefficient_matrix_cpp", (DL_FUNC) &_lslx_compute_coefficient_matrix_cpp, 5},
     {"_lslx_compute_implied_cov_cpp", (DL_FUNC) &_lslx_compute_implied_cov_cpp, 5},
     {"_lslx_compute_implied_mean_cpp", (DL_FUNC) &_lslx_compute_implied_mean_cpp, 5},
     {"_lslx_compute_moment_jacobian_cpp", (DL_FUNC) &_lslx_compute_moment_jacobian_cpp, 5},

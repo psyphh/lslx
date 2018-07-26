@@ -184,9 +184,9 @@ lslx$set("public",
            return(information_criterion)
          })
 
-## \code{$extract_fit_indice()} returns a \code{numeric} of the values of fit indices. ##
+## \code{$extract_fit_index()} returns a \code{numeric} of the values of fit indices. ##
 lslx$set("public",
-         "extract_fit_indice",
+         "extract_fit_index",
          function(selector,
                   lambda,
                   delta,
@@ -196,10 +196,22 @@ lslx$set("public",
                                         lambda = lambda,
                                         delta = delta,
                                         exclude_improper = exclude_improper)
-           fit_indice <-
-             private$fitting$fitted_result$fit_indice[[penalty_level]]
-           return(fit_indice)
+           fit_index <-
+             private$fitting$fitted_result$fit_index[[penalty_level]]
+           return(fit_index)
          })
+
+## \code{$extract_fit_index()} returns a \code{numeric} of the values of fit indices. ##
+lslx$set("public",
+         "extract_fit_indice",
+         function(selector,
+                  lambda,
+                  delta,
+                  exclude_improper = TRUE) {
+           self$extract_fit_index(selector, lambda, delta, exclude_improper)
+         })
+
+
 
 ## \code{$extract_cv_error()} returns a \code{numeric} of the values of cv errors. ##
 lslx$set("public",
@@ -421,9 +433,9 @@ lslx$set("public",
            return(residual_mean)
          })
 
-## \code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}. ##
+## \code{$extract_coefficient_matrix()} returns a \code{list} of coefficient matrice(s) specified by \code{block}. ##
 lslx$set("public",
-         "extract_coefficient_matrice",
+         "extract_coefficient_matrix",
          function(selector,
                   lambda,
                   delta,
@@ -442,8 +454,8 @@ lslx$set("public",
                                         exclude_improper = exclude_improper)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           coefficient_matrice <-
-             compute_coefficient_matrice_cpp(
+           coefficient_matrix <-
+             compute_coefficient_matrix_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
@@ -452,13 +464,13 @@ lslx$set("public",
              )
            
            if (block %in% c("f<-1", "y<-1")) {
-             selected_matrix <- coefficient_matrice$alpha
+             selected_matrix <- coefficient_matrix$alpha
              col_names <- "1"
            } else {
              if (block %in% c("f<-f", "f<-y", "y<-f", "y<-y")) {
-               selected_matrix <- coefficient_matrice$beta
+               selected_matrix <- coefficient_matrix$beta
              } else if (block %in% c("f<->f", "f<->y", "y<->f", "y<->y")) {
-               selected_matrix <- coefficient_matrice$psi
+               selected_matrix <- coefficient_matrix$psi
              } else {
                stop(
                  "Argument 'block' is unrecognized. It must be one of the following:\n",
@@ -490,21 +502,34 @@ lslx$set("public",
                  return(selected_matrix_i)
                }
              )
-           coefficient_matrice_block <-
+           coefficient_matrix_block <-
              lapply(
                X = selected_matrix,
                FUN = function(selected_matrix_i) {
-                 coefficient_matrice_block_i <-
+                 coefficient_matrix_block_i <-
                    selected_matrix_i[row_select,
                                      col_select,
                                      drop = FALSE]
-                 return(coefficient_matrice_block_i)
+                 return(coefficient_matrix_block_i)
                }
              )
-           names(coefficient_matrice_block) <-
+           names(coefficient_matrix_block) <-
              private$model$name_group
-           return(coefficient_matrice_block)
+           return(coefficient_matrix_block)
          })
+
+
+## \code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}. ##
+lslx$set("public",
+         "extract_coefficient_matrice",
+         function(selector,
+                  lambda,
+                  delta,
+                  block,
+                  exclude_improper = TRUE) {
+           self$extract_coefficient_matrix(selector, lambda, delta, block, exclude_improper)
+         })
+
 
 ## \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure. ##
 lslx$set("public",

@@ -18,7 +18,7 @@ lslx$set("public",
                   tol_other = 1e-7,
                   step_size = 0.5,
                   armijo = 1e-5,
-                  ridge_cov = 1e-4,
+                  ridge_cov = 0,
                   ridge_hessian = 1e-4,
                   positive_diag = TRUE,
                   verbose = TRUE) {
@@ -221,7 +221,7 @@ lslx$set("public",
              name_grid
            names(private$fitting$fitted_result$information_criterion) <-
              name_grid
-           names(private$fitting$fitted_result$fit_indice) <-
+           names(private$fitting$fitted_result$fit_index) <-
              name_grid
            names(private$fitting$fitted_result$cv_error) <-
              name_grid

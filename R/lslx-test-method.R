@@ -55,8 +55,8 @@ lslx$set("public",
                                               lambda = lambda,
                                               delta = delta,
                                               exclude_improper = exclude_improper)
-           fit_indice <-
-             self$extract_fit_indice(selector = selector,
+           fit_index <-
+             self$extract_fit_index(selector = selector,
                                      lambda = lambda,
                                      delta = delta,
                                      exclude_improper = exclude_improper)
