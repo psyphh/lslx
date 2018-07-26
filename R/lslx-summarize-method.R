@@ -83,6 +83,8 @@ lslx$set("public",
                         output_i <- FALSE
                         return(output_i)
                       })
+             output$general_information <- TRUE
+             output$numerical_condition <- TRUE
            } else if (style == "max") {
              output <- 
                lapply(X = output,
