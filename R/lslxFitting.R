@@ -1060,7 +1060,7 @@ lslxFitting$set("private",
                       length = length(self$control$lambda_grid) *
                         length(self$control$delta_grid)
                     )
-                  self$fitted_result$fit_indice <-
+                  self$fitted_result$fit_index <-
                     vector(
                       mode = "list",
                       length = length(self$control$lambda_grid) *

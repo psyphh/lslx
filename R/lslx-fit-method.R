@@ -221,7 +221,7 @@ lslx$set("public",
              name_grid
            names(private$fitting$fitted_result$information_criterion) <-
              name_grid
-           names(private$fitting$fitted_result$fit_indice) <-
+           names(private$fitting$fitted_result$fit_index) <-
              name_grid
            names(private$fitting$fitted_result$cv_error) <-
              name_grid

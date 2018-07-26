@@ -40,7 +40,7 @@ lslxModel$set("public",
                   setdiff(x = unique(unlist(model_parsed[, c("left", "right")])),
                           y = c(self$name_factor, "1"))
                 self$auxiliary_variable <-
-                  setdiff(x = self$auxiliary_variable, 
+                  setdiff(x = self$auxiliary_variable,
                           y = self$name_response)
                 self$name_eta <-
                   c(self$name_response, self$name_factor)
@@ -65,7 +65,7 @@ lslxModel$set("public",
                     match(self$specification$left, self$name_eta),
                     decreasing = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
                     method = "radix"
-                  ), ]
+                  ),]
               })
 
 ## \code{$parse_model()} parses specified model. ##
@@ -92,6 +92,25 @@ lslxModel$set("private",
                   unlist(x = strsplit(x = model_cleaned,
                                       split = "\n"),
                          use.names = FALSE)
+                model_split <-
+                  gsub(pattern = "=~",
+                       replacement = ":=>",
+                       x = model_split)
+                model_split <-
+                  gsub(pattern = "~~",
+                       replacement = "<=>",
+                       x = model_split)
+                model_split <-
+                  ifelse(
+                    !grepl(pattern = "<~|<~:|~>|:~>|<~>",
+                           x = model_split),
+                    gsub(
+                      pattern = "~",
+                      replacement = "<=",
+                      x = model_split
+                    ),
+                    model_split
+                  )
                 model_split <-
                   sapply(
                     X = c("<=:", "<~:", ":=>", ":~>",
@@ -143,7 +162,7 @@ lslxModel$set("private",
                               ,
                               drop = FALSE]
                 model_split <-
-                  model_split[, -1, drop = FALSE]
+                  model_split[,-1, drop = FALSE]
                 model_parsed <-
                   apply(
                     X = model_split,
@@ -203,7 +222,7 @@ lslxModel$set("private",
                           "\n  Please check the specified 'model'."
                         )
                       }
-                      if (any("["(model_parsed_i$left, !(
+                      if (any("["(model_parsed_i$left,!(
                         model_parsed_i$operator %in% c("<=>", "<~>")
                       )) == "1")) {
                         stop(
@@ -334,7 +353,7 @@ lslxModel$set("private",
                 
                 self$specification <-
                   self$specification[!duplicated(self$specification$relation,
-                                                 fromLast = TRUE), ]
+                                                 fromLast = TRUE),]
                 prefix_split <-
                   strsplit(self$specification$prefix, ",")
                 
@@ -385,7 +404,7 @@ lslxModel$set("private",
                               
                               rownames(specification_i) <-
                                 paste0(specification_i$relation,
-                                       "|",
+                                       "/",
                                        specification_i$group)
                               return(specification_i)
                             }
@@ -435,22 +454,29 @@ lslxModel$set("private",
                     }
                   )
                 self$specification$type <-
-                  ifelse(grepl("fix", self$specification$prefix),
-                         "fixed",
-                         ifelse(
-                           grepl("pen", self$specification$prefix),
-                           "pen",
-                           ifelse(
-                             grepl("free", self$specification$prefix),
-                             "free",
-                             ifelse(
-                               self$specification$operator %in%
-                                 c("<=:", "<=", "<=>"),
-                               "free",
-                               "pen"
-                             )
-                           )
-                         ))
+                  ifelse(
+                    grepl("[[:digit:]]", self$specification$prefix) &
+                      !grepl("[[:alpha:]]", self$specification$prefix),
+                    "fixed",
+                    ifelse(
+                      grepl("fix", self$specification$prefix),
+                      "fixed",
+                      ifelse(
+                        grepl("pen", self$specification$prefix),
+                        "pen",
+                        ifelse(
+                          grepl("free", self$specification$prefix),
+                          "free",
+                          ifelse(
+                            self$specification$operator %in%
+                              c("<=:", "<=", "<=>"),
+                            "free",
+                            "pen"
+                          )
+                        )
+                      )
+                    )
+                  )
                 self$specification$start <-
                   as.numeric(gsub("[^[:digit:].-]",
                                   "",
@@ -526,7 +552,7 @@ lslxModel$set("private",
                                 )
                                 rownames(specification_alpha_i) <-
                                   paste0(specification_alpha_i$relation,
-                                         "|",
+                                         "/",
                                          specification_alpha_i$group)
                               } else {
                                 specification_alpha_i = data.frame()
@@ -615,7 +641,7 @@ lslxModel$set("private",
                                 rownames(specification_psi_i) <-
                                   paste(specification_psi_i$relation,
                                         specification_psi_i$group,
-                                        sep = "|")
+                                        sep = "/")
                                 return(specification_psi_i)
                               }
                             }
@@ -625,5 +651,3 @@ lslxModel$set("private",
                         specification_psi,
                         stringsAsFactors = FALSE)
               })
-
-

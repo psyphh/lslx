@@ -90,7 +90,7 @@ lslx$set("public",
          function(criterion) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
-               "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
+               "The 'plot_information_criterion' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
            if (missing(criterion)) {
@@ -151,35 +151,40 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
-## \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels. ##
+## \code{$plot_cv_error()} shows how the values of cv error vary with penalty levels. ##
 lslx$set("public",
-         "plot_fit_indice",
-         function(indice) {
+         "plot_cv_error",
+         function(error) {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
-               "The 'plot_fit_indice' method is only available for the case of 'length(lambda_grid) > 1'"
+               "The 'plot_cv_error()' method is only available for the case of 'length(lambda_grid) > 1'"
              )
            }
-           if (missing(indice)) {
-             indice <-
-               names(private$fitting$fitted_result$fit_indice[[1]])
+           if (private$fitting$control$cv_fold == 1L) {
+             stop(
+               "The 'plot_cv_error()' method is only available for the case of 'cv_fold > 1'."
+             )
+           }
+           
+           if (missing(error)) {
+             error <- c("test_loss")
            } else {
              if (any(!(
-               indice %in% names(private$fitting$fitted_result$fit_indice[[1]])
+               error %in% names(private$fitting$fitted_result$cv_error[[1]])
              ))) {
-               stop("Argument `indice` contains unrecognized fit indice.")
+               stop("Argument `error` contains unrecognized cross-validation error.")
              }
            }
            df_for_plot <-
-             as.data.frame(do.call(cbind,
-                                   private$fitting$fitted_result$fit_indice)[indice,
-                                                                             ,
-                                                                             drop = FALSE])
-           df_for_plot$indice <- indice
+             as.data.frame(do.call(
+               cbind,
+               private$fitting$fitted_result$cv_error
+             )[error, , drop = FALSE])
+           df_for_plot$error <- error
            df_for_plot <-
              reshape(
                data = df_for_plot,
-               idvar = "indice",
+               idvar = "error",
                v.names = "value",
                timevar = "penalty_level",
                varying = colnames(df_for_plot)[-ncol(df_for_plot)],
@@ -205,7 +210,76 @@ lslx$set("public",
                }
              ))
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
-             ggplot2::geom_line(mapping = ggplot2::aes(colour = indice)) +
+             ggplot2::geom_line(mapping = ggplot2::aes(colour = error)) +
+             ggplot2::facet_grid(. ~ delta) +
+             ggplot2::theme(
+               panel.grid.minor = ggplot2::element_line(size = .1),
+               panel.grid.major = ggplot2::element_line(size = .2)
+             )  +
+             ggplot2::labs(
+               title = paste0("Values of CV Errors across Penalty Levels"),
+               x = "lambda",
+               y = "value"
+             ) +
+             ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+         })
+
+
+## \code{$plot_fit_index()} shows how the values of fit indices vary with penalty levels. ##
+lslx$set("public",
+         "plot_fit_index",
+         function(index) {
+           if (length(private$fitting$control$lambda_grid) <= 1) {
+             stop(
+               "The 'plot_fit_index' method is only available for the case of 'length(lambda_grid) > 1'"
+             )
+           }
+           if (missing(index)) {
+             index <-
+               names(private$fitting$fitted_result$fit_index[[1]])
+           } else {
+             if (any(!(
+               index %in% names(private$fitting$fitted_result$fit_index[[1]])
+             ))) {
+               stop("Argument `index` contains unrecognized fit index.")
+             }
+           }
+           df_for_plot <-
+             as.data.frame(do.call(cbind,
+                                   private$fitting$fitted_result$fit_index)[index,
+                                                                             ,
+                                                                             drop = FALSE])
+           df_for_plot$index <- index
+           df_for_plot <-
+             reshape(
+               data = df_for_plot,
+               idvar = "index",
+               v.names = "value",
+               timevar = "penalty_level",
+               varying = colnames(df_for_plot)[-ncol(df_for_plot)],
+               times = colnames(df_for_plot)[-ncol(df_for_plot)],
+               direction = "long"
+             )
+           penalty_level_split <-
+             strsplit(x = df_for_plot$penalty_level,
+                      split = "=|/")
+           df_for_plot$penalty_level <- NULL
+           df_for_plot$lambda <-
+             as.numeric(sapply(
+               X = penalty_level_split,
+               FUN = function(x) {
+                 x[2]
+               }
+             ))
+           df_for_plot$delta <-
+             as.numeric(sapply(
+               X = penalty_level_split,
+               FUN = function(x) {
+                 x[4]
+               }
+             ))
+           ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
+             ggplot2::geom_line(mapping = ggplot2::aes(colour = index)) +
              ggplot2::facet_grid(. ~ delta) +
              ggplot2::theme(
                panel.grid.minor = ggplot2::element_line(size = .1),
@@ -219,78 +293,11 @@ lslx$set("public",
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
 
-
-## \code{$plot_cv_error()} shows how the values of cv error vary with penalty levels. ##
+## \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels. ##
 lslx$set("public",
-         "plot_cv_error",
-         function(criterion) {
-           if (length(private$fitting$control$lambda_grid) <= 1) {
-             stop(
-               "The 'plot_cv_error()' method is only available for the case of 'length(lambda_grid) > 1'"
-             )
-           }
-           if (private$fitting$control$cv_fold == 1L) {
-             stop(
-               "The 'plot_cv_error()' method is only available for the case of 'cv_fold > 1'."
-             )
-           }
-           
-           if (missing(criterion)) {
-             criterion <- c("test_loss")
-           } else {
-             if (any(!(
-               criterion %in% names(private$fitting$fitted_result$cv_error[[1]])
-             ))) {
-               stop("Argument `criterion` contains unrecognized cross-validation error.")
-             }
-           }
-           df_for_plot <-
-             as.data.frame(do.call(
-               cbind,
-               private$fitting$fitted_result$cv_error
-             )[criterion, , drop = FALSE])
-           df_for_plot$criterion <- criterion
-           df_for_plot <-
-             reshape(
-               data = df_for_plot,
-               idvar = "criterion",
-               v.names = "value",
-               timevar = "penalty_level",
-               varying = colnames(df_for_plot)[-ncol(df_for_plot)],
-               times = colnames(df_for_plot)[-ncol(df_for_plot)],
-               direction = "long"
-             )
-           penalty_level_split <-
-             strsplit(x = df_for_plot$penalty_level,
-                      split = "=|/")
-           df_for_plot$penalty_level <- NULL
-           df_for_plot$lambda <-
-             as.numeric(sapply(
-               X = penalty_level_split,
-               FUN = function(x) {
-                 x[2]
-               }
-             ))
-           df_for_plot$delta <-
-             as.numeric(sapply(
-               X = penalty_level_split,
-               FUN = function(x) {
-                 x[4]
-               }
-             ))
-           ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
-             ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
-             ggplot2::facet_grid(. ~ delta) +
-             ggplot2::theme(
-               panel.grid.minor = ggplot2::element_line(size = .1),
-               panel.grid.major = ggplot2::element_line(size = .2)
-             )  +
-             ggplot2::labs(
-               title = paste0("Values of CV Errors across Penalty Levels"),
-               x = "lambda",
-               y = "value"
-             ) +
-             ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+         "plot_fit_indice",
+         function(indice) {
+           self$plot_fit_index(indice)
          })
 
 
@@ -394,3 +401,5 @@ lslx$set("public",
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
          })
+
+

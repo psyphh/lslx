@@ -78,7 +78,7 @@ lslx$set("public",
              baseline_model_information = TRUE,
              numerical_condition = TRUE,
              information_criterion = TRUE,
-             fit_indice = TRUE,
+             fit_index = TRUE,
              cv_error = TRUE,
              lr_test = TRUE,
              rmsea_test = TRUE,
@@ -89,7 +89,7 @@ lslx$set("public",
              setting$saturated_model_information <- FALSE
              setting$baseline_model_information <- FALSE
              setting$information_criterion <- FALSE
-             setting$fit_indice <- FALSE
+             setting$fit_index <- FALSE
              setting$cv_error <- FALSE
              setting$lr_test <- FALSE
              setting$rmsea_test <- FALSE
@@ -205,7 +205,7 @@ lslx$set("public",
              names(saturated_model_information) <-
                c("loss value",
                  "number of non-zero coefficients",
-                 "degree of freedom")
+                 "degrees of freedom")
            } else {
              saturated_model_information <- NULL
            }
@@ -220,7 +220,7 @@ lslx$set("public",
              names(baseline_model_information) <-
                c("loss value",
                  "number of non-zero coefficients",
-                 "degree of freedom")
+                 "degrees of freedom")
            } else {
              baseline_model_information <- NULL
            }
@@ -253,8 +253,8 @@ lslx$set("public",
                  "number of iterations",
                  "loss value",
                  "number of non-zero coefficients",
-                 "degree of freedom",
-                 "robust degree of freedom",
+                 "degrees of freedom",
+                 "robust degrees of freedom",
                  "scaling factor"
                )
            } else {
@@ -290,17 +290,17 @@ lslx$set("public",
              information_criterion <- NULL
            }
            
-           if (setting$fit_indice) {
-             fit_indice <-
+           if (setting$fit_index) {
+             fit_index <-
                formatC(
-                 x = self$extract_fit_indice(selector = selector,
+                 x = self$extract_fit_index(selector = selector,
                                              lambda = lambda,
                                              delta = delta,
                                              exclude_improper = exclude_improper),
                  digits = digit,
                  format = "f"
                )
-             names(fit_indice) <-
+             names(fit_index) <-
                c(
                  "root mean square error of approximation (rmsea)",
                  "comparative fit index (cfi)",
@@ -308,7 +308,7 @@ lslx$set("public",
                  "standardized root mean of residual (srmr)"
                )
            } else {
-             fit_indice <- NULL
+             fit_index <- NULL
            }
            
            if (setting$cv_error) {
@@ -335,7 +335,7 @@ lslx$set("public",
                baseline_model_information,
                numerical_condition,
                information_criterion,
-               fit_indice,
+               fit_index,
                cv_error
              )
            names(summary_list) <- c(
@@ -343,10 +343,10 @@ lslx$set("public",
              "Fitting Information",
              "Saturated Model Information",
              "Baseline Model Information",
-             "Numerical Condition",
+             "Numerical Conditions",
              "Information Criteria",
              "Fit Indices",
-             "Cross-Validation Error"
+             "Cross-Validation Errors"
            )
            summary_list <-
              summary_list[!sapply(summary_list, is.null)]

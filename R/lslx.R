@@ -596,7 +596,7 @@
 #' Note that in relation we only use operators \code{"<-"} and \code{"<->"}.
 #' \code{"->"} is illegal and no distinction between \code{"="} and \code{"~"} are made.
 #' In multi-group analysis cases, a coefficient name requires explicitly specifying group name.
-#' For example, \code{"y1<-f1|G1"} is the parameter name for the path coefficient from \code{"f1"} to \code{"y1"} in group \code{"G1"}.}
+#' For example, \code{"y1<-f1/G1"} is the parameter name for the path coefficient from \code{"f1"} to \code{"y1"} in group \code{"G1"}.}
 #' \item{
 #' Block is defined by the types of left variable and right variable, and the operator.
 #' In \pkg{lslx}, \code{"y"} is used to indicate observed response, \code{"f"} is used for latent factor, and \code{"1"} is for intercept.
@@ -739,8 +739,8 @@
 #' @section Plot-Related Methods:
 #' \preformatted{$plot_numerical_condition(condition)
 #' $plot_information_criterion(criterion)
-#' $plot_fit_indice(indice)
-#' $plot_coefficient(block, left, right, both)}
+#' $plot_fit_index(index)
+#' $plot_coefficient(block, left, right, both)
 #' \describe{
 #' \item{\bold{Arguments}}{
 #'
@@ -751,7 +751,7 @@
 #'  \item{\code{criterion}}{A \code{character} to specify which information criteria should be plotted.
 #'  Its value must be \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
 #'  \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"}, or their combination.}
-#'  \item{\code{indice}}{A \code{character} to specify which fit indices should be plotted.
+#'  \item{\code{index}}{A \code{character} to specify which fit indices should be plotted.
 #'  Its value must be \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, \code{"srmr"}, or their combination. }
 #'  \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
 #'  Its value must be one of \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
@@ -770,7 +770,7 @@
 #' \code{$plot_information_criterion()} shows how the values of information criteria vary with penalty levels.
 #' By default, \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, and \code{"hbic"} are plotted.
 #'
-#' \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels.
+#' \code{$plot_fit_index()} shows how the values of fit indices vary with penalty levels.
 #' By default, \code{"rmsea"}, \code{"cfi"}, \code{"nnfi"}, and \code{"srmr"} are plotted.
 #'
 #' \code{$plot_coefficient()} visualizes the solution paths of coefficients belonging to the intersection of \code{block}, \code{left}, \code{right}, and \code{both} arguments.
@@ -802,9 +802,11 @@
 #' $extract_saturated_moment_acov()
 #'
 #' $extract_penalty_level(selector, exclude_improper = TRUE)
+#' 
 #' $extract_numerical_condition(selector, exclude_improper = TRUE)
 #' $extract_information_criterion(selector, exclude_improper = TRUE)
-#' $extract_fit_indice(selector, exclude_improper = TRUE)
+#' $extract_fit_index(selector, exclude_improper = TRUE)
+#' $extract_cv_error(selector, exclude_improper = TRUE)
 #' $extract_coefficient(selector, exclude_improper = TRUE)
 #'
 #' $extract_implied_cov(selector, exclude_improper = TRUE)
@@ -812,11 +814,15 @@
 #' $extract_residual_cov(selector, exclude_improper = TRUE)
 #' $extract_residual_mean(selector, exclude_improper = TRUE)
 #'
-#' $extract_coefficient_matrice(selector, block, exclude_improper = TRUE)
+#' $extract_coefficient_matrix(selector, block, exclude_improper = TRUE)
+#' 
 #' $extract_moment_jacobian(selector, exclude_improper = TRUE)
 #'
 #' $extract_expected_fisher(selector, exclude_improper = TRUE)
+#' $extract_expected_information(selector, exclude_improper = TRUE)
 #' $extract_observed_fisher(selector, exclude_improper = TRUE)
+#' $extract_observed_information(selector, exclude_improper = TRUE)
+#' 
 #' $extract_bfgs_hessian(selector, exclude_improper = TRUE)
 #' $extract_score_acov(selector, exclude_improper = TRUE)
 #' $extract_coefficient_acov(selector, standard_error = "default",
@@ -880,16 +886,16 @@
 #'
 #' \code{$extract_residual_mean()} returns a \code{list} of residual vector(s) of mean.
 #'
-#' \code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}.
+#' \code{$extract_coefficient_matrix()} returns a \code{list} of coefficient matrice(s) specified by \code{block}.
 #'
 #' \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure.
 #'
-#' \code{$extract_expected_fisher()} returns a \code{matrix} of the expected Fisher information matrix.
+#' \code{$extract_expected_fisher()} / \code{$extract_expected_information()} returns a \code{matrix} of the expected Fisher information matrix.
 #'
-#' \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix.
+#' \code{$extract_observed_fisher()} / \code{$extract_observed_information()} returns a \code{matrix} of the observed Fisher information matrix.
 #' Note that the observed information matrix is calculated via numerical differentiation for the gradient of loss.
 #'
-#' \code{$extract_bfgs_fisher()} returns a \code{matrix} of the BFGS Hessian matrix.
+#' \code{$extract_bfgs_hessian()} returns a \code{matrix} of the BFGS Hessian matrix.
 #'
 #' \code{$extract_score_acov()} returns a \code{matrix} of the asymptotic covariance of scores.
 #'
