@@ -9,8 +9,8 @@ lslx$set("public",
                   debias = "default",
                   post = "default",
                   mode = "default",
+                  style = "default",
                   interval = TRUE,
-                  simplify = FALSE,
                   exclude_improper = TRUE,
                   digit = 3L,
                   output = list(
@@ -70,23 +70,24 @@ lslx$set("public",
                stop("Argument 'mode' can be only either 'default', 'print' or 'return'. ")
              }
            }
-           if (!is.logical(interval)) {
-             stop("Argument 'interval' can be only either TRUE or FALSE. ")
-           }
-           if (!is.logical(simplify)) {
-             stop("Argument 'simplify' can be only either TRUE or FALSE. ")
+           if (!(style %in% c("default", "min", "max"))) {
+             stop("Argument 'debias' can be only either 'default', 'min', or 'max'.")
            }
            
-           if (simplify) {
-             output$fitting_information <- FALSE
-             output$saturated_model_information <- FALSE
-             output$baseline_model_information <- FALSE
-             output$information_criterion <- FALSE
-             output$fit_index <- FALSE
-             output$cv_error <- FALSE
-             output$lr_test <- FALSE
-             output$rmsea_test <- FALSE
-             output$coefficient_test <- FALSE
+           if (style == "min") {
+             output <- 
+               lapply(X = output,
+                      FUN = function(output_i) {
+                        output_i <- FALSE
+                        return(output_i)
+                      })
+           } else if (style == "max") {
+             output <- 
+               lapply(X = output,
+                      FUN = function(output_i) {
+                        output_i <- TRUE
+                        return(output_i)
+                      })
            }
            if (private$fitting$control$cv_fold == 1L) {
              output$cv_error <- FALSE
