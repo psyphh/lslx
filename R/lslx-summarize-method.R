@@ -8,11 +8,24 @@ lslx$set("public",
                   alpha_level = .05,
                   debias = "default",
                   post = "default",
-                  interval = "default",
-                  simplify = "default",
                   mode = "default",
+                  interval = TRUE,
+                  simplify = FALSE,
                   exclude_improper = TRUE,
-                  digit = 3L) {
+                  digit = 3L,
+                  output = list(
+                    general_information = TRUE,
+                    fitting_information = FALSE,
+                    saturated_model_information = TRUE,
+                    baseline_model_information = TRUE,
+                    numerical_condition = TRUE,
+                    information_criterion = FALSE,
+                    fit_index = TRUE,
+                    cv_error = TRUE,
+                    lr_test = TRUE,
+                    rmsea_test = TRUE,
+                    coefficient_test = TRUE
+                  )) {
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
            )) {
@@ -50,20 +63,6 @@ lslx$set("public",
                debias <- "none"
              }
            }
-           if (interval == "default") {
-             interval <- TRUE
-           } else {
-             if (!is.logical(interval)) {
-               stop("Argument 'interval' can be only either 'default', TRUE or FALSE. ")
-             }
-           }
-           if (simplify == "default") {
-             simplify <- FALSE
-           } else {
-             if (!is.logical(simplify)) {
-               stop("Argument 'simplify' can be only either 'default', TRUE or FALSE. ")
-             }
-           }
            if (mode == "default") {
              mode <- "print"
            } else {
@@ -71,37 +70,31 @@ lslx$set("public",
                stop("Argument 'mode' can be only either 'default', 'print' or 'return'. ")
              }
            }
-           setting <- list(
-             general_information = TRUE,
-             fitting_information = TRUE,
-             saturated_model_information = TRUE,
-             baseline_model_information = TRUE,
-             numerical_condition = TRUE,
-             information_criterion = TRUE,
-             fit_index = TRUE,
-             cv_error = TRUE,
-             lr_test = TRUE,
-             rmsea_test = TRUE,
-             coefficient_test = TRUE
-           )
+           if (!is.logical(interval)) {
+             stop("Argument 'interval' can be only either TRUE or FALSE. ")
+           }
+           if (!is.logical(simplify)) {
+             stop("Argument 'simplify' can be only either TRUE or FALSE. ")
+           }
+           
            if (simplify) {
-             setting$fitting_information <- FALSE
-             setting$saturated_model_information <- FALSE
-             setting$baseline_model_information <- FALSE
-             setting$information_criterion <- FALSE
-             setting$fit_index <- FALSE
-             setting$cv_error <- FALSE
-             setting$lr_test <- FALSE
-             setting$rmsea_test <- FALSE
-             setting$coefficient_test <- FALSE
+             output$fitting_information <- FALSE
+             output$saturated_model_information <- FALSE
+             output$baseline_model_information <- FALSE
+             output$information_criterion <- FALSE
+             output$fit_index <- FALSE
+             output$cv_error <- FALSE
+             output$lr_test <- FALSE
+             output$rmsea_test <- FALSE
+             output$coefficient_test <- FALSE
            }
            if (private$fitting$control$cv_fold == 1L) {
-             setting$cv_error <- FALSE
+             output$cv_error <- FALSE
            }
            
            
            ##generating output informations
-           if (setting$general_information) {
+           if (output$general_information) {
              general_information <-
                formatC(
                  x = c(
@@ -136,7 +129,7 @@ lslx$set("public",
              general_information <- NULL
            }
            
-           if (setting$fitting_information) {
+           if (output$fitting_information) {
              fitting_information <-
                formatC(
                  x = c(
@@ -195,7 +188,7 @@ lslx$set("public",
              fitting_information <- NULL
            }
            
-           if (setting$saturated_model_information) {
+           if (output$saturated_model_information) {
              saturated_model_information <-
                formatC(
                  x = private$fitting$supplied_result$saturated_model,
@@ -210,7 +203,7 @@ lslx$set("public",
              saturated_model_information <- NULL
            }
            
-           if (setting$baseline_model_information) {
+           if (output$baseline_model_information) {
              baseline_model_information <-
                formatC(
                  x = private$fitting$supplied_result$baseline_model,
@@ -225,7 +218,7 @@ lslx$set("public",
              baseline_model_information <- NULL
            }
            
-           if (setting$numerical_condition) {
+           if (output$numerical_condition) {
              numerical_condition <-
                formatC(
                  x = self$extract_numerical_condition(selector = selector,
@@ -261,7 +254,7 @@ lslx$set("public",
              numerical_condition <- NULL
            }
            
-           if (setting$information_criterion) {
+           if (output$information_criterion) {
              information_criterion <-
                formatC(
                  x = self$extract_information_criterion(selector = selector,
@@ -290,7 +283,7 @@ lslx$set("public",
              information_criterion <- NULL
            }
            
-           if (setting$fit_index) {
+           if (output$fit_index) {
              fit_index <-
                formatC(
                  x = self$extract_fit_index(selector = selector,
@@ -311,7 +304,7 @@ lslx$set("public",
              fit_index <- NULL
            }
            
-           if (setting$cv_error) {
+           if (output$cv_error) {
              cv_error <-
                formatC(
                  x = self$extract_cv_error(selector = selector,
@@ -351,7 +344,7 @@ lslx$set("public",
            summary_list <-
              summary_list[!sapply(summary_list, is.null)]
            
-           if (setting$lr_test) {
+           if (output$lr_test) {
              lr_test <-
                self$test_lr(selector = selector,
                             lambda = lambda,
@@ -378,7 +371,7 @@ lslx$set("public",
              lr_test <- NULL
            }
            
-           if (setting$rmsea_test) {
+           if (output$rmsea_test) {
              rmsea_test <-
                self$test_rmsea(
                  selector = selector,
@@ -407,7 +400,7 @@ lslx$set("public",
            } else {
              rmsea_test <- NULL
            }
-           if (setting$coefficient_test) {
+           if (output$coefficient_test) {
              coefficient_test <-
                self$test_coefficient(
                  selector = selector,
@@ -505,19 +498,19 @@ lslx$set("public",
                cat("\n")
              }
              ## printing likelihood ratio test
-             if (setting$lr_test) {
+             if (output$lr_test) {
                cat("Likelihood Ratio Test\n")
                print(lr_test)
                cat("\n")
              }
              ## printing root mean square error of approximation test
-             if (setting$rmsea_test) {
+             if (output$rmsea_test) {
                cat("Root Mean Square Error of Approximation Test\n")
                print(rmsea_test)
                cat("\n")
              }
              ## generating coefficients
-             if (setting$coefficient_test) {
+             if (output$coefficient_test) {
                ## print by different groups
                if (!is.na(private$model$reference_group)) {
                  reference_group_order <-
