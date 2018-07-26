@@ -70,11 +70,11 @@ lslx$set("public",
                stop("Argument 'mode' can be only either 'default', 'print' or 'return'. ")
              }
            }
-           if (!(style %in% c("default", "min", "max"))) {
-             stop("Argument 'debias' can be only either 'default', 'min', or 'max'.")
+           if (!(style %in% c("default", "minimal", "maximal"))) {
+             stop("Argument 'style' can be only either 'default', 'mininal', or 'maximal'.")
            }
 
-           if (style == "min") {
+           if (style == "minimal") {
              output <- 
                lapply(X = output,
                       FUN = function(output_i) {
@@ -83,7 +83,7 @@ lslx$set("public",
                       })
              output$general_information <- TRUE
              output$numerical_condition <- TRUE
-           } else if (style == "max") {
+           } else if (style == "maximal") {
              output <- 
                lapply(X = output,
                       FUN = function(output_i) {
