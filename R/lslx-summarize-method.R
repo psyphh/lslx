@@ -25,7 +25,7 @@ lslx$set("public",
                     lr_test = TRUE,
                     rmsea_test = TRUE,
                     coefficient_test = TRUE
-                  ),...) {
+                  )) {
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
            )) {
@@ -73,9 +73,7 @@ lslx$set("public",
            if (!(style %in% c("default", "min", "max"))) {
              stop("Argument 'debias' can be only either 'default', 'min', or 'max'.")
            }
-           if (simplify) {
-             style <- "min"
-           }
+
            if (style == "min") {
              output <- 
                lapply(X = output,
