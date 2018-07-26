@@ -16,8 +16,8 @@ lslx$set("public",
                   output = list(
                     general_information = TRUE,
                     fitting_information = FALSE,
-                    saturated_model_information = TRUE,
-                    baseline_model_information = TRUE,
+                    saturated_model_information = FALSE,
+                    baseline_model_information = FALSE,
                     numerical_condition = TRUE,
                     information_criterion = FALSE,
                     fit_index = TRUE,
@@ -91,8 +91,7 @@ lslx$set("public",
            if (private$fitting$control$cv_fold == 1L) {
              output$cv_error <- FALSE
            }
-           
-           
+ 
            ##generating output informations
            if (output$general_information) {
              general_information <-
