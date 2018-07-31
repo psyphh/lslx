@@ -20,7 +20,7 @@ lslx$set("public",
            lr_test["unadjusted", "statistic"] <-
              numerical_condition[["loss_value"]] * private$fitting$reduced_data$n_observation
            lr_test["unadjusted", "df"] <-
-             numerical_condition[["degree_of_freedom"]]
+             numerical_condition[["degrees_of_freedom"]]
            lr_test["unadjusted", "p_value"] <-
              1 - pchisq(lr_test["unadjusted", "statistic"],
                         lr_test["unadjusted", "df"])
@@ -31,7 +31,7 @@ lslx$set("public",
                  numerical_condition[["loss_value"]] * private$fitting$reduced_data$n_observation /
                  scaling_factor
                lr_test["mean-adjusted", "df"] <-
-                 numerical_condition[["degree_of_freedom"]]
+                 numerical_condition[["degrees_of_freedom"]]
                lr_test["mean-adjusted", "p_value"] <-
                  1 - pchisq(lr_test["mean-adjusted", "statistic"],
                             lr_test["mean-adjusted", "df"])
