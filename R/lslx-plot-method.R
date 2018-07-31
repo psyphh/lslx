@@ -350,7 +350,7 @@ lslx$set("public",
                direction = "long"
              )
            name_split <- strsplit(x = df_for_plot$name,
-                                  split = "\\|")
+                                  split = "/")
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
