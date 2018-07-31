@@ -1022,7 +1022,7 @@ lslxFitting$set("private",
                     n_nonzero_coefficient =
                       self$reduced_model$n_group *
                       (2L * self$reduced_model$n_response),
-                    degree_of_freedom =
+                    degrees_of_freedom =
                       self$reduced_model$n_group *
                       (
                         self$reduced_model$n_moment -
@@ -1039,7 +1039,7 @@ lslxFitting$set("private",
                     loss_value = 0,
                     n_nonzero_coefficient = self$reduced_model$n_group *
                       self$reduced_model$n_moment,
-                    degree_of_freedom = 0
+                    degrees_of_freedom = 0
                   )
                 })
 

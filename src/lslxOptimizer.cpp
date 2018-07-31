@@ -39,7 +39,7 @@ public:
   Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx;
   
   double baseline_loss_value;
-  int baseline_degree_of_freedom;
+  int baseline_degrees_of_freedom;
   
   Eigen::MatrixXd identity_y, identity_eta, identity_theta;  
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
@@ -70,8 +70,8 @@ public:
   Eigen::MatrixXd objective_gradient;
   
   double objective_gradient_abs_max, objective_hessian_convexity;
-  int n_iter_out, n_nonzero_coefficient, degree_of_freedom;
-  double robust_degree_of_freedom, scaling_factor;
+  int n_iter_out, n_nonzero_coefficient, degrees_of_freedom;
+  double robust_degrees_of_freedom, scaling_factor;
   
   double aic, aic3, caic;
   double bic, abic, hbic;
@@ -211,7 +211,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   }
   
   baseline_loss_value = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["loss_value"]);
-  baseline_degree_of_freedom = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["degree_of_freedom"]);
+  baseline_degrees_of_freedom = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["degrees_of_freedom"]);
   
   theta_start = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
   theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
@@ -950,7 +950,7 @@ void lslxOptimizer::update_numerical_condition() {
   }
   objective_hessian_convexity = Rcpp::min(objective_hessian_diagonal);
   n_nonzero_coefficient = idx_is_effective.size(); 
-  degree_of_freedom = n_group * n_moment - n_nonzero_coefficient;
+  degrees_of_freedom = n_group * n_moment - n_nonzero_coefficient;
   if (response) {
     update_moment_jacobian();
     update_residual_weight();
@@ -973,12 +973,12 @@ void lslxOptimizer::update_numerical_condition() {
           n_moment, n_theta) = moment_jacobian_i;
       }
       moment_jacobian_matrix = slice_col(moment_jacobian_matrix, idx_is_effective);
-      robust_degree_of_freedom = 0.5 * double(n_observation) * (saturated_moment_acov_matrix * 
+      robust_degrees_of_freedom = 0.5 * double(n_observation) * (saturated_moment_acov_matrix * 
         (residual_weight_matrix - (residual_weight_matrix * moment_jacobian_matrix) *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix * moment_jacobian_matrix).inverse() *
         (moment_jacobian_matrix.transpose() * residual_weight_matrix))).diagonal().sum();
-      if (degree_of_freedom > 0) {
-        scaling_factor = robust_degree_of_freedom / degree_of_freedom;
+      if (degrees_of_freedom > 0) {
+        scaling_factor = robust_degrees_of_freedom / degrees_of_freedom;
       } else {
         scaling_factor = NAN;
       }
@@ -986,47 +986,47 @@ void lslxOptimizer::update_numerical_condition() {
       scaling_factor = NAN;      
     }
   } else {
-    robust_degree_of_freedom = NAN;
+    robust_degrees_of_freedom = NAN;
     scaling_factor = NAN;
   }
 }
 
 // method for updating final information criterion
 void lslxOptimizer::update_information_criterion() {
-  aic = loss_value - (2.0 / double(n_observation)) * double(degree_of_freedom);
-  aic3 = loss_value - (3.0 / double(n_observation)) * double(degree_of_freedom);
-  caic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(degree_of_freedom);
+  aic = loss_value - (2.0 / double(n_observation)) * double(degrees_of_freedom);
+  aic3 = loss_value - (3.0 / double(n_observation)) * double(degrees_of_freedom);
+  caic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(degrees_of_freedom);
   
-  bic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(degree_of_freedom);
-  abic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(degree_of_freedom);
-  hbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(degree_of_freedom);
+  bic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(degrees_of_freedom);
+  abic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(degrees_of_freedom);
+  hbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(degrees_of_freedom);
   
-  raic = loss_value - (2.0 / double(n_observation)) * double(robust_degree_of_freedom);
-  raic3 = loss_value - (3.0 / double(n_observation)) * double(robust_degree_of_freedom);
-  rcaic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(robust_degree_of_freedom);
+  raic = loss_value - (2.0 / double(n_observation)) * double(robust_degrees_of_freedom);
+  raic3 = loss_value - (3.0 / double(n_observation)) * double(robust_degrees_of_freedom);
+  rcaic = loss_value - ((1 + std::log(double(n_observation))) / double(n_observation)) * double(robust_degrees_of_freedom);
   
-  rbic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(robust_degree_of_freedom);
-  rabic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(robust_degree_of_freedom);
-  rhbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(robust_degree_of_freedom);
+  rbic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(robust_degrees_of_freedom);
+  rabic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(robust_degrees_of_freedom);
+  rhbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(robust_degrees_of_freedom);
   
 }
 
 // method for updating final fit index
 void lslxOptimizer::update_fit_index() {
-  if ((degree_of_freedom == 0) & (loss_value > std::sqrt(DBL_EPSILON))) {
+  if ((degrees_of_freedom == 0) & (loss_value > std::sqrt(DBL_EPSILON))) {
     rmsea = NAN;
   } else {
     if (loss_value < std::sqrt(DBL_EPSILON)) {
       rmsea = 0;
     } else {
-      rmsea = std::sqrt(n_group * std::max(((loss_value / double(degree_of_freedom)) - 
+      rmsea = std::sqrt(n_group * std::max(((loss_value / double(degrees_of_freedom)) - 
         (1 / double(n_observation))), 0.0)); 
     }
   }
   
-  double cfi_num = std::max((double(n_observation) * loss_value - double(degree_of_freedom)), 0.0);
-  double cfi_den = std::max(std::max(double(n_observation) * loss_value - double(degree_of_freedom),
-                                     double(n_observation) * baseline_loss_value - double(baseline_degree_of_freedom)), 0.0);
+  double cfi_num = std::max((double(n_observation) * loss_value - double(degrees_of_freedom)), 0.0);
+  double cfi_den = std::max(std::max(double(n_observation) * loss_value - double(degrees_of_freedom),
+                                     double(n_observation) * baseline_loss_value - double(baseline_degrees_of_freedom)), 0.0);
   if ((cfi_num < std::sqrt(DBL_EPSILON)) & (cfi_den < std::sqrt(DBL_EPSILON))) {
     cfi = NAN;
   } else {
@@ -1036,15 +1036,15 @@ void lslxOptimizer::update_fit_index() {
       cfi = 1 - cfi_num / cfi_den;
     }
   }
-  double nnfi_0 = (double(n_observation) * baseline_loss_value) / double(baseline_degree_of_freedom);
+  double nnfi_0 = (double(n_observation) * baseline_loss_value) / double(baseline_degrees_of_freedom);
   double nnfi_1;
-  if ((loss_value > std::sqrt(DBL_EPSILON)) & (degree_of_freedom == 0)) {
+  if ((loss_value > std::sqrt(DBL_EPSILON)) & (degrees_of_freedom == 0)) {
     nnfi = NAN;
   } else {
     if (loss_value < std::sqrt(DBL_EPSILON)) {
       nnfi_1 = 0;
     } else {
-      nnfi_1 = (double(n_observation) * loss_value) / double(degree_of_freedom);
+      nnfi_1 = (double(n_observation) * loss_value) / double(degrees_of_freedom);
     }
     nnfi = (nnfi_0 - nnfi_1) / (nnfi_0 - 1.0);
     nnfi = std::min(nnfi, 1.0);
@@ -1085,8 +1085,8 @@ Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
       _["n_iter_out"] = n_iter_out,
       _["loss_value"] = loss_value,
       _["n_nonzero_coefficient"] = n_nonzero_coefficient,
-      _["degree_of_freedom"] = degree_of_freedom,
-      _["robust_degree_of_freedom"] = robust_degree_of_freedom,
+      _["degrees_of_freedom"] = degrees_of_freedom,
+      _["robust_degrees_of_freedom"] = robust_degrees_of_freedom,
       _["scaling_factor"] = scaling_factor);
   return Rcpp::clone(numerical_condition);
 }
