@@ -562,7 +562,7 @@ lslx$set("public",
                        "\"",
                        ", Std.Error = \"",
                        standard_error,
-                       ")\n"
+                       "\")\n"
                      )
                    )
                  } else {
@@ -571,7 +571,7 @@ lslx$set("public",
                        "Coefficient Test",
                        " (St.Error = \"",
                        standard_error,
-                       ")\n"
+                       "\")\n"
                      )
                    )
                  }
