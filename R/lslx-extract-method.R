@@ -978,6 +978,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
