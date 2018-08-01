@@ -150,6 +150,58 @@ lslx$set("public",
            return(penalty_level)
          })
 
+## \code{$extract_coefficient_indicator()} returns a \code{logic} by testing the types of coefficients. ##
+lslx$set("public",
+         "extract_coefficient_indicator",
+         function(selector,
+                  lambda,
+                  delta,
+                  type = "default",
+                  exclude_improper = TRUE) {
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        lambda = lambda,
+                                        delta = delta,
+                                        exclude_improper = exclude_improper)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           if (!(
+             type %in% c("default", "all", "fixed", "free", "pen", "active", "selected")
+           )) {
+             stop(
+               "Argument 'type' can be only either 'default', 'all', 'fixed', 'free', 'pen', 'active', or 'selected'."
+             )
+           }
+           if (type == "default") {
+             type <- "all"
+           }
+           if (type == "all") {
+             coefficient_indicator <- rep(T, length(coefficient))
+           } else if (type == "fixed") {
+             coefficient_indicator <- 
+               !(private$fitting$reduced_model$theta_is_free |
+                   private$fitting$reduced_model$theta_is_pen)
+           } else if (type == "free") {
+             coefficient_indicator <-
+               private$fitting$reduced_model$theta_is_free
+           } else if (type == "pen") {
+             coefficient_indicator <-
+               private$fitting$reduced_model$theta_is_pen
+           } else if (type == "active") {
+             coefficient_indicator <-
+               private$fitting$reduced_model$theta_is_free |
+               (private$fitting$reduced_model$theta_is_pen &
+                  coefficient != 0)
+           } else if (type == "selected") {
+             coefficient_indicator <- 
+               private$fitting$reduced_model$theta_is_pen &
+               coefficient != 0
+           } else {
+           }
+           return(coefficient_indicator)
+         })
+
+
 ## \code{$extract_numerical_condition()} returns a \code{numeric} of the numerical conditions. ##
 lslx$set("public",
          "extract_numerical_condition",
@@ -237,6 +289,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -245,6 +298,15 @@ lslx$set("public",
                                         exclude_improper = exclude_improper)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             coefficient <- coefficient[coefficient_indicator]
+           }
            return(coefficient)
          })
 
@@ -256,6 +318,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            coefficient <-
              self$extract_coefficient(selector = selector,
@@ -303,6 +366,16 @@ lslx$set("public",
                observed_fisher_inv[is_active, is_active, drop = FALSE] %*% 
                (regularizer_gradient[is_active, 1, drop = FALSE])
            } 
+           
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             debiased_coefficient <- debiased_coefficient[coefficient_indicator]
+           }
            return(debiased_coefficient)
          })
 
@@ -537,6 +610,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -555,6 +629,15 @@ lslx$set("public",
              )
            colnames(moment_jacobian) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             moment_jacobian <- moment_jacobian[, coefficient_indicator]
+           }
            return(moment_jacobian)
          })
 
@@ -564,6 +647,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -584,6 +668,16 @@ lslx$set("public",
              rownames(private$model$specification)
            rownames(expected_fisher) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             expected_fisher <- expected_fisher[coefficient_indicator, 
+                                                coefficient_indicator]
+           }
            return(expected_fisher)
          })
 
@@ -593,6 +687,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -613,6 +708,16 @@ lslx$set("public",
              rownames(private$model$specification)
            rownames(observed_fisher) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             observed_fisher <- observed_fisher[coefficient_indicator, 
+                                                coefficient_indicator]
+           }
            return(observed_fisher)
          })
 
@@ -622,6 +727,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -642,6 +748,16 @@ lslx$set("public",
              rownames(private$model$specification)
            rownames(bfgs_hessian) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             bfgs_hessian <- bfgs_hessian[coefficient_indicator, 
+                                          coefficient_indicator]
+           }
            return(bfgs_hessian)
          })
 
@@ -651,6 +767,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -671,6 +788,16 @@ lslx$set("public",
              rownames(private$model$specification)
            rownames(score_acov) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             score_acov <- score_acov[coefficient_indicator, 
+                                      coefficient_indicator]
+           }
            return(score_acov)
          })
 
@@ -681,6 +808,7 @@ lslx$set("public",
                   lambda,
                   delta,
                   standard_error = "default",
+                  type = "default",
                   exclude_improper = TRUE) {
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
@@ -707,10 +835,6 @@ lslx$set("public",
                 coefficient != 0)
            coefficient_acov <-
              matrix(NA, length(coefficient), length(coefficient))
-           colnames(coefficient_acov) <-
-             rownames(private$model$specification)
-           rownames(coefficient_acov) <-
-             rownames(private$model$specification)
            if (standard_error == "sandwich") {
              score_acov <-
                self$extract_score_acov(selector = selector,
@@ -749,6 +873,20 @@ lslx$set("public",
            } else {
              
            }
+           colnames(coefficient_acov) <-
+             rownames(private$model$specification)
+           rownames(coefficient_acov) <-
+             rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             coefficient_acov <- coefficient_acov[coefficient_indicator, 
+                                                  coefficient_indicator]
+           }
            attr(coefficient_acov, "standard_error") <-
              standard_error
            return(coefficient_acov)
@@ -760,6 +898,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -778,6 +917,15 @@ lslx$set("public",
              )
            rownames(loss_gradient) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             loss_gradient <- loss_gradient[coefficient_indicator, ]
+           }
            return(loss_gradient)
          })
 
@@ -787,6 +935,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  type = "default",
                   exclude_improper = TRUE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
@@ -811,6 +960,15 @@ lslx$set("public",
              )
            rownames(regularizer_gradient) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             regularizer_gradient <- regularizer_gradient[coefficient_indicator, ]
+           }
            return(regularizer_gradient)
          })
 
@@ -844,5 +1002,14 @@ lslx$set("public",
              )
            rownames(objective_gradient) <-
              rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                exclude_improper = exclude_improper)
+           if (!(all(coefficient_indicator))) {
+             objective_gradient <- objective_gradient[coefficient_indicator, ]
+           }
            return(objective_gradient)
          })
