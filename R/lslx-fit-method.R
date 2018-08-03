@@ -9,7 +9,7 @@ lslx$set("public",
                   start_method = "default",
                   lambda_length = 50,
                   delta_length = 3,
-                  threshold_value = 0.4,
+                  threshold_value = 0.3,
                   subset = NULL,
                   cv_fold = 1L,
                   iter_out_max = 100L,
@@ -281,7 +281,7 @@ lslx$set("public",
 ## \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996). ##
 lslx$set("public",
          "fit_lasso",
-         function(lambda_grid = 0,
+         function(lambda_grid = "default",
                   ...) {
            self$fit(penalty_method = "lasso",
                     lambda_grid = lambda_grid,
@@ -291,7 +291,7 @@ lslx$set("public",
 ## \code{$fit_mcp()} method fits the specified model to data by minimizing a ML loss function with mcp (Zhang, 2010). ##
 lslx$set("public",
          "fit_mcp",
-         function(lambda_grid = 0,
+         function(lambda_grid = "default",
                   delta_grid = "default",
                   ...) {
            self$fit(

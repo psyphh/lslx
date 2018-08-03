@@ -240,7 +240,7 @@ lslx$set("private",
                  matrice_i <-
                    ifelse(grepl(pattern = "<->",
                                 x = name[i]),
-                          "psi",
+                          "phi",
                           ifelse(
                             grepl(pattern = "<-[^>]",
                                   x = name[i]),
@@ -268,7 +268,7 @@ lslx$set("private",
                    ifelse(
                      matrice_i %in% c("alpha", "beta", "tau"),
                      "<-",
-                     ifelse(matrice_i == "psi",
+                     ifelse(matrice_i == "phi",
                             "<->",
                             "")
                    )

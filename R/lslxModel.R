@@ -54,7 +54,7 @@ lslxModel$set("public",
                                  y = self$name_endogenous))
                 private$initialize_specification(model_parsed = model_parsed)
                 private$expand_specification_alpha()
-                private$expand_specification_psi()
+                private$expand_specification_phi()
                 self$specification <-
                   self$specification[order(
                     self$specification$reference,
@@ -411,7 +411,7 @@ lslxModel$set("private",
                           ))
                 self$specification$matrice <-
                   ifelse(self$specification$operator %in% c("<=>", "<~>"),
-                         "psi",
+                         "phi",
                          ifelse(
                            !(self$specification$operator %in%
                                c("<=:", "<~:", "<=", "<~")),
@@ -445,7 +445,7 @@ lslxModel$set("private",
                       block_middle <-
                         ifelse(matrice %in% c("alpha", "beta"),
                                "<-",
-                               ifelse(matrice == "psi",
+                               ifelse(matrice == "phi",
                                       "<->",
                                       ""))
                       block <-
@@ -566,17 +566,17 @@ lslxModel$set("private",
                         stringsAsFactors = FALSE)
               })
 
-## \code{$expand_specification_psi()} expand the specification table for covariances. ##
+## \code{$expand_specification_phi()} expand the specification table for covariances. ##
 lslxModel$set("private",
-              "expand_specification_psi",
+              "expand_specification_phi",
               function() {
-                specification_psi <-
+                specification_phi <-
                   do.call(what = rbind.data.frame,
                           args = lapply(
                             X = self$name_group,
                             FUN = function(name_group_i) {
                               if (length(self$name_exogenous) > 1) {
-                                relation_psi_i <-
+                                relation_phi_i <-
                                   setdiff(x = c(
                                     paste0(self$name_eta,
                                            "<->",
@@ -591,7 +591,7 @@ lslxModel$set("private",
                                   ),
                                   y = self$specification$relation[self$specification$group == name_group_i])
                               } else {
-                                relation_psi_i <-
+                                relation_phi_i <-
                                   setdiff(
                                     x = paste0(self$name_eta,
                                                "<->",
@@ -599,22 +599,22 @@ lslxModel$set("private",
                                     y = self$specification$relation[self$specification$group == name_group_i]
                                   )
                               }
-                              if (length(relation_psi_i) > 1) {
-                                left_psi_i <-
-                                  substr(relation_psi_i,
+                              if (length(relation_phi_i) > 1) {
+                                left_phi_i <-
+                                  substr(relation_phi_i,
                                          start = 1,
-                                         stop = regexpr("<->", relation_psi_i) - 1)
-                                right_psi_i <-
+                                         stop = regexpr("<->", relation_phi_i) - 1)
+                                right_phi_i <-
                                   substr(
-                                    relation_psi_i,
-                                    start = regexpr("<->", relation_psi_i) + 3,
-                                    stop = nchar(relation_psi_i)
+                                    relation_phi_i,
+                                    start = regexpr("<->", relation_phi_i) + 3,
+                                    stop = nchar(relation_phi_i)
                                   )
-                                specification_psi_i <-
+                                specification_phi_i <-
                                   data.frame(
-                                    relation = relation_psi_i,
-                                    left = left_psi_i,
-                                    right = right_psi_i,
+                                    relation = relation_phi_i,
+                                    left = left_phi_i,
+                                    right = right_phi_i,
                                     group = name_group_i,
                                     reference = ifelse(
                                       is.na(self$reference_group),
@@ -623,14 +623,14 @@ lslxModel$set("private",
                                              TRUE,
                                              FALSE)
                                     ),
-                                    matrice = "psi",
+                                    matrice = "phi",
                                     block =
                                       ifelse(
-                                        left_psi_i %in% self$name_factor,
-                                        ifelse(right_psi_i %in% self$name_factor,
+                                        left_phi_i %in% self$name_factor,
+                                        ifelse(right_phi_i %in% self$name_factor,
                                                "f<->f",
                                                "f<->y"),
-                                        ifelse(right_psi_i %in% self$name_factor,
+                                        ifelse(right_phi_i %in% self$name_factor,
                                                "y<->f",
                                                "y<->y")
                                       ),
@@ -638,16 +638,16 @@ lslxModel$set("private",
                                     start = NA_real_,
                                     stringsAsFactors = FALSE
                                   )
-                                rownames(specification_psi_i) <-
-                                  paste(specification_psi_i$relation,
-                                        specification_psi_i$group,
+                                rownames(specification_phi_i) <-
+                                  paste(specification_phi_i$relation,
+                                        specification_phi_i$group,
                                         sep = "/")
-                                return(specification_psi_i)
+                                return(specification_phi_i)
                               }
                             }
                           ))
                 self$specification <-
                   rbind(self$specification,
-                        specification_psi,
+                        specification_phi,
                         stringsAsFactors = FALSE)
               })

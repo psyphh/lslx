@@ -1,7 +1,8 @@
 ## \code{$plot_numerical_condition()} plots the values of selected numerical conditions. ##
 lslx$set("public",
          "plot_numerical_condition",
-         function(condition) {
+         function(condition,
+                  lambda_scale = "normal") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_numerical_condition' method is only available for the case of 'length(lambda_grid) > 1'"
@@ -54,20 +55,23 @@ lslx$set("public",
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
            df_for_plot$penalty_level <- NULL
-           df_for_plot$lambda <-
+           df_for_plot$lambda <- 
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[2]
                }
              ))
+           if (lambda_scale == "log") {
+             df_for_plot$lambda <- log(df_for_plot$lambda)  
+           }
            df_for_plot$delta <-
-             as.numeric(sapply(
+             round(as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[4]
                }
-             ))
+             )), 3)
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line() +
              ggplot2::facet_grid(condition ~ delta,
@@ -78,7 +82,9 @@ lslx$set("public",
              )  +
              ggplot2::labs(
                title = paste0("Numerical Conditions across Penalty Levels"),
-               x = "lambda",
+               x = ifelse(lambda_scale == "normal", 
+                          "lambda",
+                          "log-lambda"),
                y = "value"
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -87,7 +93,8 @@ lslx$set("public",
 ## \code{$plot_information_criterion()} shows how the values of information criteria vary with penalty levels. ##
 lslx$set("public",
          "plot_information_criterion",
-         function(criterion) {
+         function(criterion,
+                  lambda_scale = "normal") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_information_criterion' method is only available for the case of 'length(lambda_grid) > 1'"
@@ -122,20 +129,23 @@ lslx$set("public",
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
            df_for_plot$penalty_level <- NULL
-           df_for_plot$lambda <-
+           df_for_plot$lambda <- 
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[2]
                }
              ))
+           if (lambda_scale == "log") {
+             df_for_plot$lambda <- log(df_for_plot$lambda)  
+           }
            df_for_plot$delta <-
-             as.numeric(sapply(
+             round(as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[4]
                }
-             ))
+             )), 3)
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = criterion)) +
              ggplot2::facet_grid(. ~ delta) +
@@ -145,7 +155,9 @@ lslx$set("public",
              )  +
              ggplot2::labs(
                title = paste0("Values of Information Criteria across Penalty Levels"),
-               x = "lambda",
+               x = ifelse(lambda_scale == "normal", 
+                          "lambda",
+                          "log-lambda"),
                y = "value"
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -154,7 +166,8 @@ lslx$set("public",
 ## \code{$plot_cv_error()} shows how the values of cv error vary with penalty levels. ##
 lslx$set("public",
          "plot_cv_error",
-         function(error) {
+         function(error,
+                  lambda_scale = "normal") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_cv_error()' method is only available for the case of 'length(lambda_grid) > 1'"
@@ -195,20 +208,23 @@ lslx$set("public",
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
            df_for_plot$penalty_level <- NULL
-           df_for_plot$lambda <-
+           df_for_plot$lambda <- 
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[2]
                }
              ))
+           if (lambda_scale == "log") {
+             df_for_plot$lambda <- log(df_for_plot$lambda)  
+           }
            df_for_plot$delta <-
-             as.numeric(sapply(
+             round(as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[4]
                }
-             ))
+             )), 3)
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = error)) +
              ggplot2::facet_grid(. ~ delta) +
@@ -218,7 +234,9 @@ lslx$set("public",
              )  +
              ggplot2::labs(
                title = paste0("Values of CV Errors across Penalty Levels"),
-               x = "lambda",
+               x = ifelse(lambda_scale == "normal", 
+                          "lambda",
+                          "log-lambda"),
                y = "value"
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -228,7 +246,8 @@ lslx$set("public",
 ## \code{$plot_fit_index()} shows how the values of fit indices vary with penalty levels. ##
 lslx$set("public",
          "plot_fit_index",
-         function(index) {
+         function(index, 
+                  lambda_scale = "normal") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_fit_index' method is only available for the case of 'length(lambda_grid) > 1'"
@@ -264,20 +283,23 @@ lslx$set("public",
              strsplit(x = df_for_plot$penalty_level,
                       split = "=|/")
            df_for_plot$penalty_level <- NULL
-           df_for_plot$lambda <-
+           df_for_plot$lambda <- 
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[2]
                }
              ))
+           if (lambda_scale == "log") {
+             df_for_plot$lambda <- log(df_for_plot$lambda)  
+           }
            df_for_plot$delta <-
-             as.numeric(sapply(
+             round(as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[4]
                }
-             ))
+             )), 3)
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = value)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = index)) +
              ggplot2::facet_grid(. ~ delta) +
@@ -287,7 +309,9 @@ lslx$set("public",
              )  +
              ggplot2::labs(
                title = paste0("Values of Goodness-of-Fit across Penalty Levels"),
-               x = "lambda",
+               x = ifelse(lambda_scale == "normal", 
+                          "lambda",
+                          "log-lambda"),
                y = "value"
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -296,8 +320,9 @@ lslx$set("public",
 ## \code{$plot_fit_indice()} shows how the values of fit indices vary with penalty levels. ##
 lslx$set("public",
          "plot_fit_indice",
-         function(indice) {
-           self$plot_fit_index(indice)
+         function(indice,
+                  lambda_scale = "normal") {
+           self$plot_fit_index(indice, lambda_scale)
          })
 
 
@@ -307,7 +332,8 @@ lslx$set("public",
          function(block,
                   left,
                   right,
-                  both) {
+                  both,
+                  lambda_scale = "normal") {
            if (length(private$fitting$control$lambda_grid) <= 1) {
              stop(
                "The 'plot_coefficient' method is only available for the case of 'length(lambda_grid) > 1'"
@@ -370,20 +396,23 @@ lslx$set("public",
                  x[2]
                }
              )
-           df_for_plot$lambda <-
+           df_for_plot$lambda <- 
              as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[2]
                }
              ))
+           if (lambda_scale == "log") {
+             df_for_plot$lambda <- log(df_for_plot$lambda)  
+           }
            df_for_plot$delta <-
-             as.numeric(sapply(
+             round(as.numeric(sapply(
                X = penalty_level_split,
                FUN = function(x) {
                  x[4]
                }
-             ))
+             )), 3)
            ggplot2::ggplot(df_for_plot, ggplot2::aes(x = lambda, y = estimate)) +
              ggplot2::geom_line(mapping = ggplot2::aes(colour = relation)) +
              ggplot2::facet_grid(group ~ delta) +
@@ -396,7 +425,9 @@ lslx$set("public",
                  "Solution Paths of Coefficients in Block ",
                  do.call(paste, as.list(block))
                ),
-               x = "lambda",
+               x = ifelse(lambda_scale == "normal", 
+                          "lambda",
+                          "log-lambda"),
                y = "coefficient estimate"
              ) +
              ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
