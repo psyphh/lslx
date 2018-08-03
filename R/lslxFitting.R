@@ -23,7 +23,14 @@ lslxFitting$set("public",
                   private$initialize_reduced_model(model = model)
                   private$initialize_reduced_data(data = data)
                   private$initialize_supplied_result()
+                  if (self$control$lambda_grid[[1]] == "default") {
+                    
+                  }
+                  if (self$control$delta_grid[[1]] == "default") {
+                    
+                  }
                   private$initialize_fitted_result()
+                  
                 })
 
 ## \code{$initialize_control()} initializes control options. ##
@@ -48,40 +55,35 @@ lslxFitting$set("private",
                   } else {
                     self$control$regularizer <- FALSE
                   }
-                  if (self$control$lambda_grid[[1]] == "default") {
-                    self$control$lambda_grid <- 0
-                  } else {
-                    if (self$control$penalty_method == "none") {
-                      self$control$lambda_grid <- 0
-                    } else if (self$control$penalty_method == "lasso") {
-                      if (any(self$control$lambda_grid < 0)) {
-                        stop(
-                          "When argument 'penalty_method' is set as 'lasso', any element in argument 'lambda_grid' cannot be smaller than 0."
-                        )
-                      }
-                    } else if (self$control$penalty_method == "mcp") {
-                      if (any(self$control$lambda_grid < 0)) {
-                        stop(
-                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
-                        )
-                      }
+                  if (self$control$penalty_method == "none") {
+                    self$control$lambda_grid <- Inf
+                  } else if (self$control$penalty_method %in% c("lasso", "mcp")) {
+                    if (self$control$lambda_grid[[1]] == "default") {
+                      
                     } else {
+                      if (any(self$control$lambda_grid < 0)) {
+                        stop(
+                          "When argument 'penalty_method' is set as 'lasso' or 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                        )
+                      }
                     }
-                  }
-                  if (self$control$delta_grid[[1]] == "default") {
-                    self$control$delta_grid <- Inf
                   } else {
-                    if (self$control$penalty_method %in% c("none", "lasso")) {
-                      self$control$delta_grid <- Inf
-                    } else if (self$control$penalty_method == "mcp") {
+                    
+                  }
+                  if (self$control$penalty_method %in% c("none", "lasso")) {
+                    self$control$delta_grid <- Inf
+                  } else if (self$control$penalty_method == "mcp") {
+                    if (self$control$delta_grid[[1]] == "default") {
+                      
+                    } else {
                       if (any(self$control$delta_grid <= 0)) {
                         stop(
                           "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' must be positive."
                         )
                       }
-                    } else {
-                      
                     }
+                  } else {
+                    
                   }
                   self$control$lambda_grid <-
                     sort(self$control$lambda_grid, decreasing = TRUE)
@@ -108,18 +110,16 @@ lslxFitting$set("private",
                     if (self$control$response) {
                       if (is.logical(self$control$subset)) {
                         self$control$subset <- which(self$control$subset)
-                      } 
+                      }
                     } else {
-                      stop(
-                        "When only moment data is available, argument 'subset' cannot be specified."
-                      )
+                      stop("When only moment data is available, argument 'subset' cannot be specified.")
                     }
                   } else {
                     if (self$control$response) {
-                      self$control$subset <- 
+                      self$control$subset <-
                         1:sum(sapply(data$response, FUN = nrow))
                     } else {
-                      self$control$subset <- 
+                      self$control$subset <-
                         1:sum(unlist(data$sample_size))
                     }
                   }
@@ -245,12 +245,14 @@ lslxFitting$set("private",
                     )
                   if (self$control$response) {
                     idc_subset <-
-                      lapply(data$response, 
-                             FUN = function(response_i) {
-                               idc_subset_i <- 
-                                 (row.names(response_i) %in% self$control$subset)
-                               return(idc_subset_i)
-                             })
+                      lapply(
+                        data$response,
+                        FUN = function(response_i) {
+                          idc_subset_i <-
+                            (row.names(response_i) %in% self$control$subset)
+                          return(idc_subset_i)
+                        }
+                      )
                     idc_complete <-
                       lapply(
                         X = data$pattern,
@@ -267,8 +269,9 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(pattern_i,
                                          idc_subset_i) {
-                            idc_use_i <- 
-                              ((rowSums(pattern_i) > 0) & idc_subset_i)
+                            idc_use_i <-
+                              ((rowSums(pattern_i) > 0) &
+                                 idc_subset_i)
                             return(idc_use_i)
                           },
                           data$pattern,
@@ -296,8 +299,7 @@ lslxFitting$set("private",
                             FUN = function(pattern_i,
                                            auxiliary_i,
                                            idc_use_i) {
-                              return(cbind(pattern_i[idc_use_i, , drop = FALSE], 
-                                           !is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
+                              return(cbind(pattern_i[idc_use_i, , drop = FALSE],!is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
                             },
                             data$pattern,
                             data$auxiliary,
@@ -333,7 +335,7 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_use_i) {
-                            weight_i <- weight_i[idc_use_i,]
+                            weight_i <- weight_i[idc_use_i, ]
                             weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
@@ -381,7 +383,7 @@ lslxFitting$set("private",
                         mapply(
                           FUN = function(weight_i,
                                          idc_use_i) {
-                            weight_i <- weight_i[idc_use_i,]
+                            weight_i <- weight_i[idc_use_i, ]
                             weight_i <- weight_i / sum(weight_i)
                             return(weight_i)
                           },
@@ -911,7 +913,7 @@ lslxFitting$set("private",
                     alpha_start[theta_left_idx_alpha, 1] <-
                       alpha_saturated[theta_left_idx_alpha, 1]
                     
-                    coefficient_matrice_start <-
+                    self$supplied_result$coefficient_matrice_start <-
                       list(
                         alpha_start = alpha_start,
                         beta_start = beta_start,
@@ -926,8 +928,8 @@ lslxFitting$set("private",
                         self$supplied_result$fitted_start[idc_i0] <-
                           ifelse(
                             is.na(self$reduced_model$theta_start[idc_i0]),
-                            coefficient_matrice_start[[i]][cbind(self$reduced_model$theta_left_idx[idc_i0],
-                                                                 self$reduced_model$theta_right_idx[idc_i0])],
+                            self$supplied_result$coefficient_matrice_start[[i]][cbind(self$reduced_model$theta_left_idx[idc_i0],
+                                                                                      self$reduced_model$theta_right_idx[idc_i0])],
                             self$reduced_model$theta_start[idc_i0]
                           )
                         for (j in setdiff(unique(self$reduced_model$theta_group_idx), 0)) {
@@ -949,7 +951,7 @@ lslxFitting$set("private",
                           self$supplied_result$fitted_start[idc_ij] <-
                             ifelse(
                               is.na(self$reduced_model$theta_start[idc_ij]),
-                              coefficient_matrice_start[[i]][cbind(
+                              self$supplied_result$coefficient_matrice_start[[i]][cbind(
                                 self$reduced_model$theta_left_idx[idc_ij],
                                 self$reduced_model$theta_right_idx[idc_ij]
                               )],
@@ -983,8 +985,7 @@ lslxFitting$set("private",
                         )
                     }
                   } else {
-                    self$supplied_result$fitted_start <- 
-                      self$reduced_model$theta_start
+                    
                   }
                   names(self$supplied_result$fitted_start) <-
                     self$reduced_model$theta_name
