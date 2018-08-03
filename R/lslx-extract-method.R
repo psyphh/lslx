@@ -34,6 +34,26 @@ lslx$set("public",
            return(saturated_moment_acov)
          })
 
+## \code{$extract_lambda_grid()} returns a \code{numeric} of lambda grid. ##
+lslx$set("public",
+         "extract_lambda_grid",
+         function() {
+           lambda_grid <-
+             private$fitting$control$lambda_grid
+           return(lambda_grid)
+         })
+
+## \code{$extract_delta_grid()} returns a \code{numeric} of delta grid. ##
+lslx$set("public",
+         "extract_delta_grid",
+         function() {
+           delta_grid <-
+             private$fitting$control$delta_grid
+           return(delta_grid)
+         })
+
+
+
 ## \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level. ##
 lslx$set("public",
          "extract_penalty_level",
@@ -543,7 +563,7 @@ lslx$set("public",
              if (block %in% c("f<-f", "f<-y", "y<-f", "y<-y")) {
                selected_matrix <- coefficient_matrix$beta
              } else if (block %in% c("f<->f", "f<->y", "y<->f", "y<->y")) {
-               selected_matrix <- coefficient_matrix$psi
+               selected_matrix <- coefficient_matrix$phi
              } else {
                stop(
                  "Argument 'block' is unrecognized. It must be one of the following:\n",
