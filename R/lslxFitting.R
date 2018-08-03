@@ -23,7 +23,14 @@ lslxFitting$set("public",
                   private$initialize_reduced_model(model = model)
                   private$initialize_reduced_data(data = data)
                   private$initialize_supplied_result()
+                  if (self$control$lambda_grid == "default") {
+                    
+                  } 
+                  if (self$control$delta_grid == "default") {
+                    
+                  }
                   private$initialize_fitted_result()
+                  
                 })
 
 ## \code{$initialize_control()} initializes control options. ##
@@ -48,41 +55,32 @@ lslxFitting$set("private",
                   } else {
                     self$control$regularizer <- FALSE
                   }
-                  if (self$control$lambda_grid[[1]] == "default") {
-                    self$control$lambda_grid <- 0
-                  } else {
-                    if (self$control$penalty_method == "none") {
-                      self$control$lambda_grid <- 0
-                    } else if (self$control$penalty_method == "lasso") {
-                      if (any(self$control$lambda_grid < 0)) {
-                        stop(
-                          "When argument 'penalty_method' is set as 'lasso', any element in argument 'lambda_grid' cannot be smaller than 0."
-                        )
-                      }
-                    } else if (self$control$penalty_method == "mcp") {
-                      if (any(self$control$lambda_grid < 0)) {
-                        stop(
-                          "When argument 'penalty_method' is set as 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
-                        )
-                      }
+                  if (self$control$penalty_method == "none") {
+                    self$control$lambda_grid <- Inf
+                  } else if (self$control$penalty_method %in% c("lasso", "mcp")) {
+                    if (self$control$lambda_grid[[1]] == "default") {
                     } else {
+                      if (any(self$control$lambda_grid < 0)) {
+                        stop(
+                          "When argument 'penalty_method' is set as 'lasso' or 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                        )
+                      }
                     }
-                  }
-                  if (self$control$delta_grid[[1]] == "default") {
-                    self$control$delta_grid <- Inf
                   } else {
-                    if (self$control$penalty_method %in% c("none", "lasso")) {
-                      self$control$delta_grid <- Inf
-                    } else if (self$control$penalty_method == "mcp") {
+                  }
+                  if (self$control$penalty_method %in% c("none", "lasso")) {
+                    self$control$delta_grid <- Inf
+                  } else if (self$control$penalty_method == "mcp") {
+                    if (self$control$delta_grid[[1]] == "default") {
+                    } else {
                       if (any(self$control$delta_grid <= 0)) {
                         stop(
                           "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' must be positive."
                         )
                       }
-                    } else {
-                      
                     }
-                  }
+                  } else {
+                  }            
                   self$control$lambda_grid <-
                     sort(self$control$lambda_grid, decreasing = TRUE)
                   self$control$delta_grid <-

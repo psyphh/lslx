@@ -1,16 +1,19 @@
 ## \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function. ##
 lslx$set("public",
          "fit",
-         function(penalty_method = "none",
+         function(penalty_method = "mcp",
                   lambda_grid = "default",
                   delta_grid = "default",
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
+                  lambda_length = 50,
+                  delta_length = 3,
+                  threshold_value = 0.4,
                   subset = NULL,
                   cv_fold = 1L,
                   iter_out_max = 100L,
-                  iter_in_max = 30L,
+                  iter_in_max = 50L,
                   iter_other_max = 500L,
                   iter_armijo_max = 100L,
                   tol_out = 1e-3,
@@ -67,6 +70,16 @@ lslx$set("public",
                stop("Argument 'subset' must be a integer or logical vector.")
              }
            }
+           if (!(is.numeric(lambda_length) & (lambda_length > 0))) {
+             stop("Argument 'lambda_length' must be a positive integer.")
+           }
+           if (!(is.numeric(delta_length) & (delta_length > 0))) {
+             stop("Argument 'delta_length' must be a positive integer.")
+           }
+           if (!(is.numeric(threshold_value) & (threshold_value > 0))) {
+             stop("Argument 'threshold_value' must be a positive value.")
+           }
+           
            if (!(is.numeric(cv_fold) & (cv_fold > 0))) {
              stop("Argument 'cv_fold' must be a positive integer.")
            }
@@ -114,6 +127,9 @@ lslx$set("public",
                algorithm = algorithm,
                missing_method = missing_method,
                start_method = start_method,
+               lambda_length = lambda_length,
+               delta_length = delta_length,
+               threshold_value = threshold_value,
                subset = subset,
                cv_fold = cv_fold,
                iter_out_max = iter_out_max,
