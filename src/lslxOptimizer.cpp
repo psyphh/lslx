@@ -19,8 +19,8 @@ public:
   int iter_in_max, iter_out_max, iter_other_max, iter_armijo_max;
   double tol_in, tol_out, tol_other;
   double step_size, armijo;
-  double ridge_cov, ridge_hessian;
-  bool positive_diag;
+  double ridge_cov, ridge_hessian, ridge_phi;
+  bool positive_diag, enforce_cd;
   bool response, regularizer;
   
   std::string regularizer_type;
@@ -144,8 +144,10 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   step_size = Rcpp::as<double>(control["step_size"]);
   ridge_cov = Rcpp::as<double>(control["ridge_cov"]);
   ridge_hessian = Rcpp::as<double>(control["ridge_hessian"]);
+  ridge_phi = Rcpp::as<double>(control["ridge_phi"]);
   armijo = Rcpp::as<double>(control["armijo"]);
   positive_diag = Rcpp::as<bool>(control["positive_diag"]);
+  enforce_cd = Rcpp::as<bool>(control["enforce_cd"]);
   response = Rcpp::as<bool>(control["response"]);
   regularizer = Rcpp::as<bool>(control["regularizer"]);
   iter_out = -1;
@@ -743,7 +745,7 @@ void lslxOptimizer::update_theta_direction() {
   Eigen::MatrixXd g, h;
   double z_r, z_l;
   int i, j;
-  if (regularizer) {
+  if (regularizer | enforce_cd) {
     g = loss_gradient;
     if (algorithm == "bfgs") {
       h = loss_bfgs_hessian;
@@ -827,11 +829,11 @@ void lslxOptimizer::update_theta_value() {
     if (positive_diag) {
       if (!Rcpp::is_true(Rcpp::any(0 == theta_group_idx_unique))) {
         theta_value = 
-          Rcpp::ifelse((theta_value < 0) & (theta_is_diag), ridge_cov, theta_value);
+          Rcpp::ifelse((theta_value < 0) & (theta_is_diag), ridge_phi, theta_value);
       } else {
         theta_value = 
           Rcpp::ifelse(((theta_value < 0) & theta_is_diag & (theta_group_idx == 0)), 
-                       ridge_cov, theta_value);
+                       ridge_phi, theta_value);
       }
     }
     update_coefficient_matrix();

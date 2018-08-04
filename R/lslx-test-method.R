@@ -4,12 +4,12 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
-                  exclude_improper = TRUE) {
+                  include_faulty = FALSE) {
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
                                               lambda = lambda,
                                               delta = delta,
-                                              exclude_improper = exclude_improper)
+                                              include_faulty = include_faulty)
            lr_test <-
              data.frame(
                statistic = c(NA, NA),
@@ -49,22 +49,22 @@ lslx$set("public",
                   lambda,
                   delta,
                   alpha_level = .05,
-                  exclude_improper = TRUE) {
+                  include_faulty = FALSE) {
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
                                               lambda = lambda,
                                               delta = delta,
-                                              exclude_improper = exclude_improper)
+                                              include_faulty = include_faulty)
            fit_index <-
              self$extract_fit_index(selector = selector,
                                      lambda = lambda,
                                      delta = delta,
-                                     exclude_improper = exclude_improper)
+                                     include_faulty = include_faulty)
            lr_test <-
              self$test_lr(selector = selector,
                           lambda = lambda,
                           delta = delta,
-                          exclude_improper = exclude_improper)
+                          include_faulty = include_faulty)
            rmsea_test <-
              data.frame(
                estimate = c(NA, NA),
@@ -188,10 +188,10 @@ lslx$set("public",
                   lambda = lambda,
                   delta = delta,
                   standard_error = "default",
-                  alpha_level = .05,
                   debias = "default",
                   post = "default",
-                  exclude_improper = TRUE) {
+                  alpha_level = .05,
+                  include_faulty = FALSE) {
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
            )) {
@@ -243,14 +243,14 @@ lslx$set("public",
              self$extract_coefficient(selector = selector,
                                       lambda = lambda,
                                       delta = delta,
-                                      exclude_improper = exclude_improper)
+                                      include_faulty = include_faulty)
            coefficient_acov <-
              self$extract_coefficient_acov(
                selector = selector,
                lambda = lambda,
                delta = delta,
                standard_error = standard_error,
-               exclude_improper = exclude_improper
+               include_faulty = include_faulty
              )
            if (debias == "none") {
              coefficient_test <-
@@ -261,7 +261,7 @@ lslx$set("public",
                self$extract_debiased_coefficient(selector = selector,
                                                  lambda = lambda,
                                                  delta = delta,
-                                                 exclude_improper = exclude_improper)
+                                                 include_faulty = include_faulty)
              coefficient_test <-
                data.frame(estimate = debiased_coefficient,
                           standard_error = sqrt(diag(coefficient_acov)))

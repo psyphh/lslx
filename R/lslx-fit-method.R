@@ -23,7 +23,9 @@ lslx$set("public",
                   armijo = 1e-5,
                   ridge_cov = 0,
                   ridge_hessian = 1e-4,
+                  ridge_phi = 1e-4,
                   positive_diag = TRUE,
+                  enforce_cd = FALSE,
                   verbose = TRUE) {
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
              stop("Argument 'penalty_method' can be only either 'none', 'lasso', or 'mcp'.")
@@ -143,7 +145,9 @@ lslx$set("public",
                armijo = armijo,
                ridge_cov = ridge_cov,
                ridge_hessian = ridge_hessian,
-               positive_diag = positive_diag
+               ridge_phi = ridge_phi,
+               positive_diag = positive_diag,
+               enforce_cd = enforce_cd
              )
            private$fitting <-
              lslxFitting$new(model = private$model,
@@ -157,25 +161,43 @@ lslx$set("public",
              private$fitting$fitted_result
            )
            
-           name_grid <-
-             paste0(
-               "ld=",
-               sapply(
-                 X = private$fitting$fitted_result$numerical_condition,
-                 FUN = function(x) {
-                   getElement(x, "lambda")
-                 }
-               ),
-               "/",
-               "gm=",
-               sapply(
-                 X = private$fitting$fitted_result$numerical_condition,
-                 FUN = function(x) {
-                   getElement(x, "delta")
-                 }
-               )
+           private$fitting$fitted_result$is_finite <-
+             sapply(
+               X = private$fitting$fitted_result$numerical_condition,
+               FUN = function(numerical_condition_i) {
+                 is_finite_i <- !is.na((numerical_condition_i[["objective_gradient_abs_max"]]))
+                 return(is_finite_i)
+               }
              )
+           if (all(!private$fitting$fitted_result$is_finite)) {
+             stop("Optimization results are not finite under all specified penalty levels.\n",
+                  "  Please check model identifiability or specify better starting values.\n")
+           }
            
+           private$fitting$fitted_result$is_convergent <-
+             sapply(
+               X = private$fitting$fitted_result$numerical_condition,
+               FUN = function(numerical_condition_i) {
+                 is_convergent_i <-
+                   (numerical_condition_i[["n_iter_out"]] <= private$fitting$control$iter_out_max) &
+                   (numerical_condition_i[["objective_gradient_abs_max"]] <= private$fitting$control$tol_out)
+                 is_convergent_i <- 
+                   ifelse(is.na(is_convergent_i), F, is_convergent_i)
+                 return(is_convergent_i)
+               }
+             )
+           private$fitting$fitted_result$is_convex <-
+             sapply(
+               X = private$fitting$fitted_result$numerical_condition,
+               FUN = function(numerical_condition_i) {
+                 is_convex_i <-
+                   (numerical_condition_i[["objective_hessian_convexity"]] > 0)
+                 is_convex_i <- 
+                   ifelse(is.na(is_convex_i), F, is_convex_i)
+                 return(is_convex_i)
+               }
+             )
+
            if (private$fitting$control$cv_fold > 1L) {
              if (private$fitting$control$response) {
                control <- private$fitting$control
@@ -233,6 +255,25 @@ lslx$set("public",
              }
            }
            
+           name_grid <-
+             paste0(
+               "ld=",
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(x) {
+                   getElement(x, "lambda")
+                 }
+               ),
+               "/",
+               "gm=",
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(x) {
+                   getElement(x, "delta")
+                 }
+               )
+             )
+
            names(private$fitting$fitted_result$numerical_condition) <-
              name_grid
            names(private$fitting$fitted_result$information_criterion) <-
@@ -243,38 +284,30 @@ lslx$set("public",
              name_grid
            names(private$fitting$fitted_result$coefficient) <-
              name_grid
-           
-           idc_problem <-
-             sapply(
-               X = private$fitting$fitted_result$numerical_condition,
-               FUN = function(numerical_condition_i) {
-                 idc_problem_i <-
-                   (numerical_condition_i[["n_iter_out"]] == private$fitting$control$iter_out_max) &
-                   (numerical_condition_i[["objective_gradient_abs_max"]] > private$fitting$control$tol_out)
-                 return(idc_problem_i)
-               }
-             )
-           
-           if (all(is.na(idc_problem))) {
-             stop("Optimization result is incorrect under all specified penalty levels.\n",
-                  "  Please check model identifiability or try other optimization parameters.\n")
-           }
+           names(private$fitting$fitted_result$is_finite) <- name_grid
+           names(private$fitting$fitted_result$is_convergent) <- name_grid
+           names(private$fitting$fitted_result$is_convex) <- name_grid
            
            if (verbose) {
-             if (any(idc_problem)) {
-               cat("WARNING: The algorithm may not converge under some penalty level. ")
-               cat("Please try larger value of 'iter_out_max' or specify better starting values. \n")
+             if (all(private$fitting$fitted_result$is_convergent)) {
+               cat("CONGRATS: The algorithm converges under all specified penalty levels. \n")
+             } else if (all(!private$fitting$fitted_result$is_convergent)) {
+               cat("WARNING: The algorithm doesn't converge under all penalty levels.\n ")
+               cat("Please try other optimization parameters or specify better starting values. \n")
              } else {
-               cat("CONGRATS: The algorithm converged under all specified penalty levels. \n")
-               cat("  Specified Tolerance for Convergence:",
-                   private$fitting$control$tol_out,
-                   "\n")
-               cat(
-                 "  Specified Maximal Number of Iterations:",
-                 private$fitting$control$iter_out_max,
-                 "\n"
-               )
+               cat("WARNING: The algorithm doesn't converge under some penalty level.\n ")
+               cat("Please try other optimization parameters or specify better starting values. \n")
              }
+             if (!all(private$fitting$fitted_result$is_convex)) {
+               cat("WARNING: The approximated Hessian is not convex under some penalty level.\n ")
+               cat("Please try a larger 'delta_grid'. \n")
+             }
+             cat("  Specified Tolerance for Convergence:",
+                 private$fitting$control$tol_out,
+                 "\n")
+             cat("  Specified Maximal Number of Iterations:",
+                 private$fitting$control$iter_out_max,
+                 "\n")
            }
          })
 

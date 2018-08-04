@@ -5,13 +5,13 @@ lslx$set("public",
                   lambda,
                   delta,
                   standard_error = "default",
-                  alpha_level = .05,
                   debias = "default",
                   post = "default",
+                  alpha_level = .05,
+                  include_faulty = FALSE,
                   style = "default",
                   mode = "default",
                   interval = TRUE,
-                  exclude_improper = TRUE,
                   digit = 3L,
                   output = list(
                     general_information = TRUE,
@@ -26,6 +26,9 @@ lslx$set("public",
                     rmsea_test = TRUE,
                     coefficient_test = TRUE
                   )) {
+           if (is.null(private$fitting)) {
+             stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
+           }
            if (!(
              standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
            )) {
@@ -70,11 +73,25 @@ lslx$set("public",
                stop("Argument 'mode' can be only either 'default', 'print' or 'return'. ")
              }
            }
-           if (!(style %in% c("default", "minimal", "maximal"))) {
-             stop("Argument 'style' can be only either 'default', 'mininal', or 'maximal'.")
+           if (!(style %in% c("default", "manual", "minimal", "maximal"))) {
+             stop("Argument 'style' can be only either 'default', 'manual', 'mininal', or 'maximal'.")
            }
 
-           if (style == "minimal") {
+           if (style == "default") {
+             output <- list(
+               general_information = TRUE,
+               fitting_information = FALSE,
+               saturated_model_information = FALSE,
+               baseline_model_information = FALSE,
+               numerical_condition = TRUE,
+               information_criterion = FALSE,
+               fit_index = TRUE,
+               cv_error = TRUE,
+               lr_test = TRUE,
+               rmsea_test = TRUE,
+               coefficient_test = TRUE
+             )
+           } else if (style == "minimal") {
              output <- 
                lapply(X = output,
                       FUN = function(output_i) {
@@ -90,7 +107,8 @@ lslx$set("public",
                         output_i <- TRUE
                         return(output_i)
                       })
-           } else {
+           } else if (style == "manual") {
+             
            }
            if (private$fitting$control$cv_fold == 1L) {
              output$cv_error <- FALSE
@@ -227,7 +245,7 @@ lslx$set("public",
                  x = self$extract_numerical_condition(selector = selector,
                                                       lambda = lambda,
                                                       delta = delta,
-                                                      exclude_improper = exclude_improper),
+                                                      include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
                )
@@ -263,7 +281,7 @@ lslx$set("public",
                  x = self$extract_information_criterion(selector = selector,
                                                         lambda = lambda,
                                                         delta = delta,
-                                                        exclude_improper = exclude_improper),
+                                                        include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
                )
@@ -292,7 +310,7 @@ lslx$set("public",
                  x = self$extract_fit_index(selector = selector,
                                              lambda = lambda,
                                              delta = delta,
-                                             exclude_improper = exclude_improper),
+                                             include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
                )
@@ -313,7 +331,7 @@ lslx$set("public",
                  x = self$extract_cv_error(selector = selector,
                                            lambda = lambda,
                                            delta = delta,
-                                           exclude_improper = exclude_improper),
+                                           include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
                )
@@ -352,7 +370,7 @@ lslx$set("public",
                self$test_lr(selector = selector,
                             lambda = lambda,
                             delta = delta,
-                            exclude_improper = exclude_improper)
+                            include_faulty = include_faulty)
              lr_test[] <-
                data.frame(sapply(
                  X = lr_test,
@@ -381,7 +399,7 @@ lslx$set("public",
                  lambda = lambda,
                  delta = delta,
                  alpha_level = alpha_level,
-                 exclude_improper = exclude_improper
+                 include_faulty = include_faulty
                )
              rmsea_test[] <-
                data.frame(sapply(
@@ -413,7 +431,7 @@ lslx$set("public",
                  alpha_level = alpha_level,
                  debias = debias,
                  post = post,
-                 exclude_improper = exclude_improper
+                 include_faulty = include_faulty
                )
              relation_as_groupname <-
                format(

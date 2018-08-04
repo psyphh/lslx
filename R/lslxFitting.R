@@ -35,6 +35,23 @@ lslxFitting$set("private",
                          data,
                          control) {
                   self$control <- control
+                  if (length(model$name_factor) == 0) {
+                    if (!(c("y<-y") %in% model$specification$block)) {
+                      self$control$model_class <- "CA" 
+                    } else {
+                      self$control$model_class <- "PA" 
+                    }
+                  } else {
+                    if (!any(c("f<-f", "f<-y", "y<-y", "y<->f", "f<->y") %in% model$specification$block)) {
+                      self$control$model_class <- "FA" 
+                    } else {
+                      if (!any(c("f<-f", "y<->f", "f<->y") %in% model$specification$block)) {
+                        self$control$model_class <- "MIMIC" 
+                      } else {
+                        self$control$model_class <- "SEM" 
+                      }
+                    }
+                  }
                   if (length(data$response) > 0) {
                     self$control$response <- TRUE
                   } else {
@@ -49,6 +66,12 @@ lslxFitting$set("private",
                     self$control$regularizer <- TRUE
                   } else {
                     self$control$regularizer <- FALSE
+                  }
+                  if (self$control$penalty_method == "none" & 
+                      any(model$specification$type == "pen")) {
+                    stop(
+                      "When the specified model includes penalized coefficients, 'penalty_method' cannot be 'none'."
+                    )
                   }
                   if (self$control$penalty_method == "none") {
                     self$control$lambda_grid <- Inf

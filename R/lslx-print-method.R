@@ -9,7 +9,11 @@ lslx$set("public",
              cat("  Data field is initialized via moment data.\n")
            }
            if (length(private$model$name_factor) == 0) {
-             cat("  Model field is specified as a path analysis (PA) model.\n")
+             if (!(c("y<-y") %in% private$model$specification$block)) {
+               cat("  Model field is specified as a covariance analysis (CA) model.\n")
+             } else {
+               cat("  Model field is specified as a path analysis (PA) model.\n")
+             }
            } else {
              if (!any(c("f<-f", "f<-y", "y<-y", "y<->f", "f<->y") %in% private$model$specification$block)) {
                cat("  Model field is specified as a factor analysis (FA) model.\n")
@@ -66,7 +70,7 @@ lslx$set("public",
              cat("  To summarize the fitting results, please use $summarize().\n")
              cat("  To plot the fitting results, please use plot-related methods.\n")
              cat("    $plot_numerical_condition() / $plot_information_criterion()\n")
-             cat("    $plot_fit_indice() / $plot_coefficients()\n")
+             cat("    $plot_fit_index() / $plot_coefficients()\n")
              cat("  To obtain the test results for model or coefficients, please use test-related methods.\n")             
              cat("    $test_lr() / $test_rmsea() / $test_coefficient()\n")
              cat("  To get a deep copy of field, please use get-related methods.\n")   
@@ -75,11 +79,11 @@ lslx$set("public",
              cat("    $extract_specification() / $extract_saturated_mean() / $extract_saturated_cov()\n")
              cat("    $extract_saturated_moment_acov() \ $extract_penalty_level()\n")
              cat("    $extract_numerical_condition() / $extract_information_criterion()\n")
-             cat("    $extract_fit_indice() / $extract_coefficient()\n")
+             cat("    $extract_fit_index() / $extract_coefficient()\n")
              cat("    $extract_implied_cov() /  $extract_implied_mean()\n")
              cat("    $extract_residual_cov() / $extract_residual_mean()\n")
-             cat("    $extract_coefficient_matrice() / $extract_moment_jacobian()\n")
-             cat("    $extract_expected_fisher() / $extract_observed_fisher()\n")
+             cat("    $extract_coefficient_matrix() / $extract_moment_jacobian()\n")
+             cat("    $extract_expected_information() / $extract_observed_information()\n")
              cat("    $extract_score_acov() / $extract_coefficient_acov()\n")
              cat("    $extract_loss_gradient() / $extract_regularizer_gradient() / $extract_objective_gradient()\n")
            }
