@@ -1073,7 +1073,7 @@ lslxFitting$set("private",
                         self$control$threshold_value
                     } else {
                     }
-                    lambda_min <- lambda_max * (10 / self$reduced_data$n_observation)
+                    lambda_min <- (log(self$reduced_data$n_observation)/ self$reduced_data$n_observation)
                     self$control$lambda_grid <- 
                       exp(seq(log(lambda_max), log(lambda_min), 
                               length.out = self$control$lambda_length))
