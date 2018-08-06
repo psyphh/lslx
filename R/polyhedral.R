@@ -1,7 +1,8 @@
-# functions for package lslx to implement post-selection inference
-# written by Po-Hsien Huang psyphh@gmail.com
-# some functions are written based on codes in package selectiveInference
+## functions for package lslx to implement post-selection inference
+## written by Po-Hsien Huang psyphh@gmail.com
+## some functions are written based on codes in R package selectiveInference
 
+## \code{compute_tnorm_quantity()} computes quantity for calculating truncated normal probability 
 compute_tnorm_quantity <- function(i, a_ph, b_ph, 
                                    debiased_coefficient, coefficient_acov,
                                    is_pen, is_active, is_selected) {
@@ -36,6 +37,7 @@ compute_tnorm_quantity <- function(i, a_ph, b_ph,
   return(tnorm_quantity)
 }
 
+## \code{compute_tnorm_p_value()} computes p-value based on truncated normal
 compute_tnorm_p_value <- function(theta, mu, sigma, left, right) {
   if (is.na(left) | is.na(right) | is.na(sigma)) {
     p_value <- NA_real_
@@ -57,7 +59,7 @@ compute_tnorm_p_value <- function(theta, mu, sigma, left, right) {
   return(p_value)
 }
 
-
+## \code{compute_tnorm_interval()} computes confidence interval based on truncated normal
 compute_tnorm_interval <- function(theta, sigma, left, right, alpha_level, 
                                    grid_range, grid_length, depth_max = 3) {
   if (is.na(left) | is.na(right) | is.na(sigma)) {
@@ -140,7 +142,7 @@ compute_tnorm_interval <- function(theta, sigma, left, right, alpha_level,
   return(c(lower = lower, upper = upper))
 }
 
-
+## \code{compute_tnorm_prob()} computes truncated normal probability
 compute_tnorm_prob <- function(theta, mu, sigma, left, right) {
   z_center <- (theta - mu) / sigma
   z_left <- (left - mu) / sigma
@@ -168,7 +170,8 @@ compute_tnorm_prob <- function(theta, mu, sigma, left, right) {
   return(tnorm_prob)
 }
 
-
+## \code{compute_bryc()} computes tailed probability
+## Bryc, Wlodzimierz. "A uniform approximation to the right normal tail integral." Applied mathematics and computation 127.2 (2002): 365-374.
 compute_bryc <- function(x) {
   y <- (x^2 + 5.575192695 * x + 12.7743632) / 
     (sqrt(2 * pi) * x^3 + 14.38718147 * x^2 + 31.53531977 * x + 2 * 12.77436324)
