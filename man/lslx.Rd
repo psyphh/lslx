@@ -626,6 +626,7 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
   tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, ridge_cov = 0, 
   ridge_hessian = 1e-4, positive_variance = TRUE, minimum_variance = 1e-4, 
   enforce_cd = FALSE, verbose = TRUE)
+$fit_none(...)
 $fit_lasso(lambda_grid = "default", ...)
 $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \describe{
@@ -682,6 +683,9 @@ For details of optimization algorithm, see the section of \emph{Optimization Alg
 
 \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function.
 It is the most comprehensive fit method and hence many arguments can be specified.
+
+\code{$fit_none()} fits the specified model to data by minimizing a ML loss function without penalty.
+It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "none"}.
 
 \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996).
 It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "lasso"}.
@@ -1125,7 +1129,7 @@ lslx_mgfa$free_block(block = "f<-1",
                      group = "Grant-White")
                      
 # fit with mcp under default penalty levels and specified convexity levels
-lslx_mgfa$fit_mcp(delta_grid = c(4, 8, Inf))
+lslx_mgfa$fit_mcp()
 
 # summarize fitting result under penalty level selected by 'hbic'
 lslx_mgfa$summarize(selector = "hbic")

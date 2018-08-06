@@ -1103,11 +1103,11 @@ lslxFitting$set("private",
                       sigma_eta_start <- 
                         beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
                       delta_min <- 
-                        max(diag(sigma_eta_start)[eta_is_endogenous]) / 
+                        2 * max(diag(sigma_eta_start)[eta_is_endogenous]) / 
                         min(diag(sigma_eta_start)[eta_is_exogenous])
                     } else if (self$control$start_method == "heuristic") {
                       saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
-                      delta_min <- max(saturated_var, 1) / 1
+                      delta_min <- 2 * max(saturated_var, 1) / 1
                     } else {
                     }
                     if (self$control$delta_length == 1) {

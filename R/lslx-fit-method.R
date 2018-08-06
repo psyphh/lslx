@@ -343,3 +343,13 @@ lslx$set("public",
              ...
            )
          })
+
+## \code{$fit_none()} method fits the specified model to data by minimizing a ML loss function without penalty. ##
+lslx$set("public",
+         "fit_none",
+         function(...) {
+           self$fit(
+             penalty_method = "none",
+             ...
+           )
+         })
