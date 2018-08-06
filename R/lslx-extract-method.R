@@ -264,8 +264,6 @@ lslx$set("public",
            self$extract_fit_index(selector, lambda, delta, include_faulty)
          })
 
-
-
 ## \code{$extract_cv_error()} returns a \code{numeric} of the values of cv errors. ##
 lslx$set("public",
          "extract_cv_error",
@@ -682,6 +680,24 @@ lslx$set("public",
            return(expected_fisher)
          })
 
+
+## \code{$extract_expected_information()} returns a \code{matrix} of the expected Fisher information matrix. ##
+lslx$set("public",
+         "extract_expected_information",
+         function(selector,
+                  lambda,
+                  delta,
+                  type = "default",
+                  include_faulty = FALSE) {
+           expected_fisher <- 
+             self$extract_expected_fisher(selector = selector,
+                                          lambda = lambda,
+                                          delta = delta,
+                                          type = type,
+                                          include_faulty = include_faulty)
+           return(expected_fisher)
+         })
+
 ## \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix. ##
 lslx$set("public",
          "extract_observed_fisher",
@@ -719,6 +735,23 @@ lslx$set("public",
              observed_fisher <- observed_fisher[coefficient_indicator, 
                                                 coefficient_indicator]
            }
+           return(observed_fisher)
+         })
+
+## \code{$extract_observed_information()} returns a \code{matrix} of the observed Fisher information matrix. ##
+lslx$set("public",
+         "extract_observed_information",
+         function(selector,
+                  lambda,
+                  delta,
+                  type = "default",
+                  include_faulty = FALSE) {
+           observed_fisher <- 
+             self$extract_observed_fisher(selector = selector,
+                                          lambda = lambda,
+                                          delta = delta,
+                                          type = type,
+                                          include_faulty = include_faulty)
            return(observed_fisher)
          })
 
