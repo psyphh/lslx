@@ -7,13 +7,14 @@ lslx$set("public",
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
-                  lambda_length = 50,
-                  delta_length = 3,
+                  lambda_direction = "default",
+                  lambda_length = 50L,
+                  delta_length = 3L,
                   threshold_value = 0.3,
                   subset = NULL,
                   cv_fold = 1L,
                   iter_out_max = 100L,
-                  iter_in_max = 50L,
+                  iter_in_max = 30L,
                   iter_other_max = 500L,
                   iter_armijo_max = 100L,
                   tol_out = 1e-3,
@@ -23,8 +24,8 @@ lslx$set("public",
                   armijo = 1e-5,
                   ridge_cov = 0,
                   ridge_hessian = 1e-4,
-                  ridge_phi = 1e-4,
-                  positive_diag = TRUE,
+                  positive_variance = TRUE,
+                  minimum_variance = 1e-4,
                   enforce_cd = FALSE,
                   verbose = TRUE) {
            if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
@@ -67,6 +68,10 @@ lslx$set("public",
            if (!(start_method %in% c("default", "none", "mh", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
            }
+           if (!(lambda_direction %in% c("default", "decrease", "increase"))) {
+             stop("Argument 'lambda_direction' can be only 'default', 'decrease', or 'increase'.")
+           }
+           
            if (!is.null(subset)) {
              if (!(is.integer(subset) | is.logical(subset))) {
                stop("Argument 'subset' must be a integer or logical vector.")
@@ -116,9 +121,9 @@ lslx$set("public",
                  (length(ridge_hessian) = 1))) {
              stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
            }
-           if (!(is.logical(positive_diag) &
-                 (length(positive_diag) = 1))) {
-             stop("Argument 'positive_diag' must be a logical vector with length one.")
+           if (!(is.logical(positive_variance) &
+                 (length(positive_variance) = 1))) {
+             stop("Argument 'positive_variance' must be a logical vector with length one.")
            }
            
            control <-
@@ -129,6 +134,7 @@ lslx$set("public",
                algorithm = algorithm,
                missing_method = missing_method,
                start_method = start_method,
+               lambda_direction = lambda_direction,
                lambda_length = lambda_length,
                delta_length = delta_length,
                threshold_value = threshold_value,
@@ -145,8 +151,8 @@ lslx$set("public",
                armijo = armijo,
                ridge_cov = ridge_cov,
                ridge_hessian = ridge_hessian,
-               ridge_phi = ridge_phi,
-               positive_diag = positive_diag,
+               positive_variance = positive_variance,
+               minimum_variance = minimum_variance,
                enforce_cd = enforce_cd
              )
            private$fitting <-
@@ -170,7 +176,7 @@ lslx$set("public",
                }
              )
            if (all(!private$fitting$fitted_result$is_finite)) {
-             stop("Optimization results are not finite under all specified penalty levels.\n",
+             stop("Optimization result is not finite under EVERY specified penalty level.\n",
                   "  Please check model identifiability or specify better starting values.\n")
            }
            
@@ -290,24 +296,27 @@ lslx$set("public",
            
            if (verbose) {
              if (all(private$fitting$fitted_result$is_convergent)) {
-               cat("CONGRATS: The algorithm converges under all specified penalty levels. \n")
+               cat("CONGRATS: Algorithm converges under EVERY specified penalty level.\n")
+               cat("  Specified Tolerance for Convergence:",
+                   private$fitting$control$tol_out,
+                   "\n")
+               cat("  Specified Maximal Number of Iterations:",
+                   private$fitting$control$iter_out_max,
+                   "\n")
              } else if (all(!private$fitting$fitted_result$is_convergent)) {
-               cat("WARNING: The algorithm doesn't converge under all penalty levels.\n ")
-               cat("Please try other optimization parameters or specify better starting values. \n")
+               cat("WARNING: Algorithm doesn't converge under EVERY penalty level.\n")
+               cat("Please try other optimization parameters or specify better starting values.\n")
              } else {
-               cat("WARNING: The algorithm doesn't converge under some penalty level.\n ")
-               cat("Please try other optimization parameters or specify better starting values. \n")
+               cat("WARNING: Algorithm doesn't converge under SOME penalty level.\n")
+               cat("Please try other optimization parameters or specify better starting values.\n")
              }
-             if (!all(private$fitting$fitted_result$is_convex)) {
-               cat("WARNING: The approximated Hessian is not convex under some penalty level.\n ")
-               cat("Please try a larger 'delta_grid'. \n")
+             if (all(!private$fitting$fitted_result$is_convex)) {
+               cat("WARNING: Approximated Hessian is not convex under EVERY convexity level.\n")
+               cat("Please try larger 'delta_grid' or set positive 'ridge_hessian'. \n")
+             } else if (!all(private$fitting$fitted_result$is_convex)) {
+               cat("WARNING: Approximated Hessian is not convex under SOME convexity level.\n")
+               cat("Please try larger 'delta_grid' or set larger 'ridge_hessian'. \n")
              }
-             cat("  Specified Tolerance for Convergence:",
-                 private$fitting$control$tol_out,
-                 "\n")
-             cat("  Specified Maximal Number of Iterations:",
-                 private$fitting$control$iter_out_max,
-                 "\n")
            }
          })
 

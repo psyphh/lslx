@@ -25,7 +25,6 @@ lslxFitting$set("public",
                   private$initialize_supplied_result()
                   private$initialize_grid()
                   private$initialize_fitted_result()
-                  
                 })
 
 ## \code{$initialize_control()} initializes control options. ##
@@ -99,10 +98,6 @@ lslxFitting$set("private",
                     }
                   } else {
                   }            
-                  self$control$lambda_grid <-
-                    sort(self$control$lambda_grid, decreasing = TRUE)
-                  self$control$delta_grid <-
-                    sort(self$control$delta_grid, decreasing = TRUE)
                   if (self$control$algorithm == "default") {
                     if (self$control$regularizer) {
                       self$control$algorithm <- "fisher"
@@ -1112,8 +1107,7 @@ lslxFitting$set("private",
                         min(diag(sigma_eta_start)[eta_is_exogenous])
                     } else if (self$control$start_method == "heuristic") {
                       saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
-                      delta_min <- 
-                        max(saturated_var, 1) / 1
+                      delta_min <- max(saturated_var, 1) / 1
                     } else {
                     }
                     if (self$control$delta_length == 1) {
@@ -1123,6 +1117,15 @@ lslxFitting$set("private",
                         c(delta_min * (1:(self$control$delta_length - 1)), Inf) 
                     }
                   }
+                  if (self$control$lambda_direction == "decrease") {
+                    self$control$lambda_grid <-
+                      sort(self$control$lambda_grid, decreasing = TRUE)
+                  } else if (self$control$lambda_direction == "increase") {
+                    self$control$lambda_grid <-
+                      sort(self$control$lambda_grid, decreasing = FALSE)
+                  } else {}
+                  self$control$delta_grid <-
+                    sort(self$control$delta_grid, decreasing = TRUE)
                 })
 
 

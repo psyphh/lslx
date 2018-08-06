@@ -19,8 +19,9 @@ public:
   int iter_in_max, iter_out_max, iter_other_max, iter_armijo_max;
   double tol_in, tol_out, tol_other;
   double step_size, armijo;
-  double ridge_cov, ridge_hessian, ridge_phi;
-  bool positive_diag, enforce_cd;
+  double ridge_cov, ridge_hessian;
+  bool positive_variance, enforce_cd;
+  double minimum_variance;
   bool response, regularizer;
   
   std::string regularizer_type;
@@ -144,9 +145,9 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   step_size = Rcpp::as<double>(control["step_size"]);
   ridge_cov = Rcpp::as<double>(control["ridge_cov"]);
   ridge_hessian = Rcpp::as<double>(control["ridge_hessian"]);
-  ridge_phi = Rcpp::as<double>(control["ridge_phi"]);
+  minimum_variance = Rcpp::as<double>(control["minimum_variance"]);
   armijo = Rcpp::as<double>(control["armijo"]);
-  positive_diag = Rcpp::as<bool>(control["positive_diag"]);
+  positive_variance = Rcpp::as<bool>(control["positive_variance"]);
   enforce_cd = Rcpp::as<bool>(control["enforce_cd"]);
   response = Rcpp::as<bool>(control["response"]);
   regularizer = Rcpp::as<bool>(control["regularizer"]);
@@ -826,14 +827,14 @@ void lslxOptimizer::update_theta_value() {
   for (i = 0; i < iter_armijo_max; i++) {
     step_size_i = std::pow(step_size, i);
     theta_value = theta_start + step_size_i * theta_direction;
-    if (positive_diag) {
+    if (positive_variance) {
       if (!Rcpp::is_true(Rcpp::any(0 == theta_group_idx_unique))) {
         theta_value = 
-          Rcpp::ifelse((theta_value < 0) & (theta_is_diag), ridge_phi, theta_value);
+          Rcpp::ifelse((theta_value < 0) & (theta_is_diag), minimum_variance, theta_value);
       } else {
         theta_value = 
           Rcpp::ifelse(((theta_value < 0) & theta_is_diag & (theta_group_idx == 0)), 
-                       ridge_phi, theta_value);
+                       minimum_variance, theta_value);
       }
     }
     update_coefficient_matrix();
