@@ -61,7 +61,7 @@ lslx$set("public",
                   include_faulty = FALSE) {
            if (missing(selector) & missing(lambda) & missing(delta)) {
              if (length(private$fitting$fitted_result$numerical_condition) > 1) {
-               stop("Argument 'selector', 'lambda', and 'delta' cannot be all empty.")
+               stop("Argument 'selector', 'lambda', and 'delta' cannot be all empty if there are many penalty/convexity levels.")
              } 
            }
            if (!include_faulty) {
@@ -69,16 +69,16 @@ lslx$set("public",
                which(private$fitting$fitted_result$is_convergent)
              if (length(idx_convergent) == 0) {
                stop(
-                 "The PL estimates under all penalty levels are derived under nonconverged result. \n",
-                 "Please try larger value of 'iter_out_max' or specify better starting values."
+                 "PL estimate under EACH penalty level is derived under nonconverged result. \n",
+                 "  To include faulty results, please set 'include_faulty = TRUE'. \n"
                )
              }
              idx_convex <-
                which(private$fitting$fitted_result$is_convex)
              if (length(idx_convex) == 0) {
                stop(
-                 "The PL estimates under all penalty levels are derived under nonconvex hessian. \n",
-                 "Please try larger value of delta or check the identifiability of specified model."
+                 "PL estimate under EACH penalty level is derived under nonconvex approximated hessian. \n",
+                 "  To include faulty results, please set 'include_faulty = TRUE'. \n"
                )
              }
            } else {
@@ -87,20 +87,29 @@ lslx$set("public",
              idx_convex <-
                seq_len(length(private$fitting$fitted_result$numerical_condition))
            }
-           idx_selected <-
+           idx_used <-
              intersect(x = idx_convergent, y = idx_convex)
+           if (length(idx_used) == 0) {
+             stop("PL estimate under EACH penalty/convex level is derive under problematic optimization.\n",
+                  "  To include faulty results, please set 'include_faulty = TRUE'. \n")
+           }
+           
+           
            if (length(private$fitting$fitted_result$numerical_condition) == 1) {
              penalty_level <-
-               names(private$fitting$fitted_result$numerical_condition[idx_selected])
+               names(private$fitting$fitted_result$numerical_condition[idx_used])
            } else {
              if (!missing(selector)) {
+               if ((!missing(lambda)) | (!missing(delta))) {
+                 stop("Because 'selector' is specified, 'lambda' or 'delta' will not be used.\n")
+               }
                if (length(selector) > 1) {
-                 stop("The length of argument 'selector' can be only one.")
+                 stop("The length of argument 'selector' can be only one.\n")
                }
                if (!(selector %in% names(private$fitting$fitted_result$information_criterion[[1]]))) {
                  stop(
-                   "Argument 'selector' is unrecognized.",
-                   "\n  Selector currently recognized by 'lslx' is \n  ",
+                   "Argument 'selector' is unrecognized.\n",
+                   "  Selector currently recognized by 'lslx' is \n  ",
                    do.call(paste, as.list(
                      names(private$fitting$fitted_result$information_criterion[[1]])
                    )),
@@ -114,9 +123,9 @@ lslx$set("public",
                    " 'raic', 'raic3', 'rcaic', 'rbic', 'rabic', and 'rhbic' are not available."
                  )
                }
-               if (length(private$fitting$fitted_result$numerical_condition) == 1) {
+               if (length(idx_used) == 1) {
                  penalty_level <-
-                   names(private$fitting$fitted_result$numerical_condition[idx_selected])
+                   names(private$fitting$fitted_result$numerical_condition[idx_used])
                } else {
                  penalty_level <-
                    sapply(
@@ -130,21 +139,61 @@ lslx$set("public",
                          }
                        )
                        penalty_level_i <-
-                         names(which.min(information_criterion_i[idx_selected]))
+                         names(which.min(information_criterion_i[idx_used]))
                        return(penalty_level_i)
                      }
                    )
                }
              } else {
                if (missing(lambda)) {
-                 stop("When penalty level is directly specified by 'lambda' and 'delta', 'lambda' cannot be empty.")
+                 stop("When penalty level is directly specified, 'lambda' cannot be empty.")
                }
                if (missing(delta)) {
-                 delta <- Inf
+                 if (private$fitting$control$penalty_method == "mcp") {
+                   stop("If 'lambda' is directly specified, 'delta' cannot be empty under 'penalty_method = 'mcp'.")
+                 } else if (private$fitting$control$penalty_method == "lasso") {
+                   delta <- Inf
+                 }
                }
-               penalty_level <- paste0("ld=", lambda, "/", "gm=", delta)
-               if (!(penalty_level %in% names(private$fitting$fitted_result$numerical_condition))) {
-                 stop("The specified penalty level is not recognized.")
+               if (length(idx_used) == 1) {
+                 penalty_level <-
+                   names(private$fitting$fitted_result$numerical_condition[idx_used])
+               } else {
+                 penalty_used_split <- 
+                   strsplit(x = names(private$fitting$fitted_result$numerical_condition[idx_used]),
+                            split = "=|/")
+                 penalty_used <-
+                   sapply(X = penalty_used_split,
+                          FUN = function(penalty_used_split_i) {
+                            penalty_used_i <- 
+                              as.numeric(c(penalty_used_split_i[2], 
+                                           penalty_used_split_i[4]))
+                            return(penalty_used_i)
+                        })
+                 delta_used <- penalty_used[2,]
+                 if (delta %in% delta_used) {
+                   delta_nearest <- delta
+                 } else {
+                   if (delta == Inf) {
+                     delta_nearest <- max(delta_used)
+                   } else {
+                     delta_nearest <- 
+                       max(abs(unique(delta_used)[which.min(abs(unique(delta_used) - delta))]))
+                   }
+                 }
+                 lambda_used <- 
+                   penalty_used[1, penalty_used[2,] == delta_nearest]
+                 if (lambda %in% lambda_used) {
+                   lambda_nearest <- lambda
+                 } else {
+                   if (lambda == Inf) {
+                     lambda_nearest <- max(lambda_used)
+                   } else {
+                     lambda_nearest <- 
+                       max(abs(unique(lambda_used)[which.min(abs(unique(lambda_used) - lambda))]))
+                   }
+                 }
+                 penalty_level <- paste0("ld=", lambda_nearest, "/", "gm=", delta_nearest)
                }
              }
            }
@@ -944,15 +993,15 @@ lslx$set("public",
                                         include_faulty = include_faulty)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           lambda <- as.numeric(strsplit(x = penalty_level,
+           lambda_ <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
-           delta <- as.numeric(strsplit(x = penalty_level,
+           delta_ <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            regularizer_gradient <-
              compute_regularizer_gradient_cpp(
                theta_value = coefficient,
-               lambda = lambda,
-               delta = delta,
+               lambda = lambda_,
+               delta = delta_,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
@@ -987,15 +1036,15 @@ lslx$set("public",
                                         include_faulty = include_faulty)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           lambda <- as.numeric(strsplit(x = penalty_level,
+           lambda_ <- as.numeric(strsplit(x = penalty_level,
                                          split = "=|/")[[1]][2])
-           delta <- as.numeric(strsplit(x = penalty_level,
+           delta_ <- as.numeric(strsplit(x = penalty_level,
                                         split = "=|/")[[1]][4])
            objective_gradient <-
              compute_objective_gradient_cpp(
                theta_value = coefficient,
-               lambda = lambda,
-               delta = delta,
+               lambda = lambda_,
+               delta = delta_,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,

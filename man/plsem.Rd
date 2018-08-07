@@ -10,13 +10,17 @@ plsem(model, data, penalty_method = "mcp", lambda_grid = "default",
 \arguments{
 \item{model}{A \code{character} with length one to represent the model specification.}
 
-\item{data}{A \code{data.frame} of raw data.}
+\item{data}{A \code{data.frame} of raw data. 
+It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).}
 
-\item{penalty_method}{A \code{character} to specify the penalty method.}
+\item{penalty_method}{A \code{character} to specify the penalty method.
+The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.}
 
-\item{lambda_grid}{A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}.}
+\item{lambda_grid}{A non-negative \code{numeric} to specify penalty levels for both \code{"lasso"} and \code{"mcp"}.
+If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 
-\item{delta_grid}{A non-negative \code{numeric} for specifying convexity  levels for \code{"mcp"}.}
+\item{delta_grid}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
+If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 
 \item{...}{Other arguments. For details, please see the documentation of \code{lslx}.}
 }

@@ -20,7 +20,7 @@ public:
   double tol_in, tol_out, tol_other;
   double step_size, armijo;
   double ridge_cov, ridge_hessian;
-  bool positive_variance, enforce_cd;
+  bool warm_start, positive_variance, enforce_cd;
   double minimum_variance;
   bool response, regularizer;
   
@@ -147,6 +147,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   ridge_hessian = Rcpp::as<double>(control["ridge_hessian"]);
   minimum_variance = Rcpp::as<double>(control["minimum_variance"]);
   armijo = Rcpp::as<double>(control["armijo"]);
+  warm_start = Rcpp::as<bool>(control["warm_start"]);
   positive_variance = Rcpp::as<bool>(control["positive_variance"]);
   enforce_cd = Rcpp::as<bool>(control["enforce_cd"]);
   response = Rcpp::as<bool>(control["response"]);
@@ -1247,6 +1248,7 @@ void compute_regularized_path_cpp(
                           reduced_model,
                           control,
                           supplied_result);
+  Rcpp::NumericVector theta_start_zero = Rcpp::clone(optimizer.theta_start);
   Rcpp::NumericVector lambda_grid = Rcpp::as<Rcpp::NumericVector>(control["lambda_grid"]);
   Rcpp::NumericVector delta_grid = Rcpp::as<Rcpp::NumericVector>(control["delta_grid"]);
   Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
@@ -1256,6 +1258,9 @@ void compute_regularized_path_cpp(
   
   int i, j, idx;
   for (i = 0; i < lambda_grid.size(); i++) {
+    if (!optimizer.warm_start) {
+      optimizer.set_theta_value(theta_start_zero);
+    }
     for (j = 0; j < delta_grid.size(); j++) {
       optimizer.set_regularizer(
         Rcpp::as< Rcpp::CharacterVector >(control["penalty_method"]), 

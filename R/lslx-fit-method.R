@@ -24,6 +24,7 @@ lslx$set("public",
                   armijo = 1e-5,
                   ridge_cov = 0,
                   ridge_hessian = 1e-4,
+                  warm_start = TRUE,
                   positive_variance = TRUE,
                   minimum_variance = 1e-4,
                   enforce_cd = FALSE,
@@ -68,8 +69,8 @@ lslx$set("public",
            if (!(start_method %in% c("default", "none", "mh", "heuristic"))) {
              stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
            }
-           if (!(lambda_direction %in% c("default", "decrease", "increase"))) {
-             stop("Argument 'lambda_direction' can be only 'default', 'decrease', or 'increase'.")
+           if (!(lambda_direction %in% c("default", "manual", "decrease", "increase"))) {
+             stop("Argument 'lambda_direction' can be only 'default', 'manual', 'decrease', or 'increase'.")
            }
            
            if (!is.null(subset)) {
@@ -121,6 +122,11 @@ lslx$set("public",
                  (length(ridge_hessian) = 1))) {
              stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
            }
+           if (!(is.logical(warm_start) &
+                 (length(warm_start) = 1))) {
+             stop("Argument 'warm_start' must be a logical vector with length one.")
+           }
+           
            if (!(is.logical(positive_variance) &
                  (length(positive_variance) = 1))) {
              stop("Argument 'positive_variance' must be a logical vector with length one.")
@@ -151,6 +157,7 @@ lslx$set("public",
                armijo = armijo,
                ridge_cov = ridge_cov,
                ridge_hessian = ridge_hessian,
+               warm_start = warm_start,
                positive_variance = positive_variance,
                minimum_variance = minimum_variance,
                enforce_cd = enforce_cd

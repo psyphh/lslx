@@ -15,6 +15,11 @@ lslx$set("public",
                  "objective_gradient_abs_max",
                  "objective_hessian_convexity")
            } else {
+             if (condition == "all") {
+               condition <- 
+                 setdiff(names(private$fitting$fitted_result$numerical_condition[[1]]),
+                         c("lambda", "delta"))
+             }
              if (any(!(
                condition %in% names(private$fitting$fitted_result$numerical_condition[[1]])
              ))) {

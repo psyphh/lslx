@@ -9,11 +9,15 @@
 \arguments{
 \item{object}{A fitted \code{lslx} object.}
 
-\item{selector}{A \code{character} to specify a selector for determining an optimal penalty level.}
+\item{selector}{A \code{character} to specify a selector for determining an optimal penalty level.
+Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
 
-\item{lambda}{A \code{numeric} to specify a chosen optimal lambda value.}
+\item{lambda}{A \code{numeric} to specific a chosen optimal penalty level. 
+If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used.}
 
-\item{delta}{A \code{numeric} to specify a chosen optimal lambda value.}
+\item{delta}{A \code{numeric} to specific a chosen optimal convexity level.
+If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
 
 \item{...}{Other arguments. For details, please see the \code{$extracted_residual_mean()} and the \code{$extracted_residual_cov()} methods in \code{lslx}.}
 }

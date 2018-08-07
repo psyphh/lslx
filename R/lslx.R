@@ -609,14 +609,14 @@
 #'
 #' @section Fit-Related Methods:
 #'
-#' \preformatted{$fit(penalty_method = "none", lambda_grid = "default", delta_grid = "default",
+#' \preformatted{$fit(penalty_method = "mcp", lambda_grid = "default", delta_grid = "default",
 #'   algorithm = "default", missing_method = "default", start_method = "default", 
 #'   lambda_direction = "default", lambda_length = 50L, delta_length = 3L,
 #'   threshold_value = 0.3, iter_out_max = 100L, iter_in_max = 50L, 
 #'   iter_other_max = 500L, iter_armijo_max = 100L, tol_out = 1e-3, tol_in = 1e-3, 
 #'   tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, ridge_cov = 0, 
-#'   ridge_hessian = 1e-4, positive_variance = TRUE, minimum_variance = 1e-4, 
-#'   enforce_cd = FALSE, verbose = TRUE)
+#'   ridge_hessian = 1e-4, warm_start = TRUE, positive_variance = TRUE, 
+#'   minimum_variance = 1e-4, enforce_cd = FALSE, verbose = TRUE)
 #' $fit_none(...)
 #' $fit_lasso(lambda_grid = "default", ...)
 #' $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
@@ -660,6 +660,7 @@
 #'\item{\code{armijo}}{A small positive \code{numeric} for the constant in armijo rule.}
 #'\item{\code{ridge_cov}}{A small positive \code{numeric} for the ridge of sample covariance matrix.}
 #'\item{\code{ridge_hessian}}{A small positive \code{numeric} for the ridge of approximated hessian in optimization.}
+#'\item{\code{warm_start}}{A \code{logical} to specify whether the warm start approach should be used.}
 #'\item{\code{positive_variance}}{A \code{logical} to specify whether the variance estimate should be constrained to be larger than \code{minimum_variance}.}
 #'\item{\code{minimum_variance}}{A \code{numeric} to specify the minimum value of variance if \code{positive_variance = TRUE}.}
 #'\item{\code{enforce_cd}}{A \code{logic} to specify whether coordinate descent should be used when no penalty function is used.}
@@ -696,13 +697,15 @@
 #'\item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level.
 #'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
 #'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
-#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
-#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
+#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
+#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
 #'\item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
 #'   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
 #'   If it is specified as \code{"default"}, it will be set as
 #'   (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_information"} when only moment data is available.}
-#'\item{\code{debias}}{A \code{character} to specify a defias method for obtaining a debiased estimator.
+#'\item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
 #'\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
@@ -743,13 +746,15 @@
 #'\item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level.
 #'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
 #'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
-#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
-#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
+#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
+#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
 #'\item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
 #'   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
 #'   If it is specified as \code{"default"}, it will be set as
 #'   (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_information"} when only moment data is available.}
-#'\item{\code{debias}}{A \code{character} to specify a defias method for obtaining a debiased estimator.
+#'\item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
 #'\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
@@ -892,8 +897,10 @@
 #'\item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level.
 #'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
 #'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
-#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
-#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
+#'\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
+#'\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
 #'\item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
 #'   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
 #'   If it is specified as \code{"default"}, it will be set as
@@ -1041,7 +1048,7 @@
 #'
 #'
 #' @examples
-#' ## Regression Analysis with Lasso Penalty ##
+#' ## EXAMPLE: Regression Analysis with Lasso Penalty ##
 #' # run `vignette("regression-analysis")` to see the vignette
 #' # generate data for regression analysis
 #' set.seed(9487)
@@ -1066,7 +1073,7 @@
 #' lslx_reg$summarize(selector = "aic")
 #'
 #'
-#' ## Semi-Confirmatory Factor Analysis ##
+#' ## EXAMPLE: Semi-Confirmatory Factor Analysis ##
 #' # run `vignette("factor-analysis")` to see the vignette
 #' # specify semi-confirmatory factor analysis model
 #' model_fa <- "visual  :=> x1 + x2 + x3
@@ -1092,7 +1099,7 @@
 #' lslx_fa$summarize(selector = "bic")
 #'
 #'
-#' ## Semi-Confirmatory Structural Equation Modeling ##
+#' ## EXAMPLE: Semi-Confirmatory Structural Equation Modeling ##
 #' # run `vignette("structural-equation-modeling")` to see the vignette
 #' # specify structural equation modeling model
 #' model_sem <- "fix(1) * x1 + x2 + x3   <=: ind60
@@ -1121,7 +1128,7 @@
 #' lslx_sem$summarize(selector = "abic")
 #'
 #'
-#' ## Semi-Confirmatory Factor Analysis with Missing Data ##
+#' ## EXAMPLE: Semi-Confirmatory Factor Analysis with Missing Data ##
 #' # run `vignette("missing-data-analysis")` to see the vignette
 #' # create missing values for x5 and x9 by the code in package semTools
 #' data_miss <- lavaan::HolzingerSwineford1939
@@ -1156,7 +1163,7 @@
 #' lslx_miss$summarize(selector = "raic")
 #' 
 #' 
-#' ## Semi-Confirmatory Multi-Group Factor Analysis ##
+#' ## EXAMPLE: Semi-Confirmatory Multi-Group Factor Analysis ##
 #' # run `vignette("multi-group-analysis")` to see the vignette
 #' # specify multi-group factor analysis model
 #' model_mgfa <- "visual  :=> fix(1) * x1 + x2 + x3

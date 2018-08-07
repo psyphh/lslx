@@ -1117,6 +1117,13 @@ lslxFitting$set("private",
                         c(delta_min * (1:(self$control$delta_length - 1)), Inf) 
                     }
                   }
+                  if (self$control$lambda_direction == "default") {
+                    if (min(self$control$lambda_grid) == 0) {
+                      self$control$lambda_direction <- "decrease"
+                    } else {
+                      self$control$lambda_direction <- "increase"
+                    }
+                  }
                   if (self$control$lambda_direction == "decrease") {
                     self$control$lambda_grid <-
                       sort(self$control$lambda_grid, decreasing = TRUE)

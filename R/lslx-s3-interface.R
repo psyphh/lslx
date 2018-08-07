@@ -4,10 +4,14 @@
 #' 
 #' @return A fitted \code{lslx} object
 #' @param model A \code{character} with length one to represent the model specification. 
-#' @param data A \code{data.frame} of raw data.
+#' @param data A \code{data.frame} of raw data. 
+#' It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).
 #' @param penalty_method A \code{character} to specify the penalty method.
-#' @param lambda_grid A non-negative \code{numeric} for specifying penalty levels for both \code{"lasso"} and \code{"mcp"}.
-#' @param delta_grid A non-negative \code{numeric} for specifying convexity  levels for \code{"mcp"}.
+#'   The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.
+#' @param lambda_grid A non-negative \code{numeric} to specify penalty levels for both \code{"lasso"} and \code{"mcp"}.
+#'   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.
+#' @param delta_grid A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
+#'   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.
 #' @param ... Other arguments. For details, please see the documentation of \code{lslx}.
 #' @examples 
 #' ## Semi-Confirmatory Factor Analysis with lavaan Style ##
@@ -107,8 +111,12 @@ coef.lslx <- function(object,
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
-#' @param lambda A \code{numeric} to specify a chosen optimal lambda value.
-#' @param delta A \code{numeric} to specify a chosen optimal lambda value.
+#'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.
+#' @param lambda A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used.
+#' @param delta A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.
 #' @param ... Other arguments. For details, please see the \code{$extracted_coefficient_acov()} method in \code{lslx}.
 #' @export
 ## \code{vcov.lslx()} is an S3 method to extract asymptotic covariance matrix of parameter estimates from \code{lslx}.##
@@ -129,8 +137,12 @@ vcov.lslx <- function(object,
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
-#' @param lambda A \code{numeric} to specify a chosen optimal lambda value.
-#' @param delta A \code{numeric} to specify a chosen optimal lambda value.
+#'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.
+#' @param lambda A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used.
+#' @param delta A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.
 #' @param ... Other arguments. For details, please see the \code{$extracted_implied_mean()} and the \code{$extracted_implied_cov()} methods in \code{lslx}.
 #' @export
 ## \code{fitted.lslx()} is an S3 method to extract model-implied moments from \code{lslx}.##
@@ -159,8 +171,12 @@ fitted.lslx <- function(object,
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
-#' @param lambda A \code{numeric} to specify a chosen optimal lambda value.
-#' @param delta A \code{numeric} to specify a chosen optimal lambda value.
+#'   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
+#'   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.
+#' @param lambda A \code{numeric} to specific a chosen optimal penalty level. 
+#'   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used.
+#' @param delta A \code{numeric} to specific a chosen optimal convexity level.
+#'   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.
 #' @param ... Other arguments. For details, please see the \code{$extracted_residual_mean()} and the \code{$extracted_residual_cov()} methods in \code{lslx}.
 #' @export
 ## \code{residuals.lslx()} is an S3 method to extract \residual moments from \code{lslx}.##
