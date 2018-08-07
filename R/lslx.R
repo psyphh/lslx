@@ -645,7 +645,8 @@
 #'\item{\code{lambda_direction}}{A \code{character} to determine the "direction" of \code{lambda_grid}.
 #'   \code{"decrease"} sorts \code{lambda_grid} from large to small. 
 #'   On the contrary, \code{"increase"} sorts \code{lambda_grid} from small to large. 
-#'   If the argument is set as \code{"default"}, \code{"decrease"} is assumed.}
+#'   If the argument is set as \code{"default"}, \code{"increase"} will be used when the smallest element of \code{lambda_grid} is larger tha zero;
+#'   otherwise, \code{"decrease"} is assumed.}
 #'\item{\code{lambda_length}}{A \code{numeric} to specify the length of automatically generated \code{lambda_grid} under \code{lambda_grid = "default"}.}
 #'\item{\code{delta_length}}{A \code{numeric} to specify the length of automatically generated \code{delta_grid} under \code{delta_grid = "default"}.}
 #'\item{\code{threshold_value}}{A \code{numeric} to specify the "largest threshold value" for \code{lambda_grid} initialization.}
