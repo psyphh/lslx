@@ -25,12 +25,12 @@ compute_bfgs_hessian_cpp <- function(theta_value, reduced_data, reduced_model, c
     .Call('_lslx_compute_bfgs_hessian_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
-compute_expected_fisher_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
-    .Call('_lslx_compute_expected_fisher_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+compute_expected_information_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_expected_information_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
-compute_observed_fisher_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
-    .Call('_lslx_compute_observed_fisher_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+compute_observed_information_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_observed_information_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
 compute_score_acov_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {

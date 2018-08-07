@@ -709,9 +709,9 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
 \item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
 \item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
-  The argument can be either \code{"sandwich"}, \code{"expected_fisher"}, and \code{"observed_fisher"}.
+  The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as
-  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
+  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_information"} when only moment data is available.}
 \item{\code{debias}}{A \code{character} to specify a defias method for obtaining a debiased estimator.
   Its value can be either \code{"none"} or \code{"one_step"}. 
   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
@@ -758,9 +758,9 @@ $test_coefficient(selector, lambda, delta, standard_error = "default",
 \item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
 \item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
-  The argument can be either \code{"sandwich"}, \code{"expected_fisher"}, and \code{"observed_fisher"}.
+  The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as
-  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
+  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_information"} when only moment data is available.}
 \item{\code{debias}}{A \code{character} to specify a defias method for obtaining a debiased estimator.
   Its value can be either \code{"none"} or \code{"one_step"}. 
   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
@@ -885,11 +885,7 @@ $extract_coefficient_matrix(selector, lambda, delta, block,
 $extract_moment_jacobian(selector, lambda, delta, type = "default", 
   include_faulty = FALSE)
 
-$extract_expected_fisher(selector, lambda, delta, type = "default", 
-  include_faulty = FALSE)
 $extract_expected_information(selector, lambda, delta, type = "default", 
-  include_faulty = FALSE)
-$extract_observed_fisher(selector, lambda, delta, type = "default", 
   include_faulty = FALSE)
 $extract_observed_information(selector, lambda, delta, type = "default", 
   include_faulty = FALSE)
@@ -917,9 +913,9 @@ $extract_objective_gradient(selector, lambda, delta, type = "default",
 \item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level.}
 \item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
-  The argument can be either \code{"sandwich"}, \code{"expected_fisher"}, and \code{"observed_fisher"}.
+  The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as
-  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_fisher"} when only moment data is available.}
+  (1) \code{"sandwich"} when raw data is available; (2) \code{"observed_information"} when only moment data is available.}
 \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
  Its value must be \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
  \item{\code{type}}{A \code{character} to specify the type of parameters that will be used to compute the extracted quantity. 
@@ -972,9 +968,9 @@ Note that if raw data is not available, asymptotic covariance matrice is calcula
 
 \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure.
 
-\code{$extract_expected_fisher()} / \code{$extract_expected_information()} returns a \code{matrix} of the expected Fisher information matrix.
+\code{$extract_expected_information()} returns a \code{matrix} of the expected Fisher information matrix.
 
-\code{$extract_observed_fisher()} / \code{$extract_observed_information()} returns a \code{matrix} of the observed Fisher information matrix.
+\code{$extract_observed_information()} returns a \code{matrix} of the observed Fisher information matrix.
 Note that the observed information matrix is calculated via numerical differentiation for the gradient of loss.
 
 \code{$extract_bfgs_hessian()} returns a \code{matrix} of the BFGS Hessian matrix.

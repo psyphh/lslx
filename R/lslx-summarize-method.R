@@ -30,10 +30,10 @@ lslx$set("public",
              stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
            }
            if (!(
-             standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
+             standard_error %in% c("default", "sandwich", "observed_information", "expected_information")
            )) {
              stop(
-               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_fisher', or 'expected_fisher'."
+               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
              )
            }
            if (!(post_inference %in% c("default", "none", "polyhedral", "scheffe"))) {
@@ -46,7 +46,7 @@ lslx$set("public",
              if (private$fitting$control$response) {
                standard_error <- "sandwich"
              } else {
-               standard_error <- "observed_fisher"
+               standard_error <- "observed_information"
              }
            }
            if (post_inference == "default") {

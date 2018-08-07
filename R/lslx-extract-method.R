@@ -351,18 +351,18 @@ lslx$set("public",
                  control = private$fitting$control,
                  supplied_result = private$fitting$supplied_result
                )
-             observed_fisher <-
-               2 * self$extract_observed_fisher(selector = selector,
+             observed_information <-
+               2 * self$extract_observed_information(selector = selector,
                                                 lambda = lambda,
                                                 delta = delta,
                                                 include_faulty = include_faulty)
-             observed_fisher_inv <-
+             observed_information_inv <-
                matrix(0, length(coefficient), length(coefficient))
-             observed_fisher_inv[is_active, is_active] <-
-               solve(observed_fisher[is_active, is_active])
+             observed_information_inv[is_active, is_active] <-
+               solve(observed_information[is_active, is_active])
              debiased_coefficient[is_active] <- 
                coefficient[is_active] + 
-               observed_fisher_inv[is_active, is_active, drop = FALSE] %*% 
+               observed_information_inv[is_active, is_active, drop = FALSE] %*% 
                (regularizer_gradient[is_active, 1, drop = FALSE])
            } 
            
@@ -640,47 +640,6 @@ lslx$set("public",
            return(moment_jacobian)
          })
 
-## \code{$extract_expected_fisher()} returns a \code{matrix} of the expected Fisher information matrix. ##
-lslx$set("public",
-         "extract_expected_fisher",
-         function(selector,
-                  lambda,
-                  delta,
-                  type = "default",
-                  include_faulty = FALSE) {
-           penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           expected_fisher <-
-             compute_expected_fisher_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           colnames(expected_fisher) <-
-             rownames(private$model$specification)
-           rownames(expected_fisher) <-
-             rownames(private$model$specification)
-           coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
-           if (!(all(coefficient_indicator))) {
-             expected_fisher <- expected_fisher[coefficient_indicator, 
-                                                coefficient_indicator]
-           }
-           return(expected_fisher)
-         })
-
-
 ## \code{$extract_expected_information()} returns a \code{matrix} of the expected Fisher information matrix. ##
 lslx$set("public",
          "extract_expected_information",
@@ -689,23 +648,6 @@ lslx$set("public",
                   delta,
                   type = "default",
                   include_faulty = FALSE) {
-           expected_fisher <- 
-             self$extract_expected_fisher(selector = selector,
-                                          lambda = lambda,
-                                          delta = delta,
-                                          type = type,
-                                          include_faulty = include_faulty)
-           return(expected_fisher)
-         })
-
-## \code{$extract_observed_fisher()} returns a \code{matrix} of the observed Fisher information matrix. ##
-lslx$set("public",
-         "extract_observed_fisher",
-         function(selector,
-                  lambda,
-                  delta,
-                  type = "default",
-                  include_faulty = FALSE) {
            penalty_level <-
              self$extract_penalty_level(selector = selector,
                                         lambda = lambda,
@@ -713,17 +655,17 @@ lslx$set("public",
                                         include_faulty = include_faulty)
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           observed_fisher <-
-             compute_observed_fisher_cpp(
+           expected_information <-
+             compute_expected_information_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
                control = private$fitting$control,
                supplied_result = private$fitting$supplied_result
              )
-           colnames(observed_fisher) <-
+           colnames(expected_information) <-
              rownames(private$model$specification)
-           rownames(observed_fisher) <-
+           rownames(expected_information) <-
              rownames(private$model$specification)
            coefficient_indicator <-
              self$extract_coefficient_indicator(selector = selector,
@@ -732,11 +674,12 @@ lslx$set("public",
                                                 type = type,
                                                 include_faulty = include_faulty)
            if (!(all(coefficient_indicator))) {
-             observed_fisher <- observed_fisher[coefficient_indicator, 
+             expected_information <- expected_information[coefficient_indicator, 
                                                 coefficient_indicator]
            }
-           return(observed_fisher)
+           return(expected_information)
          })
+
 
 ## \code{$extract_observed_information()} returns a \code{matrix} of the observed Fisher information matrix. ##
 lslx$set("public",
@@ -746,13 +689,36 @@ lslx$set("public",
                   delta,
                   type = "default",
                   include_faulty = FALSE) {
-           observed_fisher <- 
-             self$extract_observed_fisher(selector = selector,
-                                          lambda = lambda,
-                                          delta = delta,
-                                          type = type,
-                                          include_faulty = include_faulty)
-           return(observed_fisher)
+           penalty_level <-
+             self$extract_penalty_level(selector = selector,
+                                        lambda = lambda,
+                                        delta = delta,
+                                        include_faulty = include_faulty)
+           coefficient <-
+             private$fitting$fitted_result$coefficient[[penalty_level]]
+           observed_information <-
+             compute_observed_information_cpp(
+               theta_value = coefficient,
+               reduced_data = private$fitting$reduced_data,
+               reduced_model = private$fitting$reduced_model,
+               control = private$fitting$control,
+               supplied_result = private$fitting$supplied_result
+             )
+           colnames(observed_information) <-
+             rownames(private$model$specification)
+           rownames(observed_information) <-
+             rownames(private$model$specification)
+           coefficient_indicator <-
+             self$extract_coefficient_indicator(selector = selector,
+                                                lambda = lambda,
+                                                delta = delta,
+                                                type = type,
+                                                include_faulty = include_faulty)
+           if (!(all(coefficient_indicator))) {
+             observed_information <- observed_information[coefficient_indicator, 
+                                                coefficient_indicator]
+           }
+           return(observed_information)
          })
 
 ## \code{$extract_bfgs_hessian()} returns a \code{matrix} of the BFGS Hessian matrix. ##
@@ -845,17 +811,17 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            if (!(
-             standard_error %in% c("default", "sandwich", "observed_fisher", "expected_fisher")
+             standard_error %in% c("default", "sandwich", "observed_information", "expected_information")
            )) {
              stop(
-               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_fisher', or 'expected_fisher'."
+               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
              )
            }
            if (standard_error == "default") {
              if (private$fitting$control$response) {
                standard_error <- "sandwich"
              } else {
-               standard_error <- "observed_fisher"
+               standard_error <- "observed_information"
              }
            }
            coefficient <-
@@ -875,34 +841,34 @@ lslx$set("public",
                                        lambda = lambda,
                                        delta = delta,
                                        include_faulty = include_faulty)
-             observed_fisher <-
-               self$extract_observed_fisher(selector = selector,
+             observed_information <-
+               self$extract_observed_information(selector = selector,
                                             lambda = lambda,
                                             delta = delta,
                                             include_faulty = include_faulty)
-             observed_fisher_pinv <-
-               solve(observed_fisher[is_active, is_active])
+             observed_information_pinv <-
+               solve(observed_information[is_active, is_active])
              coefficient_acov[is_active, is_active] <-
-               (observed_fisher_pinv %*%
+               (observed_information_pinv %*%
                   score_acov[is_active, is_active] %*%
-                  observed_fisher_pinv)
-           } else if (standard_error == "expected_fisher") {
-             expected_fisher <-
-               self$extract_expected_fisher(selector = selector,
+                  observed_information_pinv)
+           } else if (standard_error == "expected_information") {
+             expected_information <-
+               self$extract_expected_information(selector = selector,
                                             lambda = lambda,
                                             delta = delta,
                                             include_faulty = include_faulty)
              coefficient_acov[is_active, is_active] <-
-               solve(expected_fisher[is_active, is_active]) /
+               solve(expected_information[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
-           } else if (standard_error == "observed_fisher") {
-             observed_fisher <-
-               self$extract_observed_fisher(selector = selector,
+           } else if (standard_error == "observed_information") {
+             observed_information <-
+               self$extract_observed_information(selector = selector,
                                             lambda = lambda,
                                             delta = delta,
                                             include_faulty = include_faulty)
              coefficient_acov[is_active, is_active] <-
-               solve(observed_fisher[is_active, is_active]) /
+               solve(observed_information[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
            } else {
              

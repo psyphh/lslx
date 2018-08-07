@@ -1395,13 +1395,13 @@ Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
 
 // compute expected fisher
 // [[Rcpp::export]]
-Rcpp::NumericMatrix compute_expected_fisher_cpp(
+Rcpp::NumericMatrix compute_expected_information_cpp(
     Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Eigen::MatrixXd expected_fisher;
+  Eigen::MatrixXd expected_information;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
@@ -1413,19 +1413,19 @@ Rcpp::NumericMatrix compute_expected_fisher_cpp(
   optimizer.update_residual_weight();
   optimizer.update_moment_jacobian();
   optimizer.update_loss_expected_hessian();
-  expected_fisher = 0.5 * optimizer.loss_expected_hessian;
-  return Rcpp::wrap(expected_fisher);
+  expected_information = 0.5 * optimizer.loss_expected_hessian;
+  return Rcpp::wrap(expected_information);
 }
 
 // compute observed fisher
 // [[Rcpp::export]]
-Rcpp::NumericMatrix compute_observed_fisher_cpp(
+Rcpp::NumericMatrix compute_observed_information_cpp(
     Rcpp::NumericVector theta_value,
     Rcpp::List reduced_data,
     Rcpp::List reduced_model,
     Rcpp::List control,
     Rcpp::List supplied_result) {
-  Eigen::MatrixXd observed_fisher;
+  Eigen::MatrixXd observed_information;
   lslxOptimizer optimizer(reduced_data,
                           reduced_model,
                           control,
@@ -1439,8 +1439,8 @@ Rcpp::NumericMatrix compute_observed_fisher_cpp(
   optimizer.update_moment_jacobian();
   optimizer.update_loss_gradient();
   optimizer.update_loss_observed_hessian();
-  observed_fisher = 0.5 * optimizer.loss_observed_hessian;
-  return Rcpp::wrap(observed_fisher);
+  observed_information = 0.5 * optimizer.loss_observed_hessian;
+  return Rcpp::wrap(observed_information);
 }
 
 // compute asymptotic covariance of score
