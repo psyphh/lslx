@@ -331,9 +331,9 @@ where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, po
 The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
 The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
-To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher's scoring).
+To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher scoring).
 Although the computational cost of BFGS approximation is much smaller than calculating expected hessian,
-our experience shows that Fisher's scoring are generally faster because of smalller outer iterations for convergence.
+our experience shows that the two methods perform similarly in terms of computation time because more outer iterations are required for BFGS.
 The inner loop stops if the change of the derived direction is quite small.
 The outer loop of the algorithm updates the value of parameter estimate via the derived quasi-Newton direction and Armijo's rule.
 The outer loop stops if the maximal absolute element of subgradient of objective function is smaller than the specified tolerance.
