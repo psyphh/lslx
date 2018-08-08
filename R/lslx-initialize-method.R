@@ -26,7 +26,7 @@ lslx$set("public",
              }
              if (missing(group_variable)) {
                group_variable <- NULL
-               name_group <- "1"
+               name_group <- "g"
              } else {
                if (length(group_variable) > 1) {
                  stop("Argument `group_variable` can be only of length one.")
@@ -68,9 +68,9 @@ lslx$set("public",
              }
              if (is.null(names(sample_cov))) {
                if (length(sample_cov) > 1) {
-                 name_group <- as.character(1:length(sample_cov))
+                 name_group <- paste0("g", 1:length(sample_cov))
                } else {
-                 name_group <- "1"
+                 name_group <- "g"
                }
                names(sample_cov) <- name_group
                if (verbose) {

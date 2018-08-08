@@ -43,7 +43,7 @@ The exploratory part is composed by a set of penalized parameters describing rel
 By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently identified by the sparsity pattern of these penalized parameters.
 
 The main function \code{lslx} generates an object of \code{lslx} R6 class.
-R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object oriented programming in \pkg{R} system.
+R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object-oriented programming in \pkg{R} system.
 Hence, the \code{lslx} object is self-contained.
 On the one hand, \code{lslx} object stores model, data, and fitting results.
 On the other hand, it has many built-in methods to respecify model, fit the model to data, and test goodness of fit and coefficients.
@@ -53,8 +53,8 @@ Details of object initialization is described in the section of \emph{Initialize
 
 In the current semi-confirmatory approach, the model specification is quite similar to the traditional practice of SEM except that some parameters can be set as penalized.
 Model specification in \code{lslx} mainly relies on the argument model when creating a new \code{lslx} object.
-After a \code{lslx} object is initialized, the intialized model can be still modified by set-related methods.
-These set-related methods may hugely change the intialized model by just one simple command.
+After a \code{lslx} object is initialized, the initialized model can be still modified by set-related methods.
+These set-related methods may hugely change the initialized model by just one simple command.
 This two-step approach allows users specifying their own models flexibly and efficiently.
 Details of the model specification can be found in the sections of \emph{Model Syntax} and \emph{Set-Related Methods}.
 
@@ -62,17 +62,17 @@ Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized 
 The penalty function can be set as lasso (Tibshirani, 1996) or mcp (minimax concave penalty; Zhang, 2010).
 \pkg{lslx} solves the optimization problem based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The underlying optimizer is written by using \pkg{Rcpp} (Eddelbuettel & Francois, 2011) and \pkg{RcppEigen} (Bates & Eddelbuettel, 2013).
-Our experiences show that the algorithm can effeciently find a local minimum provided that (1) the starting value is reasonable, and (2) the saturated covariance matrix is not nearly singular.
+Our experiences show that the algorithm can efficiently find a local minimum provided that (1) the starting value is reasonable, and (2) the saturated covariance matrix is not nearly singular.
 Details of optimization algorithm and how to implement the algorithm can be found in the sections of \emph{Optimization Algorithm} and \emph{Fit-Related Methods}.
 
 When conducting SEM, missing data are easily encountered.
 \pkg{lslx} can handle missing data problem by listwise deletion and two-step methods.
-Details of the methods for mssing data can be found in the section of \emph{Missing Data}.
+Details of the methods for missing data can be found in the section of \emph{Missing Data}.
 
 After fitting the specified model to data under all of the considered penalty levels, an optimal penalty level should be chosen.
 A naive method for penalty level selection is using information criteria.
 Huang, Chen, and Weng (2017) have shown the asymptotic properties of Akaike information criterion (AIC) and Bayesian information criterion (BIC) in selecting the penalty level.
-In \pkg{lslx}, infromation criteria other an AIC and BIC can be also used.
+In \pkg{lslx}, information criteria other an AIC and BIC can be also used.
 However, the empirical performances of these included criteria should be further studied.
 Details of choosing an optimal penalty level can be found in the section of \emph{Penalty Level Selection}.
 
@@ -90,7 +90,7 @@ An object of \code{lslx} R6 class is composed by three R6 class objects: \code{l
 When fitting the model to data, a reduced model and data will be sent to \code{lslxFitting}.
 After the underlying optimizer finishes its job, the fitting results will be also stored in \code{lslxFitting}.
 Since the three members are set as private, they can be only assessed by defined member functions.
-Other than the three members, quantities that are crucial for SEM can be also extracted, such as model-implied moments, information matrice, and etc..
+Other than the three members, quantities that are crucial for SEM can be also extracted, such as model-implied moments, information matrix, and etc..
 Details of methods for obtaining private members and SEM-related quantities can be found in the sections of \emph{Get-Related Methods} and \emph{Extract-Related Methods}.
 }
 
@@ -99,6 +99,8 @@ Details of methods for obtaining private members and SEM-related quantities can 
 With \pkg{lslx} the relationships among observed variables and latent factors are mainly specified via equation-like syntax.
 The creation of syntax in \pkg{lslx} is highly motivated by \pkg{lavaan} (Rosseel, 2012), a successful package for fitting SEM.
 However, \pkg{lslx} utilizes slightly more complex, but still intuitive operators to describe relations among variables.
+
+
 
 
 \bold{Example 1: Multiple Regression Model}
@@ -113,15 +115,15 @@ The operator \code{<=} means that the regression coefficients from the right-han
 
 Although it is a very simple example, at least four important things behind this example should be addressed:
 \enumerate{
-\item{For any endogenous veriable (i.e., an variable that is influenced by any other variable), its residual term is not required to be specified.
+\item{For any endogenous variable (i.e., an variable that is influenced by any other variable), its residual term is not required to be specified.
 In this example, \code{lslx} recognizes \code{y} is an endogenous variable and hence the variance of corresponding residual will be set as freely estimated parameter.
 It is also possible to explicitly specify the variance of residual of \code{y} by \code{y <=> y}.
 Here, the operator \code{<=>} indicates the covariance of the RHS and LHS variables should be freely estimated.}
-\item{If all of the specified equations do not contain the intercept variable \code{1}, then the intercept of each endogeneous and observed variable will be freely estimated.
+\item{If all of the specified equations do not contain the intercept variable \code{1}, then the intercept of each endogenous and observed variable will be freely estimated.
 Since the intercept variable \code{1} doesn't appear in this example, the intercept for \code{y} will be set as a freely estimated parameter.
 We can explicitly set the intercept term by \code{y <= 1}.
 However, under the situation that many equations are specified, once the intercept variable \code{1} appears in some equation, intercept terms in other equations should be explicitly specified.
-Otherwise, the intercepts of endogeneous and observed variables in other equations will be fixed at zero.
+Otherwise, the intercepts of endogenous and observed variables in other equations will be fixed at zero.
 }
 \item{For any set of exogeneous variables (i.e., variables that are not influenced by any other variable in the specified system),
 not only their variances will be freely estimated, but also their pairwise covariances will be set as freely estimated parameters.
@@ -130,7 +132,7 @@ Hence, their variance and pairwise covariances will be automatically set as free
 These covariances can be explicitly stated by simply \code{x1 + x2 <=> x1 + x2}.
 The syntax parser in \code{lslx} will consider variance/covariance of each combination of LHS and RHS variables.}
 \item{The intercepts (or means) of exogeneous and observed variables are always set as freely estimated parameters.
-In this example, the interceps of \code{x1} and \code{x2} will be freely estimated.
+In this example, the intercepts of \code{x1} and \code{x2} will be freely estimated.
 It can be stated explicitly by \code{x1 + x2 <= 1}.
 Also, the \code{lslx} parser will know that the intercept variable \code{1} has effect on all of \code{x1} and \code{x2}.}
 }
@@ -158,7 +160,9 @@ Inside the parentheses, starting values can be specified.
 Any prefix must present before some variable name and divided by asterisk \code{*}.
 Note that prefix can appear in the either RHS or LHS of operators and its function can be 'distributed' to the variables in the other side.
 For example, \code{free() * y <~ x1 + x2} will be interpreted as that all of the coefficients should be freely estimated.
-However, any prefix cannot simultaneously appears on both sides of operators, which may result in an ambiguity specification.
+However, any prefix cannot simultaneously appear on both sides of operators, which may result in an ambiguity specification.
+
+
 
 
 \bold{Example 2: Factor Analysis Model}
@@ -180,7 +184,7 @@ Of course, \code{f1} can be equivalently defined by \code{f1 :=> y1 + y2 + y3}.
 As addressed in the first example, the \code{lslx} parser will automatically set many parameters that are not directly presented in these equations.
 \enumerate{
 \item {
-In this example, all of the observed variables are directed by some latent factor and hence they are endogeneous.
+In this example, all of the observed variables are directed by some latent factor and hence they are endogenous.
 The variances of their residuals will be set as freely estimated parameters.
 Also, their intercepts will be freely estimated since no intercept variable \code{1} presents in the specified equations.
 }
@@ -190,7 +194,7 @@ Their pairwise covariances will be also set as freely estimated parameters.
 However, because they are latent but not observed, their intercepts will be fixed at zero.
 If user hope to estimate the latent factor means, they should add an additional equation \code{f1 + f2 + f3 <= 1}.
 After adding this equation, on the one hand, the latent intercepts will be set as free as indicated by that equation.
-On the other hand, since intercet variable \code{1} now presents in the specified equations, the intercepts for the endogenous and observed variables will be then fixed at zero.
+On the other hand, since intercept variable \code{1} now presents in the specified equations, the intercepts for the endogenous and observed variables will be then fixed at zero.
 }
 }
 So far, the specification for the factor analysis model is not complete since the scales of factors are not yet determined.
@@ -205,8 +209,7 @@ For example, we may respecify the model via
  \code{fix(1) * y7 + y8 + y9 <=: f3}
 
 The prefix \code{fix(1)} will fix the corresponding loadings to be one.
-Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by simply using \code{1 * y1}.
-In \pkg{lslx}, \code{1 * y1} means that the starting value of coefficient corresponding to \code{y1} (which can be free or penalized parameter, depending on the specified operator) is set as one.
+Simply using \code{1 * y1} will be also interpreted as fixing the loading of \code{y1} at one to mimic \pkg{lavaan}.
 The second way for scale setting is fixing the variance of latent factors, which can be achieved by specifying additional equations
 
  \code{fix(1) * f1 <=> f1}
@@ -241,6 +244,27 @@ One possible model specification for the semi-confirmatory approach is
  \code{fix(1) * f3 <=> f3}
 
 In this specification, loadings in the non-independent cluster will be also estimated but with penalization.
+
+After version 0.6.3, \pkg{lslx} supports basic \pkg{lavaan} operators. 
+The previous model can be equivalently specified as
+
+ \code{f1 =~ y1 + y2 + y3}
+
+ \code{f2 =~ y4 + y5 + y6}
+
+ \code{f3 =~ y7 + y8 + y9}
+
+ \code{pen() * f1 =~ y4 + y5 + y6 + y7 + y8 + y9}
+
+ \code{pen() * f2 =~ y1 + y2 + y3 + y7 + y8 + y9}
+
+ \code{pen() * f3 =~ y4 + y5 + y6 + y7 + y8 + y9}
+
+ \code{f1 ~~ 1 * f1}
+
+ \code{f2 ~~ 1 * f2}
+
+ \code{f3 ~~ 1 * f3}
 
 
 \bold{Example 3: Path Models with both Observed Variables and Latent Factors}
@@ -282,6 +306,8 @@ If no theory is available to guide the relationships in some part of the model,
 the semi-confirmatory approach can set this part as exploratory by setting the corresponding parameters as penalized.
 
 
+
+
 \bold{Example 4: Multi-Group Factor Analysis Model}
 
 In the fourth example, we consider a multi-group factor analysis model.
@@ -316,8 +342,8 @@ In the current version of \pkg{lslx}, coefficient constraints cannot be imposed.
 It seems that testing coefficient invariance across groups is impossible in \pkg{lslx}.
 However, the present package parameterizes group coefficients in different way compared to other SEM software (Huang, in press).
 Under \pkg{lslx}, each group coefficient is decomposed into a sum of a reference component and an increment component.
-If the reference component is assumed to be zero, the increment component represents the group coefficient, which is equivalent to the usual parameterization in other softwares.
-On the other hand, if some group is set as reference (argument \code{referene_group} in \code{new} method, please see the section of \emph{Initialize Method}),
+If the reference component is assumed to be zero, the increment component represents the group coefficient, which is equivalent to the usual parameterization in other software solutions.
+On the other hand, if some group is set as reference (argument \code{reference_group} in \code{new} method, please see the section of \emph{Initialize Method}),
 then the reference component now represents the group coefficient of the reference group and other increment components represent the differences from the reference group.
 The coefficient invariance across groups can be evaluated by examining the value or sparsity of the corresponding increment component.
 }
@@ -330,7 +356,7 @@ Let \eqn{\theta} denote the vector of model parameter.
 where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, possibly lasso (Tibshirani, 1996) or mcp (Zhang, 2010), and \eqn{\lambda} is a regularization parameter.
 The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
-The inner loop of the algorithm derives a quasi-Newton direction by miniming a quadratic approximated objective function via coordinate descent.
+The inner loop of the algorithm derives a quasi-Newton direction by minimizing a quadratic approximated objective function via coordinate descent.
 To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher scoring).
 Although the computational cost of BFGS approximation is much smaller than calculating expected hessian,
 our experience shows that the two methods perform similarly in terms of computation time because more outer iterations are required for BFGS.
@@ -344,7 +370,7 @@ An optimal penalty level can be chosen by using model selection criterion.
 In \pkg{lslx}, PL estimates under each penalty level and convexity level specified by user will be calculated.
 The convexity levels will be sorted from large to small based on the suggestion of Mazumder (2011).
 The previous obtained PL estimate will be used as warm start for further minimization problem.
-Since the solution path is continous, the warm start can speed up the convergence of minimization (see Friedman, Hastie, & Tibshirani, 2010).
+Since the solution path is continuous, the warm start can speed up the convergence of minimization (see Friedman, Hastie, & Tibshirani, 2010).
 }
 
 \section{Missing Data}{
@@ -355,17 +381,17 @@ The listwise deletion method only uses fully complete observations for further S
 If the missing mechanism is missing completely at random (MCAR; Rubin, 1976), the listwise deletion method can yield a consistent estimator.
 The two-stage method first calculates the saturated moments by minimizing the likelihoods based on all of the available observations and then use the obtained saturated moment estimates for further SEM analysis.
 Under the assumption of missing at random (MAR; Rubin, 1976), it has been shown that the two-stage method can yield a consistent estimate.
-In addition, the standard errors of coefficients can be also consistently estimated if a correct asumptotic covariance of saturated moments is used.
+In addition, the standard errors of coefficients can be also consistently estimated if a correct asymptotic covariance of saturated moments is used.
 Because the two-stage approach is generally valid and efficient compared to the listwise deletion method,
 \pkg{lslx} set the two-stage method as default for handling the missing data problem.
-The current version also supports the use of auxiliary varialbes (see Savalei & Bentler, 2008).
+The current version also supports the use of auxiliary variables (see Savalei & Bentler, 2008).
 If the two-stage method is implemented, the standard error formula will be corrected for the presence of missing data (see Yuan & Lu, 2008 for technical details).
 
 So far, \pkg{lslx} doesn't include the full-information maximum likelihood (FIML) method for missing values.
 One reason is that PL can be computationally intensive if many penalty levels are considered.
 The additional E-step in each iteration of FIML makes the problem worse.
-Another reason is that the two step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
-Therefore, we tend to believe that the implementation of FIML in PL may not bring further advantages over the two step method.
+Another reason is that the two-step method has been shown to outperform FIML in simulation settings (Savalei & Falk, 2014).
+Therefore, we tend to believe that the implementation of FIML in PL may not bring further advantages over the two-step method.
 }
 
 \section{Penalty Level Selection}{
@@ -404,19 +430,19 @@ where
 \eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - e(\theta)} with \eqn{e(\theta)} being the number of non-zero elements in \eqn{\theta}.
 }
 }
-Note the the formula for calculating the information criteria in \pkg{lslx} are different to other softwares.
-The loss function value is used to replaced the likelihood function value and hence the penalty term is also divided by sample size \eqn{N}.
+Note the formula for calculating the information criteria in \pkg{lslx} are different to other software solutions.
+The loss function value is used to replace the likelihood function value and hence the penalty term is also divided by sample size \eqn{N}.
 For each information criterion, a robust version is calculated if raw data is available.
-Their coreesponding names are \code{raic}, \code{raic3}, \code{rcaic}, \code{rbic}, \code{rabic}, and \code{rhbic} with "r" standing for "robust".
+Their corresponding names are \code{raic}, \code{raic3}, \code{rcaic}, \code{rbic}, \code{rabic}, and \code{rhbic} with "r" standing for "robust".
 These robust criteria use the Satorra-Bentler scaling factor for correcting degree of freedom.
 For the case of normal data and correctly specified model, the two versions will be the same asymptotically.
 
 
 Huang, Chen, and Weng (2017) have study the asymptotic behaviors of \code{aic} and \code{bic} under penalized estimation.
-They show that under suitable conditions, \code{aic} can select a model with minimum espected loss and \code{bic} can choose the most parsimous one from models that attain the minimum espected loss.
+They show that under suitable conditions, \code{aic} can select a model with minimum expected loss and \code{bic} can choose the most parsimonious one from models that attain the minimum expected loss.
 By the order of penalty term, we may expect: (1) the large sample behaviors of \code{aic3} and \code{tic} will be similar to \code{aic};
 and (2) the asymptotic behaviors of \code{caic}, \code{abic}, and \code{hbic} will be similar to \code{bic}.
-However, their small-sample performances require futher studies.
+However, their small-sample performances require further studies.
 }
 
 \section{Model Fit Evaluation}{
@@ -426,9 +452,9 @@ In the current version, available fit indices for model evaluation are
 \describe{
 \item{\code{rmsea}}{Root Mean Square Error of Approximation (Steiger, 1998; Steiger & Lind, 1980)
 \deqn{ RMSEA(\theta)=\sqrt(G * max(loss(\theta) / df(\theta) - 1 / N, 0)) }}
-\item{\code{cfi}}{Comparative Fit Indice (Bentler, 1990)
+\item{\code{cfi}}{Comparative Fit Index (Bentler, 1990)
 \deqn{ CFI(\theta)=(max(loss_0 - df_0 / N, 0) - max(loss(\theta) - df(\theta) / N, 0)) / max(loss_0 - df_0 / N, 0)}}
-\item{\code{nnfi}}{Non-Normed Fit Indice (Tucker & Lewis, 1973)
+\item{\code{nnfi}}{Non-Normed Fit Index (Tucker & Lewis, 1973)
 \deqn{ NNFI(\theta)=(loss_0 / df_0 - loss(\theta) / df(\theta)) / (loss_0 / df_0 - 1 /N) }}
 \item{\code{srmr}}{Standardized Root Mean of Residual (Bentler, 1995)
 \deqn{ SRMR(\theta)=\sqrt(\sum_g w_g \sum_i \sum_{j \leq i} ((\sigma_{gij} - s_{gij})^2 / (\sigma_{gii} * \sigma_{gjj})) / (G * P * (P + 1) / 2)}
@@ -521,7 +547,7 @@ Auxiliary variable(s) must be numeric. If any categorical auxiliary is considere
 }
 \bold{Details}
 
-\code{$new()} initialzes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM).
+\code{$new()} initializes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM).
 In most cases, a new \code{lslx} object is initialized by supplying \code{model} and \code{data}.
 For details of syntax for model specification, see the section of \emph{Model Syntax}.
 If raw data is not available, \code{lslx} also supports initialization via sample moments.
@@ -662,12 +688,12 @@ $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \item{\code{iter_out_max}}{A positive \code{integer} to specify the maximal iterations for outer loop of the modified \code{glmnet} algorithm.}
 \item{\code{iter_in_max}}{A positive \code{integer} to specify the maximal iterations for inner loop of the modified \code{glmnet} algorith.}
 \item{\code{iter_other_max}}{A positive \code{integer} to specify the maximal iterations for other loop.}
-\item{\code{iter_armijo_max}}{A positive \code{integer} to specify the maximal iterations for searching step-size via armijo rule.}
+\item{\code{iter_armijo_max}}{A positive \code{integer} to specify the maximal iterations for searching step-size via Armijo rule.}
 \item{\code{tol_out}}{A small positive \code{numeric} to specify the tolerance (convergence criterion) for outer loop of the modified \code{glmnet} algorithm.}
 \item{\code{tol_in}}{A small positive \code{numeric} to specify the tolerance (convergence criterion) for inner loop of the modified \code{glmnet} algorithm.}
 \item{\code{tol_other}}{A small positive \code{numeric} to specify the tolerance (convergence criterion) for other loop.}
 \item{\code{step_size}}{A positive \code{numeric} smaller than one to specify the step-size.}
-\item{\code{armijo}}{A small positive \code{numeric} for the constant in armijo rule.}
+\item{\code{armijo}}{A small positive \code{numeric} for the constant in Armijo rule.}
 \item{\code{ridge_cov}}{A small positive \code{numeric} for the ridge of sample covariance matrix.}
 \item{\code{ridge_hessian}}{A small positive \code{numeric} for the ridge of approximated hessian in optimization.}
 \item{\code{warm_start}}{A \code{logical} to specify whether the warm start approach should be used.}
@@ -724,7 +750,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
   If it is specified as \code{"default"}, \code{"none"} will be used.}
 \item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
 \item{\code{include_faulty}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection.
-  Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration.
+  Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iterations.
   non-convexity result is determined by checking the minimum of univariate approximate hessian.}
 \item{\code{style}}{A \code{character} to specify whether the style of summary.
   Its value must be either \code{"default"}, \code{"manual"}, \code{"minimal"}, or \code{"maximal"}.}
@@ -732,14 +758,14 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
   Its value must be \code{"print"} or \code{"return"}. 
   \code{"print"} will print the summary result and \code{"return"} will return a \code{list} of the summary result.
   If it is specified as \code{"default"}, it will be set as \code{"print"}.}
-\item{\code{digit}}{An \code{interger} to specify the number of digits to be displayed.}
+\item{\code{digit}}{An \code{integer} to specify the number of digits to be displayed.}
 \item{\code{interval}}{A \code{logical} to specify whether the confidence interval should be printed.}
 }
 \bold{Details}
 
 \code{$summarize()} prints a summary for the fitting result under a selected peanlty/convexity level.
 It requires users to specify which selector should be used or a combination of \code{gamma} and \code{lambda}..
-By default, the summary includes model information, numerical conditions, information criteria, fit inddices, coefficient estimates, and related statistical inference.
+By default, the summary includes model information, numerical conditions, fit indices, coefficient estimates, and related statistical inference.
 It can be modified by the \code{style} argument. 
 For details of evaluation and inference methods, see the sections of \emph{Model Fit Evaluation} and \emph{Coefficient Evaluation}.
 }
@@ -780,7 +806,7 @@ $test_coefficient(selector, lambda, delta, standard_error = "default",
 }
 \bold{Details}
 
-Test-related mthods are used to obtain the result of specific statistical test.
+Test-related methods are used to obtain the result of specific statistical test.
 So far, only tests for likelihood ratio (LR), root mean square error of approximation (RMSEA), and coefficients are available.
 
 \code{$test_lr()} returns a \code{data.frame} of result for likelihood ratio test.
@@ -852,7 +878,7 @@ $get_fitting()
 }
 \bold{Details}
 
-Get-related methods are defined to obtain a deep copy of memebers inside \code{lslx}.
+Get-related methods are defined to obtain a deep copy of members inside \code{lslx}.
 Note that all of the data members of \code{lslx} are set as private to protect the inner data structure.
 They cannot be assessed directly via \code{$}.
 
@@ -930,7 +956,7 @@ $extract_objective_gradient(selector, lambda, delta, type = "default",
  The argument can be either \code{"all"}, \code{"fixed"}, \code{"free"}, \code{"pen"}, \code{"effective"} (include \code{"free"} + \code{"selected"}), and \code{"selected"} (non-zero element of \code{"pen"}).
  If it is specified as \code{"default"}, it will be set as \code{all}.}
 \item{\code{include_faulty}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection.
-  Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration.
+  Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iterations.
   non-convexity result is determined by checking the minimum of univariate approximate hessian.}
 }
 \bold{Details}
@@ -952,7 +978,7 @@ Fortunately, the \code{type} argument can be used to choose desired parameters b
 \code{$extract_saturated_mean()} returns a \code{list} of saturated sample mean vector(s).
 
 \code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments.
-Note that if raw data is not available, asymptotic covariance matrice is calculated by assuming normality for data.
+Note that if raw data is not available, asymptotic covariance matrix is calculated by assuming normality for data.
 
 \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level.
 
@@ -1076,7 +1102,7 @@ lslx_sem$fit_lasso()
 lslx_sem$summarize(selector = "abic")
 
 
-## EXAMPLE: Semi-Confirmatory Factor Analysis with Missing Data ##
+## EXAMPLE: Factor Analysis with Missing Data ##
 # run `vignette("missing-data-analysis")` to see the vignette
 # create missing values for x5 and x9 by the code in package semTools
 data_miss <- lavaan::HolzingerSwineford1939
@@ -1090,9 +1116,9 @@ data_miss$x9 <- ifelse(data_miss$age <= quantile(data_miss$age, .3),
 model_miss <- "visual  :=> x1 + x2 + x3 
                textual :=> x4 + x5 + x6
                speed   :=> x7 + x8 + x9
-               visual  <=> fix(1) * visual
-               textual <=> fix(1) * textual
-               speed   <=> fix(1) * speed"
+               visual  <=> 1 * visual
+               textual <=> 1 * textual
+               speed   <=> 1 * speed"
 
 # "ageyr" and "agemo" are set as auxiliary variables
 lslx_miss <- lslx$new(model = model_miss,
@@ -1111,12 +1137,12 @@ lslx_miss$fit_lasso()
 lslx_miss$summarize(selector = "raic")
 
 
-## EXAMPLE: Semi-Confirmatory Multi-Group Factor Analysis ##
+## EXAMPLE: Multi-Group Factor Analysis ##
 # run `vignette("multi-group-analysis")` to see the vignette
 # specify multi-group factor analysis model
-model_mgfa <- "visual  :=> fix(1) * x1 + x2 + x3
-               textual :=> fix(1) * x4 + x5 + x6
-               speed   :=> fix(1) * x7 + x8 + x9"
+model_mgfa <- "visual  :=> 1 * x1 + x2 + x3
+               textual :=> 1 * x4 + x5 + x6
+               speed   :=> 1 * x7 + x8 + x9"
 
 # "school" is set as group variable and "Pasteur" is specified as reference
 lslx_mgfa <- lslx$new(model = model_mgfa,
@@ -1137,9 +1163,6 @@ lslx_mgfa$fit_mcp()
 
 # summarize fitting result under penalty level selected by 'hbic'
 lslx_mgfa$summarize(selector = "hbic")
-
-
-
 
 }
 \references{
