@@ -5,5 +5,6 @@
 * x86_64-w64-mingw32 (64-bit) via devtools::build_win()
 
 ## R CMD check results
-There were no ERRORs, WARNINGs or NOTEs
+There were no ERRORs, WARNINGs or NOTEs 
+
 

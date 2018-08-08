@@ -14,7 +14,7 @@
 #'   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.
 #' @param ... Other arguments. For details, please see the documentation of \code{lslx}.
 #' @examples 
-#' ## Semi-Confirmatory Factor Analysis with lavaan Style ##
+#' ## EXAMPLE: Semi-Confirmatory Factor Analysis with lavaan Style ##
 #' # specify a factor analysis model with lavaan style
 #' model_fa <- "visual  =~ x1 + x2 + x3
 #'              textual =~ x4 + x5 + x6
@@ -30,7 +30,7 @@
 #' lslx_fa <- plsem(model = model_fa, 
 #'                  data = lavaan::HolzingerSwineford1939,
 #'                  penalty_method = "mcp", 
-#'                  lambda_grid = seq(.01, .60, .01), 
+#'                  lambda_grid = seq(.02, .60, .02), 
 #'                  delta_grid = c(1.5, 3.0, Inf))
 #' 
 #' # summarize fitting result under the penalty level selected by 'bic'
