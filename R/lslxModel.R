@@ -354,9 +354,14 @@ lslxModel$set("private",
                 self$specification <-
                   self$specification[!duplicated(self$specification$relation,
                                                  fromLast = TRUE),]
+                self$specification$prefix <- 
+                  gsub(pattern = " ", replacement = "",
+                       x = self$specification$prefix)
+                self$specification$prefix <- 
+                  gsub(pattern = "c\\(|\\(|\\)", replacement = "",
+                       x = self$specification$prefix)
                 prefix_split <-
                   strsplit(self$specification$prefix, ",")
-                
                 self$specification <-
                   do.call(what = rbind,
                           args = lapply(

@@ -206,8 +206,7 @@
 #'  \code{fix(1) * y7 + y8 + y9 <=: f3}
 #'
 #' The prefix \code{fix(1)} will fix the corresponding loadings to be one.
-#' Note that our syntax is different to that in \pkg{lavaan}, which fix the loading of \code{y1} at one by simply using \code{1 * y1}.
-#' In \pkg{lslx}, \code{1 * y1} means that the starting value of coefficient corresponding to \code{y1} (which can be free or penalized parameter, depending on the specified operator) is set as one.
+#' Simply using \code{1 * y1} will be also interpreted as fixing the loading of \code{y1} at one to mimic \pkg{lavaan}.
 #' The second way for scale setting is fixing the variance of latent factors, which can be achieved by specifying additional equations
 #'
 #'  \code{fix(1) * f1 <=> f1}
@@ -1143,9 +1142,9 @@
 #' model_miss <- "visual  :=> x1 + x2 + x3 
 #'                textual :=> x4 + x5 + x6
 #'                speed   :=> x7 + x8 + x9
-#'                visual  <=> fix(1) * visual
-#'                textual <=> fix(1) * textual
-#'                speed   <=> fix(1) * speed"
+#'                visual  <=> 1 * visual
+#'                textual <=> 1 * textual
+#'                speed   <=> 1 * speed"
 #'
 #' # "ageyr" and "agemo" are set as auxiliary variables
 #' lslx_miss <- lslx$new(model = model_miss,
@@ -1167,9 +1166,9 @@
 #' ## EXAMPLE: Semi-Confirmatory Multi-Group Factor Analysis ##
 #' # run `vignette("multi-group-analysis")` to see the vignette
 #' # specify multi-group factor analysis model
-#' model_mgfa <- "visual  :=> fix(1) * x1 + x2 + x3
-#'                textual :=> fix(1) * x4 + x5 + x6
-#'                speed   :=> fix(1) * x7 + x8 + x9"
+#' model_mgfa <- "visual  :=> 1 * x1 + x2 + x3
+#'                textual :=> 1 * x4 + x5 + x6
+#'                speed   :=> 1 * x7 + x8 + x9"
 #' 
 #' # "school" is set as group variable and "Pasteur" is specified as reference
 #' lslx_mgfa <- lslx$new(model = model_mgfa,
