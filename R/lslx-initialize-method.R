@@ -26,7 +26,7 @@ lslx$set("public",
              }
              if (missing(group_variable)) {
                group_variable <- NULL
-               name_group <- "G"
+               name_group <- "1"
              } else {
                if (length(group_variable) > 1) {
                  stop("Argument `group_variable` can be only of length one.")
@@ -68,9 +68,9 @@ lslx$set("public",
              }
              if (is.null(names(sample_cov))) {
                if (length(sample_cov) > 1) {
-                 name_group <- paste0("G", 1:length(sample_cov))
+                 name_group <- as.character(1:length(sample_cov))
                } else {
-                 name_group <- "G"
+                 name_group <- "1"
                }
                names(sample_cov) <- name_group
                if (verbose) {
@@ -98,8 +98,8 @@ lslx$set("public",
            if (any(grepl(pattern = "/|\\||@",
                          x = name_group))) {
              stop(
-               "Name(s) of group(s) cannot contain '/', '|', and '@'.",
-               "\n  Please change the name(s) of group(s) in the specified data source."
+               "Names of groups cannot contain '/', '|', and '@'.",
+               "\n  Please change the names of groups in the specified data source."
              )
            }
            
@@ -112,7 +112,7 @@ lslx$set("public",
                if (!(reference_group %in% name_group)) {
                  stop(
                    "Argument 'reference_group' is not recognized.",
-                   "\n  Group name(s) currently recognized by 'lslx' is ",
+                   "\n  Group names currently recognized by 'lslx' is ",
                    do.call(paste, as.list(name_group)),
                    " (possibly automatically created).",
                    "\n  Specified 'reference_group' is ",
@@ -148,21 +148,21 @@ lslx$set("public",
                           "'sample_cov'"),
                    "argument. \n")
              }
-             cat("  Response Variable(s):",
+             cat("  Response Variables:",
                  private$model$name_response,
                  "\n")
              if (length(private$model$name_factor) > 0) {
-               cat("  Latent Factor(s):",
+               cat("  Latent Factors:",
                    private$model$name_factor,
                    "\n") 
              }
              if (length(private$data$auxiliary) > 0) {
-               cat("  Auxiliary Variable(s):",
+               cat("  Auxiliary Variables:",
                    colnames(private$data$auxiliary[[1]]),
                    "\n")               
              }
              if (length(private$model$name_group) > 1) {
-               cat("  Group(s):",
+               cat("  Groups:",
                    private$model$name_group,
                    "\n")
                if (!is.na(private$model$reference_group)) {
