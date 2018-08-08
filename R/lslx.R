@@ -1149,7 +1149,7 @@
 #'                                        "y6<->y8"))
 #'
 #' # fit with lasso under default penalty levels
-#' lslx_sem$fit_lasso(lambda_length = 30)
+#' lslx_sem$fit_lasso(lambda_length = 25)
 #' 
 #' # summarize fitting result under penalty level selected by 'abic'
 #' lslx_sem$summarize(selector = "abic")
@@ -1184,7 +1184,7 @@
 #'                          verbose = FALSE)
 #' 
 #' # fit with lasso under default penalty levels
-#' lslx_miss$fit_lasso(lambda_length = 30)
+#' lslx_miss$fit_lasso(lambda_length = 25)
 #' 
 #' # summarize fitting result under penalty level selected by 'raic'
 #' lslx_miss$summarize(selector = "raic")
@@ -1212,7 +1212,7 @@
 #'                      group = "Grant-White")
 #'                      
 #' # fit with mcp under default penalty levels and specified convexity levels
-#' lslx_mgfa$fit_mcp(lambda_length = 30, delta_length = 2)
+#' lslx_mgfa$fit_mcp(lambda_length = 25)
 #' 
 #' # summarize fitting result under penalty level selected by 'hbic'
 #' lslx_mgfa$summarize(selector = "hbic")
