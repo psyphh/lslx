@@ -1,5 +1,5 @@
 ---
-title: "Semi-Confirmatory Factor Analysis with Missing Data"
+title: "Factor Analysis with Missing Data"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
@@ -12,67 +12,67 @@ options(digits = 3)
 options(width = 100)
 ```
 
-In this example, we will show how to use `lslx` to conduct semi-confirmatory factor analysis.
+In this example, we will show how to use `lslx` to conduct semi-confirmatory factor analysis with missing data.
 The example uses data `HolzingerSwineford1939` in the package `lavaan`.
 Hence, `lavaan` must be installed.
 
 ## Missing Data Construction
-Because `HolzingerSwineford1939` doesn't contain missing values, we use the code in `semTools` to create `NA` (see the example of `twostage` function in `semTools`).
+Because `HolzingerSwineford1939` doesn't contain missing values, we use the code in `semTools` to create `NA` (see the example of `twostage()` function in `semTools`).
 ```{r comment = "", message = FALSE}
-data <- lavaan::HolzingerSwineford1939
-data$x5 <- ifelse(data$x1 <= quantile(data$x1, .3), NA, data$x5)
-data$age <- data$ageyr + data$agemo/12
-data$x9 <- ifelse(data$age <= quantile(data$age, .3), NA, data$x9)
+data_miss <- lavaan::HolzingerSwineford1939
+data_miss$x5 <- ifelse(data_miss$x1 <= quantile(data_miss$x1, .3), 
+                       NA, data_miss$x5)
+data_miss$age <- data_miss$ageyr + data_miss$agemo/12
+data_miss$x9 <- ifelse(data_miss$age <= quantile(data_miss$age, .3), 
+                       NA, data_miss$x9)
 ```
 By the construction, we can see that the missingness of `x5` depends on the value of `x1` and the missingness of `x9` relies on the `age` variable. Note that `age` is created by `ageyr` and `agemo`. 
 Since `ageyr` and `agemo` are not the variables that we are interested, the two variables are treated as auxiliary in the later analysis.
 
-## Model Sepcification and Object Initialization
-The following model specification is the same to our example of semi-confirmatory factor analysis (see `vignette("factor-analysis")`).
+## Model Specification and Object Initialization
+A usual confirmatory factor analysis (CFA) model is specified.
 ```{r comment = "", message = FALSE}
-model <-
-'
-visual  :=> x1 + x2 + x3
-textual :=> x4 + x5 + x6
-speed   :=> x7 + x8 + x9
-visual  :~> x4 + x5 + x6 + x7 + x8 + x9 
-textual :~> x1 + x2 + x3 + x7 + x8 + x9 
-speed   :~> x1 + x2 + x3 + x4 + x5 + x6 
-visual  <=> fix(1) * visual
-textual <=> fix(1) * textual
-speed   <=> fix(1) * speed
-'
+model_miss <- "visual  :=> x1 + x2 + x3
+               textual :=> x4 + x5 + x6
+               speed   :=> x7 + x8 + x9
+               visual  <=> 1 * visual
+               textual <=> 1 * textual
+               speed   <=> 1 * speed"
 ```
-To initialize an `lslx` object with auxiliary variables, we need to specify the `auxiliary_variable` argument.
-`auxiliary_variable` argument only accepts numeric variables.
-If any categorical variable ia considered as a valid auxiliary variable, user should transform it as a set of dummy variables first. One possible method is using `model.matrix` function.
+Here, `1` before `*` will be interpreted as `fix(1)`.
+To initialize an `lslx` object with auxiliary variables, we need to specify the `auxiliary_variable` argument. The `auxiliary_variable` argument only accepts numeric variables.
+If any categorical variable is considered as a valid auxiliary variable, user should transform it as a set of dummy variables first. One possible method is using `model.matrix` function.
 ```{r comment = "", message = FALSE}
 library(lslx)
-r6_lslx <- lslx$new(model = model,
-                    data = data,
-                    auxiliary_variable = c("ageyr", "agemo"))
+lslx_miss <- lslx$new(model = model_miss, data = data_miss,
+                      auxiliary_variable = c("ageyr", "agemo"))
 ```
+Because the specified CFA might not fit the data well, we add a correlated residual structure to the model by `$penalize_block()` 
+```{r comment = "", message = FALSE}
+lslx_miss$penalize_block(block = "y<->y", type = "fixed", verbose = FALSE)
+```
+The code penalizes all the coefficients in `y<->y` block with fixed parameter type. 
+Note that this model is not identified under the usual SEM framework.
+PL method can still estimate it because the penalty function introduces additional constraints on parameters.
+However, we don't recommend using such type of model because it is difficult to be interpreted.
+
 
 ## Model Fitting
 So far, the specified auxiliary variables are only stored in `lslx` object. 
-They are actually used after implementing the `fit` related methods.
+They are actually used after implementing the `$fit()` related methods.
 ```{r comment = "", message = FALSE}
-r6_lslx$fit(penalty_method = "mcp",
-            lambda_grid = seq(.01, .30, .01),
-            delta_grid = c(5, 10))
+lslx_miss$fit_lasso()
 ```
-By default, `fit` related methods implement two-step method (possibly with auxiliary variables) for handling missing values.
-User can specify the missing method explicitly via `missing_method` argument.
-Another missing method in the current version is listwise deletion.
-However, listwise deletion has no theoretical advantages over the two step method.
+By default, `fit` related methods implement two-step method (possibly with auxiliary variables) for handling missing values. User can specify the missing method explicitly via `missing_method` argument.
+Another missing method in the current version is listwise deletion. However, listwise deletion has no theoretical advantages over the two-step method.
 
 ## Model Summarizing
-The following code summarizes the fitting result under the penalty level selected by Bayesian information criterion (BIC).
-The `number of missing pattern` shows how many missing patterns present in the data set (include the complete pattern).
+The following code summarizes the fitting result under the penalty level selected by a Robust version of Akaike information criterion (RAIC).
+The `number of missing patterns` shows how many missing patterns present in the data set (include the complete pattern).
 If the `lslx` object is initialized via raw data, by default, a corrected sandwich standard error will be used for coefficient test.
-The correction is based on the asymptotic covariance of saturated derived by full information maximum likelihood.
+The correction is based on the asymptotic covariance of saturated moments derived by full information maximum likelihood.
 Also, the mean adjusted likelihood ratio test is based on this quantity.
-For the reference, please see the section of Missing Data in `?lslx`
+For the reference, please see the section of Missing Data in `?lslx`.
 ```{r comment = "", message = FALSE, fig.width = 24, fig.height = 14}
-r6_lslx$summarize(selector = "bic")
+lslx_miss$summarize(selector = "raic")
 ```
