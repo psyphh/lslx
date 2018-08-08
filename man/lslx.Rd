@@ -1056,9 +1056,9 @@ model_fa <- "visual  :=> x1 + x2 + x3
              visual  :~> x4 + x5 + x6 + x7 + x8 + x9
              textual :~> x1 + x2 + x3 + x7 + x8 + x9
              speed   :~> x1 + x2 + x3 + x4 + x5 + x6
-             visual  <=> fix(1)* visual
-             textual <=> fix(1)* textual
-             speed   <=> fix(1)* speed"
+             visual  <=> fix(1) * visual
+             textual <=> fix(1) * textual
+             speed   <=> fix(1) * speed"
           
 # initialize lslx object via specified model and raw data
 lslx_fa <- lslx$new(model = model_fa,
@@ -1066,7 +1066,7 @@ lslx_fa <- lslx$new(model = model_fa,
                     
 # fit with mcp under specified penalty levels and convexity levels
 lslx_fa$fit(penalty_method = "mcp", 
-            lambda_grid = seq(.01, .60, .01), 
+            lambda_grid = seq(.02, .60, .02), 
             delta_grid = c(1.5, 3.0, Inf))
 
 # summarize fitting result under penalty level selected by 'bic'
@@ -1096,7 +1096,7 @@ lslx_sem$penalize_coefficient(name = c("y1<->y5",
                                        "y6<->y8"))
 
 # fit with lasso under default penalty levels
-lslx_sem$fit_lasso()
+lslx_sem$fit_lasso(lambda_length = 30)
 
 # summarize fitting result under penalty level selected by 'abic'
 lslx_sem$summarize(selector = "abic")
@@ -1131,7 +1131,7 @@ lslx_miss$penalize_block(block = "y<->y",
                          verbose = FALSE)
 
 # fit with lasso under default penalty levels
-lslx_miss$fit_lasso()
+lslx_miss$fit_lasso(lambda_length = 30)
 
 # summarize fitting result under penalty level selected by 'raic'
 lslx_miss$summarize(selector = "raic")
@@ -1159,7 +1159,7 @@ lslx_mgfa$free_block(block = "f<-1",
                      group = "Grant-White")
                      
 # fit with mcp under default penalty levels and specified convexity levels
-lslx_mgfa$fit_mcp()
+lslx_mgfa$fit_mcp(lambda_length = 30, delta_length = 2)
 
 # summarize fitting result under penalty level selected by 'hbic'
 lslx_mgfa$summarize(selector = "hbic")
