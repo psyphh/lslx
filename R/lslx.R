@@ -715,7 +715,7 @@
 #'
 #' @section Summarize Method:
 #' \preformatted{$summarize(selector, lambda, delta, standard_error = "default", debias = "default",
-#'   post_inference = "default", alpha_level = .05, include_faulty = FALSE, 
+#'   inference = "default", alpha_level = .05, include_faulty = FALSE, 
 #'   style = "default", mode = "default", digit = 3, interval = TRUE, output)}
 #'\describe{
 #'\item{\bold{Arguments}}{
@@ -735,7 +735,7 @@
 #'\item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
-#'\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
+#'\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
 #'   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
 #'   If it is specified as \code{"default"}, \code{"none"} will be used.}
 #'\item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
@@ -764,7 +764,7 @@
 #' \preformatted{$test_lr(selector, lambda, delta, include_faulty = FALSE)
 #' $test_rmsea(selector, lambda, delta, alpha_level = .05, include_faulty = FALSE)
 #' $test_coefficient(selector, lambda, delta, standard_error = "default", 
-#'   debias = "default", post_inference = "default", alpha_level = .05, 
+#'   debias = "default", inference = "default", alpha_level = .05, 
 #'   include_faulty = FALSE)}
 #'\describe{
 #'\item{\bold{Arguments}}{
@@ -784,7 +784,7 @@
 #'\item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
-#'\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
+#'\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
 #'   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
 #'   If it is specified as \code{"default"}, \code{"none"} will be used.}
 #'\item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}

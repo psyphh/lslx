@@ -6,7 +6,7 @@ lslx$set("public",
                   delta,
                   standard_error = "default",
                   debias = "default",
-                  post_inference = "default",
+                  inference = "default",
                   alpha_level = .05,
                   include_faulty = FALSE,
                   style = "default",
@@ -36,8 +36,8 @@ lslx$set("public",
                "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
              )
            }
-           if (!(post_inference %in% c("default", "none", "polyhedral", "scheffe"))) {
-             stop("Argument 'post_inference' can be only either 'default', 'none', 'polyhedral', or 'scheffe'.")
+           if (!(inference %in% c("default", "none", "polyhedral", "scheffe"))) {
+             stop("Argument 'inference' can be only either 'default', 'none', 'polyhedral', or 'scheffe'.")
            }
            if (!(debias %in% c("default", "none", "one_step"))) {
              stop("Argument 'debias' can be only either 'default', 'none', or 'one_step'.")
@@ -49,17 +49,17 @@ lslx$set("public",
                standard_error <- "observed_information"
              }
            }
-           if (post_inference == "default") {
-             post_inference <- "none"
+           if (inference == "default") {
+             inference <- "none"
              if (debias == "default") {
                debias <- "none"
              }
-           } else if (post_inference == "polyhedral") {
+           } else if (inference == "polyhedral") {
              if (debias == "default") {
                debias <- "one_step"
              }
              if (debias == "none") {
-               stop("Argument 'debias' cannot be 'none' under 'post_inference' == 'polyhedral'.")
+               stop("Argument 'debias' cannot be 'none' under 'inference' == 'polyhedral'.")
              }
            } else {
              if (debias == "default") {
@@ -430,7 +430,7 @@ lslx$set("public",
                  standard_error = standard_error,
                  alpha_level = alpha_level,
                  debias = debias,
-                 post_inference = post_inference,
+                 inference = inference,
                  include_faulty = include_faulty
                )
              relation_as_groupname <-

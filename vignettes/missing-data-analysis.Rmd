@@ -3,7 +3,7 @@ title: "Factor Analysis with Missing Data"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Semi-Confirmatory Factor Analysis with Missing Data}
+  %\VignetteIndexEntry{Factor Analysis with Missing Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

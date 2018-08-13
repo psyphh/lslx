@@ -3,7 +3,7 @@ title: "Multi-Group Factor Analysis"
 author: "Po-Hsien Huang"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Semi-Confirmatory Multi-Group Factor Analysis}
+  %\VignetteIndexEntry{Multi-Group Factor Analysis}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
