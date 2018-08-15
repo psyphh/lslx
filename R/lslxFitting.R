@@ -42,7 +42,15 @@ lslxFitting$set("private",
                     }
                   } else {
                     if (!any(c("f<-f", "f<-y", "y<-y", "y<->f", "f<->y") %in% model$specification$block)) {
-                      self$control$model_class <- "FA" 
+                      if ("y<-f" %in% model$specification$block) {
+                        if (all(model$specification$type[model$specification$block == "y<-f"] == "pen")) {
+                          self$control$model_class <- "EFA" 
+                        } else {
+                          self$control$model_class <- "FA" 
+                        }
+                      } else {
+                        self$control$model_class <- "SEM" 
+                      }
                     } else {
                       if (!any(c("f<-f", "y<->f", "f<->y") %in% model$specification$block)) {
                         self$control$model_class <- "MIMIC" 
@@ -726,27 +734,33 @@ lslxFitting$set("private",
                           USE.NAMES = TRUE
                         )
                       )
-                    idc_beta <-
-                      (self$reduced_model$theta_matrice_idx == 2 &
-                         self$reduced_model$theta_is_free) |
-                      (
-                        self$reduced_model$theta_matrice_idx == 2 &
-                          (
-                            !self$reduced_model$theta_is_free &
-                              !self$reduced_model$theta_is_pen
-                          ) &
-                          (self$reduced_model$theta_start != 0)
-                      ) |
-                      (
-                        self$reduced_model$theta_matrice_idx == 2 &
-                          self$reduced_model$theta_is_pen &
-                          !(
-                            self$reduced_model$theta_left_idx <=
-                              self$reduced_model$n_response &
-                              self$reduced_model$theta_right_idx >
-                              self$reduced_model$n_response
-                          )
-                      )
+                    if (self$control$model_class == "EFA" ) {
+                      idc_beta <-
+                        (self$reduced_model$theta_matrice_idx == 2 &
+                           self$reduced_model$theta_is_pen)
+                    } else {
+                      idc_beta <-
+                        (self$reduced_model$theta_matrice_idx == 2 &
+                           self$reduced_model$theta_is_free) |
+                        (
+                          self$reduced_model$theta_matrice_idx == 2 &
+                            (
+                              !self$reduced_model$theta_is_free &
+                                !self$reduced_model$theta_is_pen
+                            ) &
+                            (self$reduced_model$theta_start != 0)
+                        ) |
+                        (
+                          self$reduced_model$theta_matrice_idx == 2 &
+                            self$reduced_model$theta_is_pen &
+                            !(
+                              self$reduced_model$theta_left_idx <=
+                                self$reduced_model$n_response &
+                                self$reduced_model$theta_right_idx >
+                                self$reduced_model$n_response
+                            )
+                        )
+                    }
                     idx_beta <-
                       strsplit(x = unique(
                         paste0(
@@ -775,36 +789,54 @@ lslxFitting$set("private",
                         matrix(0,
                                self$reduced_model$n_eta,
                                self$reduced_model$n_eta)
+                      cor_pool <- cov2cor(saturated_cov_pool)
                       cov_eta[1:self$reduced_model$n_response,
                               1:self$reduced_model$n_response] <-
-                        cov2cor(saturated_cov_pool)
-                      for (i in (self$reduced_model$n_response + 1):(self$reduced_model$n_eta)) {
-                        theta_left_idx_beta_i <-
-                          theta_left_idx_beta[theta_right_idx_beta == i &
-                                                theta_left_idx_beta <= self$reduced_model$n_response]
-                        cov_sum_i <-
-                          sum(cov_eta[theta_left_idx_beta_i,
-                                      theta_left_idx_beta_i])
-                        for (j in seq_len(i)) {
-                          if (j <= self$reduced_model$n_response) {
-                            cov_eta_ij <-
-                              sum(cov_eta[j, theta_left_idx_beta_i]) / sqrt(abs(cov_sum_i))
-                            cov_eta[i, j] <- cov_eta_ij
-                            cov_eta[j, i] <- cov_eta_ij
-                          } else if (j < i) {
-                            theta_left_idx_beta_j <-
-                              theta_left_idx_beta[theta_right_idx_beta == j &
-                                                    theta_left_idx_beta <= self$reduced_model$n_response]
-                            cov_sum_j <-
-                              sum(cov_eta[theta_left_idx_beta_j,
-                                          theta_left_idx_beta_j])
-                            cov_eta_ij <-
-                              sum(cov_eta[theta_left_idx_beta_j, theta_left_idx_beta_i]) /
-                              sqrt(abs(cov_sum_i) * abs(cov_sum_j))
-                            cov_eta[i, j] <- cov_eta_ij
-                            cov_eta[j, i] <- cov_eta_ij
-                          } else {
-                            cov_eta[j, i] <- 1
+                        cor_pool
+                      if (self$control$model_class == "EFA") {
+                        cor_pool_eigen <- eigen(cor_pool)
+                        cov_eta_yf <- 
+                          cor_pool_eigen$vectors[, 1:self$reduced_model$n_factor, drop = FALSE] %*%
+                          diag(sqrt(cor_pool_eigen$values[1:self$reduced_model$n_factor]))
+                        cov_eta_yf <- promax(cov_eta_yf, m = 4)$loadings[]
+                        cov_eta[1:self$reduced_model$n_response, 
+                                   (self$reduced_model$n_response + 1):self$reduced_model$n_eta] <-
+                          cov_eta_yf
+                        cov_eta[(self$reduced_model$n_response + 1):self$reduced_model$n_eta,
+                                1:self$reduced_model$n_response] <-
+                          t(cov_eta_yf)
+                        cov_eta[(self$reduced_model$n_response + 1):self$reduced_model$n_eta,
+                                (self$reduced_model$n_response + 1):self$reduced_model$n_eta] <-
+                          diag(1, self$reduced_model$n_factor)
+                      } else {
+                        for (i in (self$reduced_model$n_response + 1):(self$reduced_model$n_eta)) {
+                          theta_left_idx_beta_i <-
+                            theta_left_idx_beta[theta_right_idx_beta == i &
+                                                  theta_left_idx_beta <= self$reduced_model$n_response]
+                          cov_sum_i <-
+                            sum(cov_eta[theta_left_idx_beta_i,
+                                        theta_left_idx_beta_i])
+                          for (j in seq_len(i)) {
+                            if (j <= self$reduced_model$n_response) {
+                              cov_eta_ij <-
+                                sum(cov_eta[j, theta_left_idx_beta_i]) / sqrt(abs(cov_sum_i))
+                              cov_eta[i, j] <- cov_eta_ij
+                              cov_eta[j, i] <- cov_eta_ij
+                            } else if (j < i) {
+                              theta_left_idx_beta_j <-
+                                theta_left_idx_beta[theta_right_idx_beta == j &
+                                                      theta_left_idx_beta <= self$reduced_model$n_response]
+                              cov_sum_j <-
+                                sum(cov_eta[theta_left_idx_beta_j,
+                                            theta_left_idx_beta_j])
+                              cov_eta_ij <-
+                                sum(cov_eta[theta_left_idx_beta_j, theta_left_idx_beta_i]) /
+                                sqrt(abs(cov_sum_i) * abs(cov_sum_j))
+                              cov_eta[i, j] <- cov_eta_ij
+                              cov_eta[j, i] <- cov_eta_ij
+                            } else {
+                              cov_eta[j, i] <- 1
+                            }
                           }
                         }
                       }
@@ -825,6 +857,7 @@ lslxFitting$set("private",
                       matrix(0,
                              self$reduced_model$n_eta,
                              self$reduced_model$n_eta)
+                    
                     for (i in seq_len(self$reduced_model$n_eta)) {
                       theta_right_idx_beta_i <-
                         theta_right_idx_beta[theta_left_idx_beta == i]
