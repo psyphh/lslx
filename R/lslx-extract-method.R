@@ -386,15 +386,15 @@ lslx$set("public",
                                           lambda = lambda,
                                           delta = delta,
                                           include_faulty = include_faulty)
-             lambda <- as.numeric(strsplit(x = penalty_level,
+             lambda_ <- as.numeric(strsplit(x = penalty_level,
                                            split = "=|/")[[1]][2])
-             delta <- as.numeric(strsplit(x = penalty_level,
+             delta_ <- as.numeric(strsplit(x = penalty_level,
                                           split = "=|/")[[1]][4])
              regularizer_gradient <-
                compute_regularizer_gradient_cpp(
                  theta_value = coefficient,
-                 lambda = lambda,
-                 delta = delta,
+                 lambda = lambda_,
+                 delta = delta_,
                  reduced_data = private$fitting$reduced_data,
                  reduced_model = private$fitting$reduced_model,
                  control = private$fitting$control,
