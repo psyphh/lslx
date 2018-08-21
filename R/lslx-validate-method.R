@@ -10,8 +10,9 @@ lslx$set("public",
                   standard_error = "default",
                   alpha_level = .05,
                   interval = "default",
+                  simplify = "default",
                   mode = "default",
-                  include_faulty = TRUE,
+                  exclude_improper = TRUE,
                   digit = 3L) {
            if (is.null(private$fitting)) {
              stop("Fitting field is not yet derived. Please use fit-related methods first.")
@@ -26,6 +27,25 @@ lslx$set("public",
            if (do_fit == "default") {
              do_fit <- "pattern"
            } 
+           if (simplify == "default") {
+             if (do_fit == "none") {
+               simplify <- TRUE
+             } else {
+               simplify <- FALSE
+             }
+           } else {
+             if (!is.logical(simplify)) {
+               stop("Argument 'simplify' can be only either 'default', TRUE or FALSE. ")
+             }
+             if (do_fit == "none") {
+               if (!simplify) {
+                 stop(
+                   "Argument 'simplify' cannot be FALSE under 'do_fit' == 'none'."
+                 )
+               }
+             } 
+           }
+
            lslx_cv <- self$clone(deep = TRUE)
            if (!missing(data)) {
              lslx_cv$set_data(data = data)
@@ -34,8 +54,7 @@ lslx$set("public",
              self$extract_coefficient(selector = selector,
                                       lambda = lambda,
                                       delta = delta,
-                                      type = "all",
-                                      include_faulty = include_faulty)
+                                      exclude_improper = exclude_improper)
            if (do_fit %in% c("none", "pattern")) {
              type <- ifelse((coefficient != 0) & (private$model$specification$type != "fixed"),
                             "free", "fixed")
@@ -61,6 +80,7 @@ lslx$set("public",
                            armijo = private$fitting$control$armijo,
                            ridge_cov = private$fitting$control$ridge_cov,
                            ridge_hessian = private$fitting$control$ridge_hessian,
+                           positive_diag = private$fitting$control$positive_diag,
                            verbose = FALSE)
              } else {
                lslx_cv$fit(penalty_method = "none",
@@ -80,6 +100,7 @@ lslx$set("public",
                            armijo = private$fitting$control$armijo,
                            ridge_cov = private$fitting$control$ridge_cov,
                            ridge_hessian = private$fitting$control$ridge_hessian,
+                           positive_diag = private$fitting$control$positive_diag,
                            verbose = FALSE)
              }
            } else if (do_fit == "level") {
@@ -87,16 +108,16 @@ lslx$set("public",
                  self$extract_penalty_level(selector = selector,
                                             lambda = lambda,
                                             delta = delta,
-                                            include_faulty = include_faulty)
-               lambda_ <- as.numeric(strsplit(x = penalty_level,
+                                            exclude_improper = exclude_improper)
+               lambda <- as.numeric(strsplit(x = penalty_level,
                                              split = "=|/")[[1]][2])
-               delta_ <- as.numeric(strsplit(x = penalty_level,
+               delta <- as.numeric(strsplit(x = penalty_level,
                                             split = "=|/")[[1]][4])
                lslx_cv$set_coefficient_start(name = names(coefficient), 
                                              start = coefficient)
                lslx_cv$fit(penalty_method = private$fitting$control$penalty_method,
-                           lambda_grid = lambda_,
-                           delta_grid = delta_,
+                           lambda_grid = lambda,
+                           delta_grid = delta,
                            algorithm = private$fitting$control$algorithm,
                            missing_method = private$fitting$control$missing_method,
                            start_method = "none",
@@ -113,21 +134,24 @@ lslx$set("public",
                            armijo = private$fitting$control$armijo,
                            ridge_cov = private$fitting$control$ridge_cov,
                            ridge_hessian = private$fitting$control$ridge_hessian,
+                           positive_diag = private$fitting$control$positive_diag,
                            verbose = FALSE)
              } else {
              }
            
            if (do_fit == "none") {
              lslx_cv$summarize(interval = FALSE,
+                               simplify = TRUE,
                                mode = mode,
-                               include_faulty = FALSE,
+                               exclude_improper = FALSE,
                                digit = digit)
            } else {
              lslx_cv$summarize(standard_error = standard_error,
                                alpha_level = alpha_level,
                                interval = interval,
+                               simplify = simplify,
                                mode = mode,
-                               include_faulty = FALSE,
+                               exclude_improper = FALSE,
                                digit = digit)
            }
          })
