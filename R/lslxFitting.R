@@ -1034,6 +1034,7 @@ lslxFitting$set("private",
                         )
                     }
                   } else {
+                    self$supplied_result$fitted_start <- self$reduced_model$theta_start
                   }
                   names(self$supplied_result$fitted_start) <-
                     self$reduced_model$theta_name
