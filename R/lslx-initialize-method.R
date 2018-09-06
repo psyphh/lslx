@@ -3,97 +3,104 @@ lslx$set("public",
          "initialize",
          function(model,
                   data,
-                  group_variable,
-                  reference_group,
+                  ordered_variable,
                   weight_variable,
                   auxiliary_variable,
+                  group_variable,
+                  reference_group,
                   sample_cov,
                   sample_mean,
                   sample_size,
+                  sample_moment_acov,
                   verbose = TRUE) {
            if (missing(model)) {
              stop("Argument 'model' cannot be empty.")
            }
            if (missing(data) & missing(sample_cov)) {
              stop("Argument 'data' and 'sample_cov' cannot be both empty.")
-           } else if (!missing(data)) {
-             if (!is.data.frame(data)) {
-               if (!(is.matrix(data) & is.numeric(data))) {
-                 stop("Argument 'data' must be a 'data.frame' or a 'matrix'.")
-               } else {
+           } else {
+             if (!missing(data)) {
+               if (!is.data.frame(data)) {
                  data <- as.data.frame(data)
                }
-             }
-             if (missing(group_variable)) {
-               group_variable <- NULL
-               name_group <- "g"
-             } else {
-               if (length(group_variable) > 1) {
-                 stop("Argument `group_variable` can be only of length one.")
-               }
-               if (!(group_variable %in% colnames(data))) {
-                 stop("Argument 'group_variable' is not recognized.")
-               }
-               name_group <-
-                 sort(levels(factor(getElement(
-                   data, group_variable
-                 ))))
-             }
-             if (missing(weight_variable)) {
-               weight_variable <- NULL
-             } else {
-               if (length(weight_variable) > 1) {
-                 stop("Argument `weight_variable` can be only of length one.")
-               }
-               if (!(weight_variable %in% colnames(data))) {
-                 stop("Argument 'weight_variable' is not recognized.")
-               }
-             }
-             if (missing(auxiliary_variable)) {
-               auxiliary_variable <- NULL
-             } else {
-               if (!all(auxiliary_variable %in% colnames(data))) {
-                 stop("Argument 'auxiliary_variable' is not recognized.")
-               }
-             }
-           } else {
-             if (!is.matrix(sample_cov) & !is.list(sample_cov)) {
-               stop(
-                 "Argument 'sample_cov' must be a 'matrix' (for single group analysis)",
-                 " or a 'list' of 'matrix' (for multiple group analysis)."
-               )
-             }
-             if (is.matrix(sample_cov)) {
-               sample_cov <- list(sample_cov)
-             }
-             if (is.null(names(sample_cov))) {
-               if (length(sample_cov) > 1) {
-                 name_group <- paste0("g", 1:length(sample_cov))
+               if (missing(ordered_variable)) {
+                 ordered_variable <- NULL
                } else {
-                 name_group <- "g"
+                 if (!(ordered_variable %in% colnames(data))) {
+                   stop("Argument 'ordered_variable' is not recognized.")
+                 }
                }
-               names(sample_cov) <- name_group
-               if (verbose) {
-                 cat(
-                   "NOTE: Because argument 'sample_cov' doesn't contain group name(s),",
-                   "default group name(s) is created.\n"
+               if (missing(weight_variable)) {
+                 weight_variable <- NULL
+               } else {
+                 if (length(weight_variable) > 1) {
+                   stop("Argument `weight_variable` can be only of length one.")
+                 }
+                 if (!(weight_variable %in% colnames(data))) {
+                   stop("Argument 'weight_variable' is not recognized.")
+                 }
+               }
+               if (missing(auxiliary_variable)) {
+                 auxiliary_variable <- NULL
+               } else {
+                 if (!all(auxiliary_variable %in% colnames(data))) {
+                   stop("Argument 'auxiliary_variable' is not recognized.")
+                 }
+               }
+               if (missing(group_variable)) {
+                 group_variable <- NULL
+                 name_group <- "g"
+               } else {
+                 if (length(group_variable) > 1) {
+                   stop("Argument `group_variable` can be only of length one.")
+                 }
+                 if (!(group_variable %in% colnames(data))) {
+                   stop("Argument 'group_variable' is not recognized.")
+                 }
+                 name_group <-
+                   sort(levels(factor(getElement(
+                     data, group_variable
+                   ))))
+               }
+             } else if (!missing(sample_cov)) {
+               if (!is.matrix(sample_cov) & !is.list(sample_cov)) {
+                 stop(
+                   "Argument 'sample_cov' must be a 'matrix' (for single group analysis)",
+                   " or a 'list' of 'matrix' (for multiple group analysis)."
                  )
                }
+               if (is.matrix(sample_cov)) {
+                 sample_cov <- list(sample_cov)
+               }
+               if (is.null(names(sample_cov))) {
+                 if (length(sample_cov) == 1L) {
+                   name_group <- "g"
+                 } else {
+                   name_group <- paste0("g", 1:length(sample_cov))
+                 }
+                 names(sample_cov) <- name_group
+               } else {
+                 name_group <- names(sample_cov)
+               }
+               if (!missing(ordered_variable)) {
+                 stop("Argument 'ordered_variable' is unnecessary under moment initialization.")
+               }
+               if (!missing(weight_variable)) {
+                 stop("Argument 'weight_variable' is unnecessary under moment initialization.")
+               }
+               if (!missing(auxiliary_variable)) {
+                 stop("Argument 'auxiliary_variable' is unnecessary under moment initialization.")
+               }
+               if (!missing(group_variable)) {
+                 stop("Argument 'group_variable' is unnecessary under moment initialization.")
+               }
+               ordered_variable <- NULL
+               weight_variable <- NULL
+               auxiliary_variable <- NULL
+               group_variable <- NULL
              } else {
-               name_group <- names(sample_cov)
+               
              }
-             if (!missing(group_variable)) {
-               stop("Argument 'group_variable' is unnecessary under moment initialization.")
-             }
-             if (!missing(weight_variable)) {
-               stop("Argument 'weight_variable' is unnecessary under moment initialization.")
-             }
-             if (!missing(auxiliary_variable)) {
-               stop("Argument 'auxiliary_variable' is unnecessary under moment initialization.")
-             }
-             group_variable <- NULL
-             weight_variable <- NULL
-             auxiliary_variable <- NULL
            }
            if (any(grepl(pattern = "/|\\||@",
                          x = name_group))) {
@@ -102,32 +109,36 @@ lslx$set("public",
                "\n  Please change the names of groups in the specified data source."
              )
            }
-           
            if (missing(reference_group)) {
-             reference_group <- NA_character_
+             reference_group <- NULL
+           } else if (is.na(reference_group)) {
+    
            } else {
              if (length(name_group) == 1L) {
                stop("Argument 'reference_group' is unnecessary for single group analysis.")
              } else {
-               if (!(reference_group %in% name_group)) {
-                 stop(
-                   "Argument 'reference_group' is not recognized.",
-                   "\n  Group names currently recognized by 'lslx' is ",
-                   do.call(paste, as.list(name_group)),
-                   " (possibly automatically created).",
-                   "\n  Specified 'reference_group' is ",
-                   reference_group,
-                   "."
-                 )
+               if (!is.na(reference_group)) {
+                 if (!(reference_group %in% name_group)) {
+                   stop(
+                     "Argument 'reference_group' is not recognized.",
+                     "\n  Group names currently recognized by 'lslx' is ",
+                     do.call(paste, as.list(name_group)),
+                     " (possibly automatically created).",
+                     "\n  Specified 'reference_group' is ",
+                     reference_group,
+                     "."
+                   )
+                 }
                }
              }
            }
            private$model <-
              lslxModel$new(model = model,
-                           group_variable = group_variable,
-                           reference_group = reference_group,
+                           ordered_variable = ordered_variable,
                            weight_variable = weight_variable,
                            auxiliary_variable = auxiliary_variable,
+                           group_variable = group_variable,
+                           reference_group = reference_group,
                            name_group = name_group)
            private$data <- 
              lslxData$new(data = data,
@@ -141,13 +152,11 @@ lslx$set("public",
                           name_group = private$model$name_group)
            private$fitting <- NULL
            if (verbose) {
-             if (verbose) {
-               cat("An 'lslx' R6 class is initialized via",
-                   ifelse(!missing(data), 
-                          "'data'",
-                          "'sample_cov'"),
-                   "argument. \n")
-             }
+             cat("An 'lslx' R6 class is initialized via",
+                 ifelse(!missing(data), 
+                        "'data'",
+                        "'sample_cov'"),
+                 "argument. \n")
              cat("  Response Variables:",
                  private$model$name_response,
                  "\n")
@@ -165,13 +174,13 @@ lslx$set("public",
                cat("  Groups:",
                    private$model$name_group,
                    "\n")
-               if (!is.na(private$model$reference_group)) {
+               if (!is.null(private$model$reference_group)) {
                  cat("  Reference Group:",
                      private$model$reference_group,
-                     "\n") 
+                     "\n")
                }
              }
-             if (!is.na(private$model$reference_group)) {
+             if (!is.null(private$model$reference_group)) {
                cat(
                  "NOTE:",
                  "Because",

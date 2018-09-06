@@ -21,9 +21,10 @@ lslxData$set("public",
                       sample_cov,
                       sample_mean,
                       sample_size,
-                      group_variable,
+                      ordered_variable,
                       weight_variable,
                       auxiliary_variable,
+                      group_variable,
                       name_response,
                       name_group) {
                if (!missing(data)) {
@@ -38,9 +39,9 @@ lslxData$set("public",
                      "."
                    )
                  } else {
+                   index <- 1:nrow(data)
+                   row.names(data) <- index
                    if (is.null(group_variable)) {
-                     index <- 1:nrow(data)
-                     row.names(data) <- index
                      response <-
                        list(data[, name_response, drop = FALSE])
                      names(response) <- name_group
@@ -62,8 +63,6 @@ lslxData$set("public",
                        }
                      }
                    } else {
-                     index <- 1:nrow(data)
-                     row.names(data) <- index
                      data <-
                        data[order(as.character(getElement(data, group_variable))), , drop = FALSE]
                      data[, group_variable] <-

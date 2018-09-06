@@ -4,6 +4,7 @@ lslx$set("public",
          function(penalty_method = "mcp",
                   lambda_grid = "default",
                   delta_grid = "default",
+                  loss = "default",
                   algorithm = "default",
                   missing_method = "default",
                   start_method = "default",
@@ -24,6 +25,7 @@ lslx$set("public",
                   armijo = 1e-5,
                   ridge_cov = 0,
                   ridge_hessian = 1e-4,
+                  ridge_weight = 1e-4,
                   warm_start = TRUE,
                   positive_variance = TRUE,
                   minimum_variance = 1e-4,
@@ -58,8 +60,11 @@ lslx$set("public",
                }
              }
            }
-           if (!(algorithm %in% c("default", "bfgs", "fisher"))) {
-             stop("Argument 'algorithm' can be only 'default', 'bfgs', or 'fisher'.")
+           if (!(loss %in% c("default", "ml", "uls", "dwls", "wls"))) {
+             stop("Argument 'default' can be only 'default', 'ml', 'uls', 'dwls', or 'wls'.")
+           }
+           if (!(algorithm %in% c("default", "gd", "bfgs", "fisher"))) {
+             stop("Argument 'algorithm' can be only 'default', 'gd', 'bfgs', or 'fisher'.")
            }
            if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
              stop(
@@ -137,6 +142,7 @@ lslx$set("public",
                penalty_method = penalty_method,
                lambda_grid = lambda_grid,
                delta_grid = delta_grid,
+               loss = loss,
                algorithm = algorithm,
                missing_method = missing_method,
                start_method = start_method,

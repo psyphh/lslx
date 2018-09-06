@@ -357,7 +357,7 @@ where \eqn{loss} is the ML loss function, \eqn{regularizer} is a regularizer, po
 The optimization algorithm for minimizing the PL criterion is based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The algorithm can be understood as a quasi-Newton method with inner loop and outer loop.
 The inner loop of the algorithm derives a quasi-Newton direction by minimizing a quadratic approximated objective function via coordinate descent.
-To save the computation time, the Hessian matrix for the quadratic term is approximated by the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method or the expected Hessian (Fisher scoring).
+To save the computation time, the Hessian matrix for the quadratic term is approximated by the identity matrix, the Broyden-Fletcher-Goldfarb-Shanno (BFGS) method, or the expected Hessian (Fisher scoring).
 Although the computational cost of BFGS approximation is much smaller than calculating expected hessian,
 our experience shows that the two methods perform similarly in terms of computation time because more outer iterations are required for BFGS.
 The inner loop stops if the change of the derived direction is quite small.
@@ -502,7 +502,7 @@ where
 \eqn{m_{gi}}: the \eqn{i} element of sample mean at group \eqn{g};
 }
 }
-In \pkg{lslx}, the baseline model is the model that assumes a diagonal covariance matrice and a saturated mean.
+In \pkg{lslx}, the baseline model is the model that assumes a diagonal covariance matrix and a saturated mean.
 Hence, the baseline model may not be appropriate if users hope to evaluate the goodness-of-fit of mean structure.
 
 
@@ -540,7 +540,7 @@ It must contains variables specified in \code{model} (and possibly the variables
 \item{\code{weight_variable}}{A \code{character} with length one to specify what variable is used for sampling weight.}
 \item{\code{auxiliary_variable}}{A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments when missing data presents and two-step method is implemented.
 Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.}
-\item{\code{sample_cov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrices. It must have row and column names that match the variable names specified in \code{model}.}
+\item{\code{sample_cov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrixs. It must have row and column names that match the variable names specified in \code{model}.}
 \item{\code{sample_mean}}{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
 \item{\code{sample_size}}{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
@@ -666,7 +666,7 @@ $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \item{\code{delta_grid}}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 \item{\code{algorithm}}{A \code{character} to determine the method of optimization.
-  The current version supports \code{"bfgs"} and \code{"fisher"}.
+  The current version supports \code{"gd"} (gradient descent), \code{"bfgs"} (Broyden-Fletcher-Goldfarb-Shanno), and \code{"fisher"} (Fisher scoring).
   If the argument is set as \code{"default"}, then (1) \code{"bfgs"} will be implemented if no penalty is considered;
   (2) \code{"fisher"} will be implemented if penalty is considered.}
 \item{\code{missing_method}}{A \code{character} to determine the method for handling missing data (or \code{NA}).
@@ -725,7 +725,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
 \section{Summarize Method}{
 
 \preformatted{$summarize(selector, lambda, delta, standard_error = "default", debias = "default",
-  post_inference = "default", alpha_level = .05, include_faulty = FALSE, 
+  inference = "default", alpha_level = .05, include_faulty = FALSE, 
   style = "default", mode = "default", digit = 3, interval = TRUE, output)}
 \describe{
 \item{\bold{Arguments}}{
@@ -745,7 +745,7 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
 \item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
   Its value can be either \code{"none"} or \code{"one_step"}. 
   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
-\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
+\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
   If it is specified as \code{"default"}, \code{"none"} will be used.}
 \item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
@@ -776,7 +776,7 @@ For details of evaluation and inference methods, see the sections of \emph{Model
 \preformatted{$test_lr(selector, lambda, delta, include_faulty = FALSE)
 $test_rmsea(selector, lambda, delta, alpha_level = .05, include_faulty = FALSE)
 $test_coefficient(selector, lambda, delta, standard_error = "default", 
-  debias = "default", post_inference = "default", alpha_level = .05, 
+  debias = "default", inference = "default", alpha_level = .05, 
   include_faulty = FALSE)}
 \describe{
 \item{\bold{Arguments}}{
@@ -796,7 +796,7 @@ $test_coefficient(selector, lambda, delta, standard_error = "default",
 \item{\code{debias}}{A \code{character} to specify a debias method for obtaining a debiased estimator.
   Its value can be either \code{"none"} or \code{"one_step"}. 
   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
-\item{\code{post_inference}}{A \code{character} to specify the method for post selection inference.
+\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
   If it is specified as \code{"default"}, \code{"none"} will be used.}
 \item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
@@ -973,11 +973,11 @@ Fortunately, the \code{type} argument can be used to choose desired parameters b
 
 \code{$extract_specification()} returns a \code{data.frame} of model specification.
 
-\code{$extract_saturated_cov()} returns a \code{list} of saturated sample covariance matrice(s).
+\code{$extract_saturated_cov()} returns a \code{list} of saturated sample covariance matrix(s).
 
 \code{$extract_saturated_mean()} returns a \code{list} of saturated sample mean vector(s).
 
-\code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrice(s) of saturated moments.
+\code{$extract_saturated_moment_acov()} returns a \code{list} of asymptotic covariance matrix(s) of saturated moments.
 Note that if raw data is not available, asymptotic covariance matrix is calculated by assuming normality for data.
 
 \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level.
@@ -990,15 +990,15 @@ Note that if raw data is not available, asymptotic covariance matrix is calculat
 
 \code{$extract_coefficient()} returns a \code{numeric} of estimates of the coefficients.
 
-\code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrice(s).
+\code{$extract_implied_cov()} returns a \code{list} of model-implied covariance matrix(s).
 
 \code{$extract_implied_mean()} returns a \code{list} of model-implied mean vector(s).
 
-\code{$extract_residual_cov()} returns a \code{list} of residual matrice(s) of covariance.
+\code{$extract_residual_cov()} returns a \code{list} of residual matrix(s) of covariance.
 
 \code{$extract_residual_mean()} returns a \code{list} of residual vector(s) of mean.
 
-\code{$extract_coefficient_matrix()} returns a \code{list} of coefficient matrice(s) specified by \code{block}.
+\code{$extract_coefficient_matrix()} returns a \code{list} of coefficient matrix(s) specified by \code{block}.
 
 \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure.
 

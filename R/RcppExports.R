@@ -17,8 +17,8 @@ compute_implied_mean_cpp <- function(theta_value, reduced_data, reduced_model, c
     .Call('_lslx_compute_implied_mean_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
-compute_moment_jacobian_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
-    .Call('_lslx_compute_moment_jacobian_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
+compute_model_jacobian_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
+    .Call('_lslx_compute_model_jacobian_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
 compute_bfgs_hessian_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
@@ -43,10 +43,6 @@ compute_loss_value_cpp <- function(theta_value, reduced_data, reduced_model, con
 
 compute_loss_gradient_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_loss_gradient_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
-}
-
-compute_loss_gradient_direct_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
-    .Call('_lslx_compute_loss_gradient_direct_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }
 
 compute_regularizer_gradient_cpp <- function(theta_value, lambda, delta, reduced_data, reduced_model, control, supplied_result) {

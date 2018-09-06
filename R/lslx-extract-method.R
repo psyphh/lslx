@@ -61,8 +61,10 @@ lslx$set("public",
                   include_faulty = FALSE) {
            if (missing(selector) & missing(lambda) & missing(delta)) {
              if (length(private$fitting$fitted_result$numerical_condition) > 1) {
-               stop("Argument 'selector', 'lambda', and 'delta' cannot be all empty if there are many penalty/convexity levels.")
-             } 
+               stop(
+                 "Argument 'selector', 'lambda', and 'delta' cannot be all empty if there are many penalty/convexity levels."
+               )
+             }
            }
            if (!include_faulty) {
              idx_convergent <-
@@ -90,10 +92,11 @@ lslx$set("public",
            idx_used <-
              intersect(x = idx_convergent, y = idx_convex)
            if (length(idx_used) == 0) {
-             stop("PL estimate under EACH penalty/convex level is derive under problematic optimization.\n",
-                  "  To include faulty results, please set 'include_faulty = TRUE'. \n")
+             stop(
+               "PL estimate under EACH penalty/convex level is derive under problematic optimization.\n",
+               "  To include faulty results, please set 'include_faulty = TRUE'. \n"
+             )
            }
-           
            
            if (length(private$fitting$fitted_result$numerical_condition) == 1) {
              penalty_level <-
@@ -111,7 +114,9 @@ lslx$set("public",
                    "Argument 'selector' is unrecognized.\n",
                    "  Selector currently recognized by 'lslx' is \n  ",
                    do.call(paste, as.list(
-                     names(private$fitting$fitted_result$information_criterion[[1]])
+                     names(
+                       private$fitting$fitted_result$information_criterion[[1]]
+                     )
                    )),
                    "."
                  )
@@ -150,7 +155,9 @@ lslx$set("public",
                }
                if (missing(delta)) {
                  if (private$fitting$control$penalty_method == "mcp") {
-                   stop("If 'lambda' is directly specified, 'delta' cannot be empty under 'penalty_method = 'mcp'.")
+                   stop(
+                     "If 'lambda' is directly specified, 'delta' cannot be empty under 'penalty_method = 'mcp'."
+                   )
                  } else if (private$fitting$control$penalty_method == "lasso") {
                    delta <- Inf
                  }
@@ -159,41 +166,46 @@ lslx$set("public",
                  penalty_level <-
                    names(private$fitting$fitted_result$numerical_condition[idx_used])
                } else {
-                 penalty_used_split <- 
-                   strsplit(x = names(private$fitting$fitted_result$numerical_condition[idx_used]),
-                            split = "=|/")
+                 penalty_used_split <-
+                   strsplit(
+                     x = names(private$fitting$fitted_result$numerical_condition[idx_used]),
+                     split = "=|/"
+                   )
                  penalty_used <-
-                   sapply(X = penalty_used_split,
-                          FUN = function(penalty_used_split_i) {
-                            penalty_used_i <- 
-                              as.numeric(c(penalty_used_split_i[2], 
-                                           penalty_used_split_i[4]))
-                            return(penalty_used_i)
-                        })
-                 delta_used <- penalty_used[2,]
+                   sapply(
+                     X = penalty_used_split,
+                     FUN = function(penalty_used_split_i) {
+                       penalty_used_i <-
+                         as.numeric(c(penalty_used_split_i[2],
+                                      penalty_used_split_i[4]))
+                       return(penalty_used_i)
+                     }
+                   )
+                 delta_used <- penalty_used[2, ]
                  if (delta %in% delta_used) {
                    delta_nearest <- delta
                  } else {
                    if (delta == Inf) {
                      delta_nearest <- max(delta_used)
                    } else {
-                     delta_nearest <- 
+                     delta_nearest <-
                        max(abs(unique(delta_used)[which.min(abs(unique(delta_used) - delta))]))
                    }
                  }
-                 lambda_used <- 
-                   penalty_used[1, penalty_used[2,] == delta_nearest]
+                 lambda_used <-
+                   penalty_used[1, penalty_used[2, ] == delta_nearest]
                  if (lambda %in% lambda_used) {
                    lambda_nearest <- lambda
                  } else {
                    if (lambda == Inf) {
                      lambda_nearest <- max(lambda_used)
                    } else {
-                     lambda_nearest <- 
+                     lambda_nearest <-
                        max(abs(unique(lambda_used)[which.min(abs(unique(lambda_used) - lambda))]))
                    }
                  }
-                 penalty_level <- paste0("ld=", lambda_nearest, "/", "gm=", delta_nearest)
+                 penalty_level <-
+                   paste0("ld=", lambda_nearest, "/", "gm=", delta_nearest)
                }
              }
            }
@@ -209,15 +221,23 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
-           if (!(
-             type %in% c("default", "all", "fixed", "free", "pen", "effective", "selected")
-           )) {
+           if (!(type %in% c(
+             "default",
+             "all",
+             "fixed",
+             "free",
+             "pen",
+             "effective",
+             "selected"
+           ))) {
              stop(
                "Argument 'type' can be only either 'default', 'all', 'fixed', 'free', 'pen', 'active', or 'selected'."
              )
@@ -228,9 +248,11 @@ lslx$set("public",
            if (type == "all") {
              coefficient_indicator <- rep(T, length(coefficient))
            } else if (type == "fixed") {
-             coefficient_indicator <- 
-               !(private$fitting$reduced_model$theta_is_free |
-                   private$fitting$reduced_model$theta_is_pen)
+             coefficient_indicator <-
+               !(
+                 private$fitting$reduced_model$theta_is_free |
+                   private$fitting$reduced_model$theta_is_pen
+               )
            } else if (type == "free") {
              coefficient_indicator <-
                private$fitting$reduced_model$theta_is_free
@@ -243,10 +265,11 @@ lslx$set("public",
                (private$fitting$reduced_model$theta_is_pen &
                   coefficient != 0)
            } else if (type == "selected") {
-             coefficient_indicator <- 
+             coefficient_indicator <-
                private$fitting$reduced_model$theta_is_pen &
                coefficient != 0
            } else {
+             
            }
            return(coefficient_indicator)
          })
@@ -260,10 +283,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            numerical_condition <-
              private$fitting$fitted_result$numerical_condition[[penalty_level]]
            return(numerical_condition)
@@ -277,10 +302,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            information_criterion <-
              private$fitting$fitted_result$information_criterion[[penalty_level]]
            return(information_criterion)
@@ -294,10 +321,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            fit_index <-
              private$fitting$fitted_result$fit_index[[penalty_level]]
            return(fit_index)
@@ -321,10 +350,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            cv_error <-
              private$fitting$fitted_result$cv_error[[penalty_level]]
            return(cv_error)
@@ -340,18 +371,22 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
              coefficient <- coefficient[coefficient_indicator]
            }
@@ -369,27 +404,32 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            coefficient <-
-             self$extract_coefficient(selector = selector,
-                                      lambda = lambda,
-                                      delta = delta,
-                                      include_faulty = include_faulty)
+             self$extract_coefficient(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            is_active <-
              private$fitting$reduced_model$theta_is_free |
              (private$fitting$reduced_model$theta_is_pen &
                 coefficient != 0)
-           is_selected <- 
-             private$fitting$reduced_model$theta_is_pen & (coefficient != 0)
+           is_selected <-
+             private$fitting$reduced_model$theta_is_pen &
+             (coefficient != 0)
            debiased_coefficient <- coefficient
            if (any(is_selected)) {
              penalty_level <-
-               self$extract_penalty_level(selector = selector,
-                                          lambda = lambda,
-                                          delta = delta,
-                                          include_faulty = include_faulty)
+               self$extract_penalty_level(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                           split = "=|/")[[1]][2])
+                                            split = "=|/")[[1]][2])
              delta_ <- as.numeric(strsplit(x = penalty_level,
-                                          split = "=|/")[[1]][4])
+                                           split = "=|/")[[1]][4])
              regularizer_gradient <-
                compute_regularizer_gradient_cpp(
                  theta_value = coefficient,
@@ -401,26 +441,30 @@ lslx$set("public",
                  supplied_result = private$fitting$supplied_result
                )
              observed_information <-
-               2 * self$extract_observed_information(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                include_faulty = include_faulty)
+               2 * self$extract_observed_information(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              observed_information_inv <-
                matrix(0, length(coefficient), length(coefficient))
              observed_information_inv[is_active, is_active] <-
                solve(observed_information[is_active, is_active])
-             debiased_coefficient[is_active] <- 
-               coefficient[is_active] + 
-               observed_information_inv[is_active, is_active, drop = FALSE] %*% 
+             debiased_coefficient[is_active] <-
+               coefficient[is_active] +
+               observed_information_inv[is_active, is_active, drop = FALSE] %*%
                (regularizer_gradient[is_active, 1, drop = FALSE])
-           } 
+           }
            
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
              debiased_coefficient <- debiased_coefficient[coefficient_indicator]
            }
@@ -436,10 +480,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            implied_cov <-
@@ -472,10 +518,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            implied_mean <-
@@ -506,10 +554,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            implied_cov <-
-             self$extract_implied_cov(selector = selector,
-                                      lambda = lambda,
-                                      delta = delta,
-                                      include_faulty = include_faulty)
+             self$extract_implied_cov(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            residual_cov <-
              mapply(
                FUN = function(implied_cov_i,
@@ -534,10 +584,12 @@ lslx$set("public",
                   delta,
                   include_faulty = FALSE) {
            implied_mean <-
-             self$extract_implied_mean(selector = selector,
-                                       lambda = lambda,
-                                       delta = delta,
-                                       include_faulty = include_faulty)
+             self$extract_implied_mean(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            residual_mean <-
              mapply(
                FUN = function(implied_mean_i,
@@ -569,10 +621,12 @@ lslx$set("public",
              stop("The length of argument 'block' can be only one.")
            }
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            coefficient_matrix <-
@@ -640,18 +694,6 @@ lslx$set("public",
          })
 
 
-## \code{$extract_coefficient_matrice()} returns a \code{list} of coefficient matrice(s) specified by \code{block}. ##
-lslx$set("public",
-         "extract_coefficient_matrice",
-         function(selector,
-                  lambda,
-                  delta,
-                  block,
-                  include_faulty = FALSE) {
-           self$extract_coefficient_matrix(selector, lambda, delta, block, include_faulty)
-         })
-
-
 ## \code{$extract_moment_jacobian()} returns a \code{matrix} of Jacobian of moment structure. ##
 lslx$set("public",
          "extract_moment_jacobian",
@@ -661,14 +703,16 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            moment_jacobian <-
-             compute_moment_jacobian_cpp(
+             compute_model_jacobian_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
@@ -678,13 +722,16 @@ lslx$set("public",
            colnames(moment_jacobian) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             moment_jacobian <- moment_jacobian[, coefficient_indicator]
+             moment_jacobian <-
+               moment_jacobian[, coefficient_indicator, drop = FALSE]
            }
            return(moment_jacobian)
          })
@@ -698,10 +745,12 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            expected_information <-
@@ -717,14 +766,17 @@ lslx$set("public",
            rownames(expected_information) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             expected_information <- expected_information[coefficient_indicator, 
-                                                coefficient_indicator]
+             expected_information <- expected_information[coefficient_indicator,
+                                                          coefficient_indicator,
+                                                          drop = FALSE]
            }
            return(expected_information)
          })
@@ -739,10 +791,12 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            observed_information <-
@@ -758,14 +812,17 @@ lslx$set("public",
            rownames(observed_information) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             observed_information <- observed_information[coefficient_indicator, 
-                                                coefficient_indicator]
+             observed_information <- observed_information[coefficient_indicator,
+                                                          coefficient_indicator,
+                                                          drop = FALSE]
            }
            return(observed_information)
          })
@@ -779,10 +836,12 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            bfgs_hessian <-
@@ -798,14 +857,17 @@ lslx$set("public",
            rownames(bfgs_hessian) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             bfgs_hessian <- bfgs_hessian[coefficient_indicator, 
-                                          coefficient_indicator]
+             bfgs_hessian <- bfgs_hessian[coefficient_indicator,
+                                          coefficient_indicator,
+                                          drop = FALSE]
            }
            return(bfgs_hessian)
          })
@@ -819,10 +881,12 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            score_acov <-
@@ -838,14 +902,17 @@ lslx$set("public",
            rownames(score_acov) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             score_acov <- score_acov[coefficient_indicator, 
-                                      coefficient_indicator]
+             score_acov <- score_acov[coefficient_indicator,
+                                      coefficient_indicator,
+                                      drop = FALSE]
            }
            return(score_acov)
          })
@@ -860,7 +927,12 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            if (!(
-             standard_error %in% c("default", "sandwich", "observed_information", "expected_information")
+             standard_error %in% c(
+               "default",
+               "sandwich",
+               "observed_information",
+               "expected_information"
+             )
            )) {
              stop(
                "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
@@ -874,10 +946,12 @@ lslx$set("public",
              }
            }
            coefficient <-
-             self$extract_coefficient(selector = selector,
-                                      lambda = lambda,
-                                      delta = delta,
-                                      include_faulty = include_faulty)
+             self$extract_coefficient(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            is_active <-
              private$fitting$reduced_model$theta_is_free |
              (private$fitting$reduced_model$theta_is_pen &
@@ -886,15 +960,19 @@ lslx$set("public",
              matrix(NA, length(coefficient), length(coefficient))
            if (standard_error == "sandwich") {
              score_acov <-
-               self$extract_score_acov(selector = selector,
-                                       lambda = lambda,
-                                       delta = delta,
-                                       include_faulty = include_faulty)
+               self$extract_score_acov(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              observed_information <-
-               self$extract_observed_information(selector = selector,
-                                            lambda = lambda,
-                                            delta = delta,
-                                            include_faulty = include_faulty)
+               self$extract_observed_information(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              observed_information_pinv <-
                solve(observed_information[is_active, is_active])
              coefficient_acov[is_active, is_active] <-
@@ -903,19 +981,23 @@ lslx$set("public",
                   observed_information_pinv)
            } else if (standard_error == "expected_information") {
              expected_information <-
-               self$extract_expected_information(selector = selector,
-                                            lambda = lambda,
-                                            delta = delta,
-                                            include_faulty = include_faulty)
+               self$extract_expected_information(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              coefficient_acov[is_active, is_active] <-
                solve(expected_information[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
            } else if (standard_error == "observed_information") {
              observed_information <-
-               self$extract_observed_information(selector = selector,
-                                            lambda = lambda,
-                                            delta = delta,
-                                            include_faulty = include_faulty)
+               self$extract_observed_information(
+                 selector = selector,
+                 lambda = lambda,
+                 delta = delta,
+                 include_faulty = include_faulty
+               )
              coefficient_acov[is_active, is_active] <-
                solve(observed_information[is_active, is_active]) /
                private$fitting$reduced_data$n_observation
@@ -927,14 +1009,17 @@ lslx$set("public",
            rownames(coefficient_acov) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             coefficient_acov <- coefficient_acov[coefficient_indicator, 
-                                                  coefficient_indicator]
+             coefficient_acov <- coefficient_acov[coefficient_indicator,
+                                                  coefficient_indicator,
+                                                  drop = FALSE]
            }
            attr(coefficient_acov, "standard_error") <-
              standard_error
@@ -950,14 +1035,16 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            loss_gradient <-
-             compute_loss_gradient_direct_cpp(
+             compute_loss_gradient_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,
@@ -967,13 +1054,16 @@ lslx$set("public",
            rownames(loss_gradient) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             loss_gradient <- loss_gradient[coefficient_indicator, ]
+             loss_gradient <- loss_gradient[coefficient_indicator, ,
+                                            drop = FALSE]
            }
            return(loss_gradient)
          })
@@ -987,16 +1077,18 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                         split = "=|/")[[1]][2])
+                                          split = "=|/")[[1]][2])
            delta_ <- as.numeric(strsplit(x = penalty_level,
-                                        split = "=|/")[[1]][4])
+                                         split = "=|/")[[1]][4])
            regularizer_gradient <-
              compute_regularizer_gradient_cpp(
                theta_value = coefficient,
@@ -1010,13 +1102,17 @@ lslx$set("public",
            rownames(regularizer_gradient) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             regularizer_gradient <- regularizer_gradient[coefficient_indicator, ]
+             regularizer_gradient <-
+               regularizer_gradient[coefficient_indicator, ,
+                                    drop = FALSE]
            }
            return(regularizer_gradient)
          })
@@ -1030,16 +1126,18 @@ lslx$set("public",
                   type = "default",
                   include_faulty = FALSE) {
            penalty_level <-
-             self$extract_penalty_level(selector = selector,
-                                        lambda = lambda,
-                                        delta = delta,
-                                        include_faulty = include_faulty)
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               include_faulty = include_faulty
+             )
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                         split = "=|/")[[1]][2])
+                                          split = "=|/")[[1]][2])
            delta_ <- as.numeric(strsplit(x = penalty_level,
-                                        split = "=|/")[[1]][4])
+                                         split = "=|/")[[1]][4])
            objective_gradient <-
              compute_objective_gradient_cpp(
                theta_value = coefficient,
@@ -1053,13 +1151,16 @@ lslx$set("public",
            rownames(objective_gradient) <-
              rownames(private$model$specification)
            coefficient_indicator <-
-             self$extract_coefficient_indicator(selector = selector,
-                                                lambda = lambda,
-                                                delta = delta,
-                                                type = type,
-                                                include_faulty = include_faulty)
+             self$extract_coefficient_indicator(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               type = type,
+               include_faulty = include_faulty
+             )
            if (!(all(coefficient_indicator))) {
-             objective_gradient <- objective_gradient[coefficient_indicator, ]
+             objective_gradient <- objective_gradient[coefficient_indicator, ,
+                                                      drop = FALSE]
            }
            return(objective_gradient)
          })

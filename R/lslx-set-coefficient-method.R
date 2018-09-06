@@ -237,7 +237,7 @@ lslx$set("private",
                  right_i <- name_i_split[2]
                  group_i <- name_i_split[3]
                  
-                 matrice_i <-
+                 matrix_i <-
                    ifelse(grepl(pattern = "<->",
                                 x = name[i]),
                           "phi",
@@ -266,9 +266,9 @@ lslx$set("private",
                    )
                  block_i_middle <-
                    ifelse(
-                     matrice_i %in% c("alpha", "beta", "tau"),
+                     matrix_i %in% c("alpha", "beta", "tau"),
                      "<-",
-                     ifelse(matrice_i == "phi",
+                     ifelse(matrix_i == "phi",
                             "<->",
                             "")
                    )
@@ -283,13 +283,13 @@ lslx$set("private",
                      group = group_i,
                      reference =
                        ifelse(
-                         is.na(private$model$reference_group),
+                         is.null(private$model$reference_group),
                          FALSE,
                          ifelse(group_i == private$model$reference_group,
                                 TRUE,
                                 FALSE)
                        ),
-                     matrice = matrice_i,
+                     matrix = matrix_i,
                      block = block_i,
                      type = type,
                      start = start[i],
@@ -321,7 +321,7 @@ lslx$set("private",
                }
              }
              
-             if (verbose & !is.na(private$model$reference_group)) {
+             if (verbose & !is.null(private$model$reference_group)) {
                cat(
                  "NOTE: Because",
                  private$model$reference_group,
@@ -339,7 +339,7 @@ lslx$set("private",
                private$model$specification[order(
                  private$model$specification$reference,
                  private$model$specification$group,
-                 private$model$specification$matrice,
+                 private$model$specification$matrix,
                  private$model$specification$block,
                  match(private$model$specification$right, private$model$name_eta),
                  match(private$model$specification$left, private$model$name_eta),
@@ -348,7 +348,7 @@ lslx$set("private",
                ), ]
              
              private$model$name_endogenous <-
-               unique(private$model$specification$left[private$model$specification$matrice == "beta"])
+               unique(private$model$specification$left[private$model$specification$matrix == "beta"])
              private$model$name_exogenous <-
                setdiff(x = private$model$name_eta,
                        y = private$model$name_endogenous)
