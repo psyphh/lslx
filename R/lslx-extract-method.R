@@ -668,7 +668,7 @@ lslx$set("public",
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            moment_jacobian <-
-             compute_moment_jacobian_cpp(
+             compute_model_jacobian_cpp(
                theta_value = coefficient,
                reduced_data = private$fitting$reduced_data,
                reduced_model = private$fitting$reduced_model,

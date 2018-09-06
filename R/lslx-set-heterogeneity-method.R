@@ -8,29 +8,30 @@ lslx$set("private",
            if (!all(block %in% unique(private$model$specification$block))) {
              stop("Argument 'block' contains invalid relation. Please check.")
            }
-           if (is.na(private$model$reference_group)) {
+           if (is.null(private$model$reference_group)) {
              stop(
                "Reference group is not specified.",
                "\n The 'set heterogeneity method' can be used only if reference group is specified"
              )
-           }
-           if (group == private$model$reference_group) {
-             stop(
-               "Argument 'group' is set as the reference group, please select another group.",
-               "\n  Group name specified in 'group' is ",
-               do.call(paste, as.list(group)),
-               "."
-             )
-           } else if (!all(group %in% private$model$name_group)) {
-             stop(
-               "Argument 'group' contains unknown group name.",
-               "\n  Group name(s) currently recognized by 'lslx' is ",
-               do.call(paste, as.list(private$model$name_group)),
-               ".",
-               "\n  Group name specified in 'group' is ",
-               do.call(paste, as.list(group)),
-               "."
-             )
+           } else {
+             if (group == private$model$reference_group) {
+               stop(
+                 "Argument 'group' is set as the reference group, please select another group.",
+                 "\n  Group name specified in 'group' is ",
+                 do.call(paste, as.list(group)),
+                 "."
+               )
+             } else if (!all(group %in% private$model$name_group)) {
+               stop(
+                 "Argument 'group' contains unknown group name.",
+                 "\n  Group name(s) currently recognized by 'lslx' is ",
+                 do.call(paste, as.list(private$model$name_group)),
+                 ".",
+                 "\n  Group name specified in 'group' is ",
+                 do.call(paste, as.list(group)),
+                 "."
+               )
+             }
            }
            relation <-
              private$model$specification[(private$model$specification$block %in% block) &

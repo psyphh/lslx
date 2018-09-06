@@ -105,13 +105,12 @@ lslxFitting$set("private",
                       }
                     }
                   } else {
-                  }            
+                  }
+                  if (self$control$loss == "default") {
+                    self$control$loss <- "ml"
+                  }
                   if (self$control$algorithm == "default") {
-                    if (self$control$regularizer) {
-                      self$control$algorithm <- "fisher"
-                    } else {
-                      self$control$algorithm <- "bfgs"
-                    }
+                    self$control$algorithm <- "fisher"
                   }
                   if (self$control$missing_method == "default") {
                     if (self$control$response) {
@@ -175,32 +174,32 @@ lslxFitting$set("private",
                       eta_is_exogenous = model$name_eta %in% model$name_exogenous,
                       eta_is_endogenous = model$name_eta %in% model$name_endogenous,
                       theta_name = rownames(model$specification),
-                      theta_matrice_idx =
+                      theta_matrix_idx =
                         ifelse(
-                          model$specification$matrice == "alpha",
-                          1L,
+                          model$specification$matrix == "gamma",
+                          0L,
                           ifelse(
-                            model$specification$matrice == "beta",
-                            2L,
-                            ifelse(model$specification$matrice == "phi",
-                                   3L,
-                                   0L)
+                            model$specification$matrix == "alpha",
+                            1L,
+                            ifelse(model$specification$matrix == "beta",
+                                   2L,
+                                   3L)
                           )
                         ),
                       theta_left_idx = match(model$specification$left, model$name_eta),
                       theta_right_idx = ifelse(
-                        model$specification$matrice == "alpha",
-                        1L,
+                        model$specification$matrix == "gamma",
+                        NA_integer_,
                         ifelse(
-                          model$specification$matrice == "tau",
-                          NA_integer_,
+                          model$specification$matrix == "alpha",
+                          1L,
                           match(model$specification$right, model$name_eta)
                         )
                       ),
                       theta_flat_idx = NA_integer_,
                       theta_group_idx = ifelse(
                         rep(
-                          is.na(model$reference_group),
+                          is.null(model$reference_group),
                           length(model$specification$group)
                         ),
                         match(model$specification$group,
@@ -217,7 +216,7 @@ lslxFitting$set("private",
                       theta_is_pen = (model$specification$type == "pen"),
                       theta_is_diag =
                         ifelse(
-                          model$specification$matrice == "phi" &
+                          model$specification$matrix == "phi" &
                             (model$specification$left ==
                                model$specification$right),
                           TRUE,
@@ -227,15 +226,15 @@ lslxFitting$set("private",
                     )
                   self$reduced_model$theta_flat_idx <-
                     ifelse(
-                      self$reduced_model$theta_matrice_idx == 1,
+                      self$reduced_model$theta_matrix_idx == 1,
                       self$reduced_model$theta_left_idx,
                       ifelse(
-                        self$reduced_model$theta_matrice_idx == 2,
+                        self$reduced_model$theta_matrix_idx == 2,
                         self$reduced_model$n_eta *
                           (self$reduced_model$theta_right_idx - 1L) +
                           self$reduced_model$theta_left_idx,
                         ifelse(
-                          self$reduced_model$theta_matrice_idx == 3,
+                          self$reduced_model$theta_matrix_idx == 3,
                           as.integer(
                             self$reduced_model$n_eta *
                               (self$reduced_model$theta_right_idx - 1L) +
@@ -689,6 +688,29 @@ lslxFitting$set("private",
                   } else {
                     
                   }
+                  if (self$control$loss %in% c("uls", "dwls", "wls")) {
+                    self$reduced_data$residual_weight <-
+                      mapply(
+                        FUN = function(saturated_moment_acov_i,
+                                       sample_proportion_i) {
+                          if (self$control$loss == "uls") {
+                            residual_weight_i <- 
+                              sample_proportion_i * diag(dim(saturated_moment_acov_i)[1])
+                          } else if (self$control$loss == "dwls") {
+                            residual_weight_i <-
+                              diag(1 / diag(saturated_moment_acov_i)) / self$reduced_data$n_observation
+                          } else if (self$control$loss == "wls") {
+                            residual_weight_i <- 
+                              solve(saturated_moment_acov_i) / self$reduced_data$n_observation
+                          } else {}
+                          return(residual_weight_i)
+                        },
+                        self$reduced_data$saturated_moment_acov,
+                        self$reduced_data$sample_proportion,
+                        SIMPLIFY = FALSE,
+                        USE.NAMES = TRUE
+                      )
+                  }
                 })
 
 ## \code{$initialize_supplied_result()} initializes a supplied result. ##
@@ -736,14 +758,14 @@ lslxFitting$set("private",
                       )
                     if (self$control$model_class == "EFA" ) {
                       idc_beta <-
-                        (self$reduced_model$theta_matrice_idx == 2 &
+                        (self$reduced_model$theta_matrix_idx == 2 &
                            self$reduced_model$theta_is_pen)
                     } else {
                       idc_beta <-
-                        (self$reduced_model$theta_matrice_idx == 2 &
+                        (self$reduced_model$theta_matrix_idx == 2 &
                            self$reduced_model$theta_is_free) |
                         (
-                          self$reduced_model$theta_matrice_idx == 2 &
+                          self$reduced_model$theta_matrix_idx == 2 &
                             (
                               !self$reduced_model$theta_is_free &
                                 !self$reduced_model$theta_is_pen
@@ -751,7 +773,7 @@ lslxFitting$set("private",
                             (self$reduced_model$theta_start != 0)
                         ) |
                         (
-                          self$reduced_model$theta_matrice_idx == 2 &
+                          self$reduced_model$theta_matrix_idx == 2 &
                             self$reduced_model$theta_is_pen &
                             !(
                               self$reduced_model$theta_left_idx <=
@@ -872,10 +894,10 @@ lslxFitting$set("private",
                       }
                     }
                     idc_phi <-
-                      (self$reduced_model$theta_matrice_idx == 3 &
+                      (self$reduced_model$theta_matrix_idx == 3 &
                          self$reduced_model$theta_is_free) |
                       (
-                        self$reduced_model$theta_matrice_idx == 3 &
+                        self$reduced_model$theta_matrix_idx == 3 &
                           (
                             !self$reduced_model$theta_is_free &
                               !self$reduced_model$theta_is_pen
@@ -917,10 +939,10 @@ lslxFitting$set("private",
                     phi_start[cbind(theta_right_idx_phi, theta_left_idx_phi)] <-
                       phi_saturated[cbind(theta_right_idx_phi, theta_left_idx_phi)]
                     idc_alpha <-
-                      (self$reduced_model$theta_matrice_idx == 1 &
+                      (self$reduced_model$theta_matrix_idx == 1 &
                          self$reduced_model$theta_is_free) |
                       (
-                        self$reduced_model$theta_matrice_idx == 1 &
+                        self$reduced_model$theta_matrix_idx == 1 &
                           (
                             !self$reduced_model$theta_is_free &
                               !self$reduced_model$theta_is_pen
@@ -957,7 +979,7 @@ lslxFitting$set("private",
                     alpha_start[theta_left_idx_alpha, 1] <-
                       alpha_saturated[theta_left_idx_alpha, 1]
                     
-                    coefficient_matrice_start <-
+                    coefficient_matrix_start <-
                       list(
                         alpha_start = alpha_start,
                         beta_start = beta_start,
@@ -966,20 +988,20 @@ lslxFitting$set("private",
                     for (i in 1:3) {
                       if (0 %in% unique(self$reduced_model$theta_group_idx)) {
                         idc_i0 <-
-                          (self$reduced_model$theta_matrice_idx == i) &
+                          (self$reduced_model$theta_matrix_idx == i) &
                           (self$reduced_model$theta_group_idx == 0)
                         
                         self$supplied_result$fitted_start[idc_i0] <-
                           ifelse(
                             is.na(self$reduced_model$theta_start[idc_i0]),
-                            coefficient_matrice_start[[i]][
+                            coefficient_matrix_start[[i]][
                               cbind(self$reduced_model$theta_left_idx[idc_i0],
                                     self$reduced_model$theta_right_idx[idc_i0])],
                             self$reduced_model$theta_start[idc_i0]
                           )
                         for (j in setdiff(unique(self$reduced_model$theta_group_idx), 0)) {
                           idc_ij <-
-                            (self$reduced_model$theta_matrice_idx == i) &
+                            (self$reduced_model$theta_matrix_idx == i) &
                             (self$reduced_model$theta_group_idx == j)
                           self$supplied_result$fitted_start[idc_ij] <-
                             ifelse(
@@ -991,12 +1013,12 @@ lslxFitting$set("private",
                       } else {
                         for (j in seq_len(self$reduced_model$n_group)) {
                           idc_ij <-
-                            (self$reduced_model$theta_matrice_idx == i) &
+                            (self$reduced_model$theta_matrix_idx == i) &
                             (self$reduced_model$theta_group_idx == j)
                           self$supplied_result$fitted_start[idc_ij] <-
                             ifelse(
                               is.na(self$reduced_model$theta_start[idc_ij]),
-                              coefficient_matrice_start[[i]][
+                              coefficient_matrix_start[[i]][
                                 cbind(self$reduced_model$theta_left_idx[idc_ij],
                                       self$reduced_model$theta_right_idx[idc_ij]
                               )],
@@ -1013,10 +1035,10 @@ lslxFitting$set("private",
                       ifelse(
                         !is.na(self$reduced_model$theta_start),
                         self$reduced_model$theta_start,
-                        ifelse(self$reduced_model$theta_matrice_idx == 2,
+                        ifelse(self$reduced_model$theta_matrix_idx == 2,
                                ifelse(self$reduced_model$theta_is_free,
                                       0.5, 0),
-                               ifelse((self$reduced_model$theta_matrice_idx == 3) &
+                               ifelse((self$reduced_model$theta_matrix_idx == 3) &
                                         (
                                           self$reduced_model$theta_left_idx ==
                                             self$reduced_model$theta_right_idx

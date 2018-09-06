@@ -533,7 +533,7 @@ lslx$set("public",
              ## generating coefficients
              if (output$coefficient_test) {
                ## print by different groups
-               if (!is.na(private$model$reference_group)) {
+               if (!is.null(private$model$reference_group)) {
                  reference_group_order <-
                    which(private$model$name_group %in% private$model$reference_group)
                  group_by_order <-
@@ -599,7 +599,7 @@ lslx$set("public",
                      cat(" ", i_block_label)
                      # if 'single group' or 'reference group not specified', print nothing.
                      if ((length(group_by_order) == 1) |
-                         is.na(private$model$reference_group)) {
+                         is.null(private$model$reference_group)) {
                        cat("\n")
                      } else if (i_group == group_by_order[1]) {
                        cat(" (reference component)\n")
