@@ -680,6 +680,13 @@ void lslxOptimizer::update_loss_observed_hessian() {
     if (loss == "ml") {
       update_loss_gradient_direct(); 
     } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+      update_residual_weight();
+>>>>>>> 79f5bd8325abe324a8cbe59ef9bc47ed5cdba5b6
+>>>>>>> a8488dc539cbb06dea54376d1fab9d681b41436e
       update_model_jacobian();
       update_loss_gradient(); 
     } else {}
@@ -963,6 +970,13 @@ void lslxOptimizer::update_coefficient() {
           update_loss_expected_hessian();
         } else {}
       } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+        update_residual_weight();
+>>>>>>> 79f5bd8325abe324a8cbe59ef9bc47ed5cdba5b6
+>>>>>>> a8488dc539cbb06dea54376d1fab9d681b41436e
         update_model_jacobian();
         update_loss_gradient();
         update_loss_expected_hessian();
@@ -1582,6 +1596,10 @@ Rcpp::NumericMatrix compute_loss_gradient_cpp(
   optimizer.set_theta_value(theta_value);
   optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> a8488dc539cbb06dea54376d1fab9d681b41436e
   if (optimizer.loss == "ml") {
     optimizer.update_loss_gradient_direct();
   } else {    
@@ -1589,6 +1607,36 @@ Rcpp::NumericMatrix compute_loss_gradient_cpp(
     optimizer.update_model_jacobian();
     optimizer.update_loss_gradient();
     }
+<<<<<<< HEAD
+=======
+=======
+  
+  optimizer.update_residual_weight();
+  optimizer.update_model_jacobian();
+  optimizer.update_loss_gradient();
+  loss_gradient = optimizer.loss_gradient;
+  return Rcpp::wrap(loss_gradient);
+}
+
+// compute loss gradient directly
+// [[Rcpp::export]]
+Rcpp::NumericMatrix compute_loss_gradient_direct_cpp(
+    Rcpp::NumericVector theta_value,
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result) {
+  Eigen::MatrixXd loss_gradient;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_theta_value(theta_value);
+  optimizer.update_coefficient_matrix();
+  optimizer.update_implied_moment();
+  optimizer.update_loss_gradient_direct();
+>>>>>>> 79f5bd8325abe324a8cbe59ef9bc47ed5cdba5b6
+>>>>>>> a8488dc539cbb06dea54376d1fab9d681b41436e
   loss_gradient = optimizer.loss_gradient;
   return Rcpp::wrap(loss_gradient);
 }
