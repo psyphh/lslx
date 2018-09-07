@@ -30,113 +30,8 @@ lslx$set("public",
                   positive_variance = TRUE,
                   minimum_variance = 1e-4,
                   enforce_cd = FALSE,
+                  weight_matrix = NULL,
                   verbose = TRUE) {
-           if (!(penalty_method %in% c("none", "lasso", "mcp"))) {
-             stop("Argument 'penalty_method' can be only either 'none', 'lasso', or 'mcp'.")
-           }
-           if (!is.numeric(lambda_grid)) {
-             if (!is.character(lambda_grid)) {
-               stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(lambda_grid) &
-                        (length(lambda_grid) != 1)) {
-               stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(lambda_grid) &
-                        (length(lambda_grid) == 1)) {
-               if (lambda_grid != "default") {
-                 stop("Argument 'lambda_grid' can be only a numeric vector or set as 'default'.")
-               }
-             }
-           }
-           if (!is.numeric(delta_grid)) {
-             if (!is.character(delta_grid)) {
-               stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(delta_grid) &
-                        (length(delta_grid) != 1)) {
-               stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
-             } else if (is.character(delta_grid) &
-                        (length(delta_grid) == 1)) {
-               if (delta_grid != "default") {
-                 stop("Argument 'delta_grid' can be only a numeric vector or set as 'default'.")
-               }
-             }
-           }
-           if (!(loss %in% c("default", "ml", "uls", "dwls", "wls"))) {
-             stop("Argument 'default' can be only 'default', 'ml', 'uls', 'dwls', or 'wls'.")
-           }
-           if (!(algorithm %in% c("default", "gd", "bfgs", "fisher"))) {
-             stop("Argument 'algorithm' can be only 'default', 'gd', 'bfgs', or 'fisher'.")
-           }
-           if (!(missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
-             stop(
-               "Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
-             )
-           }
-           if (!(start_method %in% c("default", "none", "mh", "heuristic"))) {
-             stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
-           }
-           if (!(lambda_direction %in% c("default", "manual", "decrease", "increase"))) {
-             stop("Argument 'lambda_direction' can be only 'default', 'manual', 'decrease', or 'increase'.")
-           }
-           
-           if (!is.null(subset)) {
-             if (!(is.integer(subset) | is.logical(subset))) {
-               stop("Argument 'subset' must be a integer or logical vector.")
-             }
-           }
-           if (!(is.numeric(lambda_length) & (lambda_length > 0))) {
-             stop("Argument 'lambda_length' must be a positive integer.")
-           }
-           if (!(is.numeric(delta_length) & (delta_length > 0))) {
-             stop("Argument 'delta_length' must be a positive integer.")
-           }
-           if (!(is.numeric(threshold_value) & (threshold_value > 0))) {
-             stop("Argument 'threshold_value' must be a positive value.")
-           }
-           
-           if (!(is.numeric(cv_fold) & (cv_fold > 0))) {
-             stop("Argument 'cv_fold' must be a positive integer.")
-           }
-           if (!(is.numeric(iter_out_max) &
-                 (length(iter_out_max) = 1))) {
-             stop("Argument 'iter_out_max' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(iter_in_max) &
-                 (length(iter_in_max) = 1))) {
-             stop("Argument 'iter_in_max' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(iter_armijo_max) &
-                 (length(iter_armijo_max) = 1))) {
-             stop("Argument 'iter_armijo_max' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(tol_out) & (length(tol_out) = 1))) {
-             stop("Argument 'tol_out' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(tol_in) & (length(tol_in) = 1))) {
-             stop("Argument 'tol_in' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(step_size) & (length(step_size) = 1))) {
-             stop("Argument 'step_size' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(armijo) & (length(armijo) = 1))) {
-             stop("Argument 'armijo' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(ridge_cov) & (length(ridge_cov) = 1))) {
-             stop("Argument 'ridge_cov' must be a numeric vector with length one.")
-           }
-           if (!(is.numeric(ridge_hessian) &
-                 (length(ridge_hessian) = 1))) {
-             stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
-           }
-           if (!(is.logical(warm_start) &
-                 (length(warm_start) = 1))) {
-             stop("Argument 'warm_start' must be a logical vector with length one.")
-           }
-           
-           if (!(is.logical(positive_variance) &
-                 (length(positive_variance) = 1))) {
-             stop("Argument 'positive_variance' must be a logical vector with length one.")
-           }
-           
            control <-
              list(
                penalty_method = penalty_method,
@@ -166,8 +61,10 @@ lslx$set("public",
                warm_start = warm_start,
                positive_variance = positive_variance,
                minimum_variance = minimum_variance,
-               enforce_cd = enforce_cd
+               enforce_cd = enforce_cd,
+               weight_matrix = weight_matrix
              )
+           
            private$fitting <-
              lslxFitting$new(model = private$model,
                              data = private$data,

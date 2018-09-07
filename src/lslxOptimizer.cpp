@@ -201,7 +201,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   saturated_mean = Rcpp::as<List>(reduced_data["saturated_mean"]);
   saturated_moment_acov = Rcpp::as<List>(reduced_data["saturated_moment_acov"]);
   if (loss == "uls"|loss == "dwls"|loss == "wls") {
-    residual_weight = Rcpp::as<List>(reduced_data["residual_weight"]);
+    residual_weight = Rcpp::as<List>(control["weight_matrix"]);
   }
   
   int i;

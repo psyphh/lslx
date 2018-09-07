@@ -10,7 +10,8 @@ lslxData <-
       auxiliary = "list",
       sample_cov = "list",
       sample_mean = "list",
-      sample_size = "list"
+      sample_size = "list",
+      sample_moment_acov = "list"
     )
   )
 
@@ -21,6 +22,7 @@ lslxData$set("public",
                       sample_cov,
                       sample_mean,
                       sample_size,
+                      sample_moment_acov,
                       ordered_variable,
                       weight_variable,
                       auxiliary_variable,
@@ -130,6 +132,7 @@ lslxData$set("public",
                  self$sample_cov <- list()
                  self$sample_mean <- list()
                  self$sample_size <- list()
+                 self$sample_moment_acov <- list()
                } else {
                  if (!all(name_response %in% colnames(sample_cov[[1]]))) {
                    stop(
@@ -185,7 +188,7 @@ lslxData$set("public",
                        ".",
                        "\n  Column names of 'sample_mean' are ",
                        do.call(paste, as.list(colnames(
-                         sample_cov[[1]]
+                         sample_mean[[1]]
                        ))),
                        "."
                      )
@@ -271,6 +274,86 @@ lslxData$set("public",
                      }
                    }
                  }
+                 
+                 if (!missing(sample_moment_acov)) {
+                   if (!is.matrix(sample_moment_acov) & !is.list(sample_moment_acov)) {
+                     stop(
+                       "Argument 'sample_moment_acov' must be a 'matrix' (for single group analysis)",
+                       " or a 'list' of 'matrix' (for multiple group analysis)."
+                     )
+                   }
+                   if (is.matrix(sample_moment_acov)) {
+                     sample_moment_acov <- list(sample_moment_acov)
+                   }
+                   
+                   name_response2 <- outer(
+                     name_response,
+                     name_response,
+                     FUN = function(name_response_i, name_response_j) {
+                       return(paste(name_response_i, name_response_j, sep = "*"))
+                     }
+                   )
+                   name_response2 <-
+                     name_response2[lower.tri(name_response2, diag = TRUE)]
+                   if (!all(c(name_response, name_response2) %in% 
+                            colnames(sample_moment_acov[[1]]))) {
+                     stop(
+                       "Some response variables (products) in 'model' cannot be found in 'sample_moment_acov'.",
+                       "\n  Response variables (products) specified by 'model' are ",
+                       do.call(paste, as.list(c(name_response, name_response2))),
+                       ".",
+                       "\n  Column names of 'sample_moment_acov' are ",
+                       do.call(paste, as.list(colnames(
+                         sample_moment_acov[[1]]
+                       ))),
+                       "."
+                     )
+                   } else {
+                     sample_moment_acov <-
+                       lapply(
+                         X = sample_moment_acov,
+                         FUN = function(sample_moment_acov_i) {
+                           sample_moment_acov_i <-
+                             sample_moment_acov_i[c(name_response, name_response2),
+                                                  c(name_response, name_response2),
+                                                  drop = FALSE]
+                           return(sample_moment_acov_i)
+                         }
+                       )
+                   }
+                   if (length(sample_moment_acov) != length(sample_cov)) {
+                     stop(
+                       "The length of argument 'sample_moment_acov' doesn't match the length of 'sample_cov'.",
+                       "\n  The length of 'sample_moment_acov' is ",
+                       length(sample_moment_acov),
+                       ".",
+                       "\n  The length of 'sample_cov' is ",
+                       length(sample_cov),
+                       "."
+                     )
+                   }
+                   if (is.null(names(sample_moment_acov))) {
+                     names(sample_moment_acov) <- name_group
+                   } else {
+                     if (!all(name_group %in% names(sample_moment_acov))) {
+                       stop(
+                         "Argument 'sample_moment_acov' contains unrecognized group name(s).",
+                         "\n  Group name(s) currently recognized by 'lslx' is ",
+                         do.call(paste, as.list(name_group)),
+                         " (possibly automatically created).",
+                         "\n  Group name(s) specified in 'sample_moment_acov' is ",
+                         do.call(paste, as.list(names(
+                           sample_moment_acov
+                         ))),
+                         "."
+                       )
+                     } else{
+                       sample_moment_acov <- sample_moment_acov[name_group]
+                     }
+                   }
+                 } else {
+                   sample_moment_acov <- list()
+                 }
                  self$response <- list()
                  self$weight <- list()
                  self$auxiliary <- list()
@@ -278,6 +361,7 @@ lslxData$set("public",
                  self$sample_cov <- sample_cov
                  self$sample_mean <- sample_mean
                  self$sample_size <- sample_size
+                 self$sample_moment_acov <- sample_moment_acov
                }
              })
 

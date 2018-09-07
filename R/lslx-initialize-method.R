@@ -98,9 +98,7 @@ lslx$set("public",
                weight_variable <- NULL
                auxiliary_variable <- NULL
                group_variable <- NULL
-             } else {
-               
-             }
+             } else {}
            }
            if (any(grepl(pattern = "/|\\||@",
                          x = name_group))) {
@@ -145,6 +143,7 @@ lslx$set("public",
                           sample_cov = sample_cov,
                           sample_mean = sample_mean,
                           sample_size = sample_size,
+                          sample_moment_acov = sample_moment_acov,
                           group_variable = private$model$group_variable,
                           weight_variable = private$model$weight_variable,
                           auxiliary_variable = private$model$auxiliary_variable,

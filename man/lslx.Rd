@@ -665,10 +665,13 @@ $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 \item{\code{delta_grid}}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
+\item{\code{loss}}{A \code{character} to determine the loss function.
+  The current version supports \code{"ml"} (maximum likelihood), \code{"uls"} (unweighted least squares), 
+  \code{"dwls"} (diagonal weighted least squres), and \code{"wls"} (weighted least squares). 
+  If the argument is set as \code{"default"}, then \code{"ml"} will be implemented.}
 \item{\code{algorithm}}{A \code{character} to determine the method of optimization.
   The current version supports \code{"gd"} (gradient descent), \code{"bfgs"} (Broyden-Fletcher-Goldfarb-Shanno), and \code{"fisher"} (Fisher scoring).
-  If the argument is set as \code{"default"}, then (1) \code{"bfgs"} will be implemented if no penalty is considered;
-  (2) \code{"fisher"} will be implemented if penalty is considered.}
+  If the argument is set as \code{"default"}, then \code{"fisher"} will be implemented.}
 \item{\code{missing_method}}{A \code{character} to determine the method for handling missing data (or \code{NA}).
   The current version supports \code{"two_stage"} and \code{"listwise_deletion"}.
   If the argument is set as \code{"default"} and a raw data set is available, the \code{"two_stage"} will be implemented.

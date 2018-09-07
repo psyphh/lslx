@@ -52,6 +52,20 @@ lslx$set("public",
            return(delta_grid)
          })
 
+
+## \code{$extract_weight_matrix()} returns a \code{list} of weight matrix. ##
+lslx$set("public",
+         "extract_weight_matrix",
+         function() {
+           if (!(private$fitting$control$loss %in% c("uls", "dwls", "wls"))) {
+             stop("Weight matrix can be only extracted when 'loss' = 'uls', 'dwls', or 'wls'.")
+           } else {
+             weight_matrix <-
+               private$fitting$control$weight_matrix
+           }
+           return(weight_matrix)
+         })
+
 ## \code{$extract_penalty_level()} returns a \code{character} of the index name of the optimal penalty level. ##
 lslx$set("public",
          "extract_penalty_level",
