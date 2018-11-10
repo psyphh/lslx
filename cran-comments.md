@@ -1,4 +1,4 @@
-## lslx ver.0.6.3
+## lslx ver.0.6.4
 
 ## Test environments
 * x86_64-apple-darwin15.6.0 (64-bit), R 3.5.0

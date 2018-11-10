@@ -200,7 +200,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   saturated_cov = Rcpp::as<List>(reduced_data["saturated_cov"]);
   saturated_mean = Rcpp::as<List>(reduced_data["saturated_mean"]);
   saturated_moment_acov = Rcpp::as<List>(reduced_data["saturated_moment_acov"]);
-  if (loss == "uls"|loss == "dwls"|loss == "wls") {
+  if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
     residual_weight = Rcpp::as<List>(control["weight_matrix"]);
   }
   
@@ -230,7 +230,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
   theta_direction = Rcpp::rep(0.0, n_theta);
   theta_value.attr("names") = theta_name;
-  Rcpp::LogicalVector theta_est_idc = (theta_is_pen | theta_is_free);
+  Rcpp::LogicalVector theta_est_idc = ((theta_is_pen) | (theta_is_free));
   for (i = 0; i < n_theta; i++) {
     if (theta_est_idc[i]) {
       theta_est_idx.push_back(i);
@@ -515,7 +515,7 @@ void lslxOptimizer::update_model_residual() {
           mu_i * saturated_mean_i.transpose() -
           saturated_mean_i * mu_i.transpose() + 
           mu_i * mu_i.transpose() - sigma_i);
-    } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+    } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
       model_residual_i.block(
         n_response, 0, (n_moment - n_response), 1) = 
           vech(saturated_cov_i - sigma_i);
@@ -542,7 +542,7 @@ void lslxOptimizer::update_residual_weight() {
                                 0.5 * sample_proportion_i * duplication_y.transpose() * 
                                 Eigen::kroneckerProduct(sigma_inv_i, sigma_inv_i) * duplication_y;
     }
-  } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+  } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
   } else {}
 }
 
@@ -552,7 +552,7 @@ void lslxOptimizer::update_loss_value() {
   loss_value = 0;
   double sample_proportion_i;
   double loss_value_i;
-  if (loss == "uls"|loss == "dwls"|loss == "wls") {
+  if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
     update_model_residual();
   } 
   int i;
@@ -568,7 +568,7 @@ void lslxOptimizer::update_loss_value() {
         std::log((saturated_cov_i * sigma_inv_i).determinant()) - n_response + 
         ((saturated_mean_i - mu_i).transpose() * sigma_inv_i * (saturated_mean_i - mu_i)).value();
       loss_value_i = sample_proportion_i * loss_value_i;
-    } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+    } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
       Eigen::Map<Eigen::MatrixXd> model_residual_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(model_residual[i]));
       Eigen::Map<Eigen::MatrixXd> residual_weight_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(residual_weight[i]));
       loss_value_i = (model_residual_i.transpose() * residual_weight_i * model_residual_i).value();
@@ -679,7 +679,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
     update_implied_moment();
     if (loss == "ml") {
       update_loss_gradient_direct(); 
-    } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+    } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
       update_model_jacobian();
       update_loss_gradient(); 
     } else {}
@@ -962,7 +962,7 @@ void lslxOptimizer::update_coefficient() {
           update_loss_gradient();
           update_loss_expected_hessian();
         } else {}
-      } else if (loss == "uls"|loss == "dwls"|loss == "wls") {
+      } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
         update_model_jacobian();
         update_loss_gradient();
         update_loss_expected_hessian();

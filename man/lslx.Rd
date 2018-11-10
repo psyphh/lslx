@@ -702,7 +702,7 @@ $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \item{\code{warm_start}}{A \code{logical} to specify whether the warm start approach should be used.}
 \item{\code{positive_variance}}{A \code{logical} to specify whether the variance estimate should be constrained to be larger than \code{minimum_variance}.}
 \item{\code{minimum_variance}}{A \code{numeric} to specify the minimum value of variance if \code{positive_variance = TRUE}.}
-\item{\code{enforce_cd}}{A \code{logic} to specify whether coordinate descent should be used when no penalty function is used.}
+\item{\code{enforce_cd}}{A \code{logic} to specify whether coordinate descent should be used when no penalty function is used. Its default value is TRUE.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 \item{\code{...}}{Other passing arguments for calling \code{$fit()}.}
 }
