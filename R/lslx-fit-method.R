@@ -29,7 +29,7 @@ lslx$set("public",
                   warm_start = TRUE,
                   positive_variance = TRUE,
                   minimum_variance = 1e-4,
-                  enforce_cd = FALSE,
+                  enforce_cd = TRUE,
                   weight_matrix = NULL,
                   verbose = TRUE) {
            control <-
