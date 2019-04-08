@@ -86,34 +86,48 @@ lslx$set("public",
                }
              )
            if (all(!private$fitting$fitted_result$is_finite)) {
-             stop("Optimization result is not finite under EVERY specified penalty level.\n",
-                  "  Please check model identifiability or specify better starting values.\n")
+             cat("ERROR: Optimization result is not finite under EVERY specified penalty level.\n",
+                  "Please check model identifiability or specify better starting values.\n")
+             private$fitting$fitted_result$is_convergent <-
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(numerical_condition_i) {
+                   return(FALSE)
+                 }
+               )
+             private$fitting$fitted_result$is_convex <-
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(numerical_condition_i) {
+                   return(FALSE)
+                 }
+               )
+           } else {
+             private$fitting$fitted_result$is_convergent <-
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(numerical_condition_i) {
+                   is_convergent_i <-
+                     (numerical_condition_i[["n_iter_out"]] <= private$fitting$control$iter_out_max) &
+                     (numerical_condition_i[["objective_gradient_abs_max"]] <= private$fitting$control$tol_out)
+                   is_convergent_i <- 
+                     ifelse(is.na(is_convergent_i), F, is_convergent_i)
+                   return(is_convergent_i)
+                 }
+               )
+             private$fitting$fitted_result$is_convex <-
+               sapply(
+                 X = private$fitting$fitted_result$numerical_condition,
+                 FUN = function(numerical_condition_i) {
+                   is_convex_i <-
+                     (numerical_condition_i[["objective_hessian_convexity"]] > 0)
+                   is_convex_i <- 
+                     ifelse(is.na(is_convex_i), F, is_convex_i)
+                   return(is_convex_i)
+                 }
+               )
            }
            
-           private$fitting$fitted_result$is_convergent <-
-             sapply(
-               X = private$fitting$fitted_result$numerical_condition,
-               FUN = function(numerical_condition_i) {
-                 is_convergent_i <-
-                   (numerical_condition_i[["n_iter_out"]] <= private$fitting$control$iter_out_max) &
-                   (numerical_condition_i[["objective_gradient_abs_max"]] <= private$fitting$control$tol_out)
-                 is_convergent_i <- 
-                   ifelse(is.na(is_convergent_i), F, is_convergent_i)
-                 return(is_convergent_i)
-               }
-             )
-           private$fitting$fitted_result$is_convex <-
-             sapply(
-               X = private$fitting$fitted_result$numerical_condition,
-               FUN = function(numerical_condition_i) {
-                 is_convex_i <-
-                   (numerical_condition_i[["objective_hessian_convexity"]] > 0)
-                 is_convex_i <- 
-                   ifelse(is.na(is_convex_i), F, is_convex_i)
-                 return(is_convex_i)
-               }
-             )
-
            if (private$fitting$control$cv_fold > 1L) {
              if (private$fitting$control$response) {
                control <- private$fitting$control

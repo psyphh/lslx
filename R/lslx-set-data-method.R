@@ -14,6 +14,6 @@ lslx$set("public",
                           weight_variable = private$model$weight_variable,
                           auxiliary_variable = private$model$auxiliary_variable,
                           name_response = private$model$name_response,
-                          name_group = private$model$name_group)
+                          level_group = private$model$level_group)
            private$fitting <- NULL
          })

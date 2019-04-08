@@ -98,7 +98,7 @@ lslx$set("public",
                  self$extract_penalty_level(selector = selector,
                                             lambda = lambda,
                                             delta = delta,
-                                            exclude_improper = exclude_improper)
+                                            include_faulty = include_faulty)
                lambda_ <- as.numeric(strsplit(x = penalty_level,
                                              split = "=|/")[[1]][2])
                delta_ <- as.numeric(strsplit(x = penalty_level,
@@ -135,7 +135,7 @@ lslx$set("public",
            if (do_fit == "none") {
              lslx_cv$summarize(style = style,
                                mode = mode,
-                               include_faulty = FALSE,
+                               include_faulty = include_faulty,
                                interval = FALSE,
                                digit = digit)
            } else {
@@ -143,7 +143,7 @@ lslx$set("public",
                                alpha_level = alpha_level,
                                style = style,
                                mode = mode,
-                               include_faulty = FALSE,
+                               include_faulty = include_faulty,
                                interval = interval,
                                digit = digit)
            }

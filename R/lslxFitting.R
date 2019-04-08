@@ -145,14 +145,14 @@ lslxFitting$set("private",
                     if (is.matrix(self$control$weight_matrix)) {
                       self$control$weight_matrix <- list(self$control$weight_matrix)
                     }
-                    if (length(self$control$weight_matrix) != length(model$name_group)) {
+                    if (length(self$control$weight_matrix) != length(model$level_group)) {
                       stop(
                         "The length of argument 'weight_matrix' doesn't match the number of groups.",
                         "\n  The length of 'weight_matrix' is ",
                         length(self$control$weight_matrix),
                         ".",
                         "\n  The number of groups is ",
-                        length(model$name_group),
+                        length(model$level_group),
                         "."
                       )
                     }
@@ -306,7 +306,7 @@ lslxFitting$set("private",
                       n_eta = length(model$name_eta),
                       n_moment = length(model$name_response) *
                         (length(model$name_response) + 3) / 2,
-                      n_group = length(model$name_group),
+                      n_group = length(model$level_group),
                       n_theta = nrow(model$specification),
                       eta_is_exogenous = model$name_eta %in% model$name_exogenous,
                       eta_is_endogenous = model$name_eta %in% model$name_endogenous,
@@ -340,13 +340,13 @@ lslxFitting$set("private",
                           length(model$specification$group)
                         ),
                         match(model$specification$group,
-                              model$name_group),
+                              model$level_group),
                         ifelse(
                           model$specification$group ==
                             model$reference_group,
                           0L,
                           match(model$specification$group,
-                                model$name_group)
+                                model$level_group)
                         )
                       ),
                       theta_is_free = (model$specification$type == "free"),
