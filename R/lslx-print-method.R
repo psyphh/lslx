@@ -38,9 +38,9 @@ lslx$set("public",
                  colnames(private$data$auxiliary[[1]]),
                  "\n")               
            }
-           if (length(private$model$name_group) > 1) {
+           if (length(private$model$level_group) > 1) {
              cat("    Group(s):",
-                 private$model$name_group,
+                 private$model$level_group,
                  "\n")
              if (!is.null(private$model$reference_group)) {
                cat("    Reference Group:",

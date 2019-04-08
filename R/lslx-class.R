@@ -739,8 +739,8 @@
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
 #'\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
-#'   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
-#'   If it is specified as \code{"default"}, \code{"none"} will be used.}
+#'   The current version supports \code{"naive"}, \code{"polyhedral"}, and \code{"scheffe"}.
+#'   If it is specified as \code{"default"}, \code{"naive"} will be used.}
 #'\item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
 #'\item{\code{include_faulty}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection.
 #'   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iterations.
@@ -788,8 +788,8 @@
 #'   Its value can be either \code{"none"} or \code{"one_step"}. 
 #'   If it is specified as \code{"default"}, \code{"none"} will be used unless \code{post = "polyhedral"} is used.}
 #'\item{\code{inference}}{A \code{character} to specify the method for post selection inference.
-#'   The current version supports \code{"none"}, \code{"polyhedral"}, and \code{"scheffe"}.
-#'   If it is specified as \code{"default"}, \code{"none"} will be used.}
+#'   The current version supports \code{"naive"}, \code{"polyhedral"}, and \code{"scheffe"}.
+#'   If it is specified as \code{"default"}, \code{"naive"} will be used.}
 #'\item{\code{alpha_level}}{A \code{numeric} to specify the alpha level for constructing 1 - alpha confidence intervals.}
 #'\item{\code{include_faulty}}{A \code{logical} to specify whether non-convergence or non-convexity results should be removed for penalty level selection.
 #'   Non-convergence result determined by examining the maximal elements of absolute objective gradient and the number of iteration.
@@ -1224,6 +1224,7 @@
 lslx <-
   R6::R6Class(
     classname = "lslx",
+    inherit = prelslx,
     private = list(
       model = "lslxModel",
       data = "lslxData",

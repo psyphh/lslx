@@ -7,7 +7,7 @@ Description: Fits semi-confirmatory structural equation modeling (SEM) via penal
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Collate: lslxData.R lslxModel.R lslxFitting.R lslx.R lslx-initialize-method.R lslx-print-method.R lslx-set-coefficient-method.R lslx-set-block-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R lslx-set-data-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R lslx-validate-method.R lslx-s3-interface.R polyhedral.R 
+Collate: lslxData.R lslxModel.R lslxFitting.R prelslx-class.R prelslx-initialize-method.R lslx-class.R lslx-print-method.R lslx-set-coefficient-method.R lslx-set-block-method.R lslx-set-directed-method.R lslx-set-heterogeneity-method.R lslx-set-undirected-method.R lslx-set-data-method.R RcppExports.R lslx-fit-method.R lslx-get-method.R  lslx-extract-method.R lslx-test-method.R lslx-summarize-method.R lslx-plot-method.R lslx-validate-method.R lslx-s3-interface.R polyhedral.R 
 Depends:
     R (>= 3.5.0)
 Imports: stats, 
@@ -20,6 +20,6 @@ Suggests: knitr,
 VignetteBuilder: knitr
 LinkingTo: Rcpp,
     RcppEigen
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 URL: https://github.com/psyphh/lslx/wiki
 BugReports: https://github.com/psyphh/lslx/issues

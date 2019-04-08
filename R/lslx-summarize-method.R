@@ -36,8 +36,8 @@ lslx$set("public",
                "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
              )
            }
-           if (!(inference %in% c("default", "none", "polyhedral", "scheffe"))) {
-             stop("Argument 'inference' can be only either 'default', 'none', 'polyhedral', or 'scheffe'.")
+           if (!(inference %in% c("default", "naive", "polyhedral", "scheffe"))) {
+             stop("Argument 'inference' can be only either 'default', 'naive', 'polyhedral', or 'scheffe'.")
            }
            if (!(debias %in% c("default", "none", "one_step"))) {
              stop("Argument 'debias' can be only either 'default', 'none', or 'one_step'.")
@@ -50,7 +50,7 @@ lslx$set("public",
              }
            }
            if (inference == "default") {
-             inference <- "none"
+             inference <- "naive"
              if (debias == "default") {
                debias <- "none"
              }
@@ -535,20 +535,20 @@ lslx$set("public",
                ## print by different groups
                if (!is.null(private$model$reference_group)) {
                  reference_group_order <-
-                   which(private$model$name_group %in% private$model$reference_group)
+                   which(private$model$level_group %in% private$model$reference_group)
                  group_by_order <-
                    c(reference_group_order,
                      c(1:(
-                       length(private$model$name_group)
+                       length(private$model$level_group)
                      ))[!(c(1:(
-                       length(private$model$name_group)
+                       length(private$model$level_group)
                      )) %in% reference_group_order)])
                } else {
-                 group_by_order <- 1:length(private$model$name_group)
+                 group_by_order <- 1:length(private$model$level_group)
                }
                for (i_group in group_by_order) {
                  idc_group <-
-                   coefficient_test$group == private$model$name_group[i_group]
+                   coefficient_test$group == private$model$level_group[i_group]
                  coefficient_test_group <-
                    coefficient_test[idc_group, 
                                     c("type", "estimate", "standard_error",
@@ -572,11 +572,11 @@ lslx$set("public",
                    coefficient_test_group$lower <- NULL
                    coefficient_test_group$upper <- NULL
                  } 
-                 if (length(private$model$name_group) != 1) {
+                 if (length(private$model$level_group) != 1) {
                    cat(
                      paste0(
                        "Coefficient Test (Group = \"",
-                       private$model$name_group[[i_group]],
+                       private$model$level_group[[i_group]],
                        "\"",
                        ", Std.Error = \"",
                        standard_error,

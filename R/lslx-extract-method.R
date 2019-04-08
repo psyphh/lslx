@@ -520,7 +520,7 @@ lslx$set("public",
                  return(implied_cov_i)
                }
              )
-           names(implied_cov) <- private$model$name_group
+           names(implied_cov) <- private$model$level_group
            return(implied_cov)
          })
 
@@ -556,7 +556,7 @@ lslx$set("public",
                  return(implied_mean_i)
                }
              )
-           names(implied_mean) <- private$model$name_group
+           names(implied_mean) <- private$model$level_group
            return(implied_mean)
          })
 
@@ -703,7 +703,7 @@ lslx$set("public",
                }
              )
            names(coefficient_matrix_block) <-
-             private$model$name_group
+             private$model$level_group
            return(coefficient_matrix_block)
          })
 

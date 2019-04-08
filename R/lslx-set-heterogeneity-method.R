@@ -21,11 +21,11 @@ lslx$set("private",
                  do.call(paste, as.list(group)),
                  "."
                )
-             } else if (!all(group %in% private$model$name_group)) {
+             } else if (!all(group %in% private$model$level_group)) {
                stop(
                  "Argument 'group' contains unknown group name.",
                  "\n  Group name(s) currently recognized by 'lslx' is ",
-                 do.call(paste, as.list(private$model$name_group)),
+                 do.call(paste, as.list(private$model$level_group)),
                  ".",
                  "\n  Group name specified in 'group' is ",
                  do.call(paste, as.list(group)),

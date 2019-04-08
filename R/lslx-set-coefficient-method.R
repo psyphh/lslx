@@ -84,8 +84,8 @@ lslx$set("private",
                    stop("Some coefficient name doesn't contain valid operator ('<-' and '<->').")
                  }
                  if (!grepl(pattern = "/", x = name_i)) {
-                   if (length(private$model$name_group) == 1) {
-                     name_i <- paste0(name_i, "/", private$model$name_group)
+                   if (length(private$model$level_group) == 1) {
+                     name_i <- paste0(name_i, "/", private$model$level_group)
                    } else {
                      stop("Some coefficient name doesn't contain group name.")
                    }
@@ -127,11 +127,11 @@ lslx$set("private",
                    )
                  }
                  
-                 if (!(group_i %in% private$model$name_group)) {
+                 if (!(group_i %in% private$model$level_group)) {
                    stop(
                      "Some specified group name is unrecognized.",
                      "\n  Group name(s) currently recognized by 'lslx' is ",
-                     do.call(paste, as.list(private$model$name_group)),
+                     do.call(paste, as.list(private$model$level_group)),
                      ".",
                      "\n  The unrecognized group name is ",
                      group_i,
@@ -293,6 +293,7 @@ lslx$set("private",
                      block = block_i,
                      type = type,
                      start = start[i],
+                     label = NA_character_,
                      stringsAsFactors = FALSE
                    )
                  rownames(specification_i) <- name[i]
@@ -335,7 +336,6 @@ lslx$set("private",
              }
              
              private$model$specification <-
-               private$model$specification <-
                private$model$specification[order(
                  private$model$specification$reference,
                  private$model$specification$group,
@@ -343,7 +343,12 @@ lslx$set("private",
                  private$model$specification$block,
                  match(private$model$specification$right, private$model$name_eta),
                  match(private$model$specification$left, private$model$name_eta),
-                 decreasing = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE),
+                 method = "radix"
+               ), ]
+             private$model$specification <-
+               private$model$specification[order(
+                 private$model$specification$reference,
+                 decreasing = TRUE,
                  method = "radix"
                ), ]
              

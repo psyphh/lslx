@@ -200,10 +200,10 @@ lslx$set("public",
              )
            }
            if (!(
-             inference %in% c("default", "none", "polyhedral", "scheffe")
+             inference %in% c("default", "naive", "polyhedral", "scheffe")
            )) {
              stop(
-               "Argument 'inference' can be only either 'default', 'none', 'polyhedral', or 'scheffe'."
+               "Argument 'inference' can be only either 'default', 'naive', 'polyhedral', or 'scheffe'."
              )
            }
            if (!(
@@ -221,7 +221,7 @@ lslx$set("public",
              }
            }
            if (inference == "default") {
-             inference <- "none"
+             inference <- "naive"
              if (debias == "default") {
                debias <- "none"
              }
@@ -270,7 +270,7 @@ lslx$set("public",
              coefficient_test$estimate / coefficient_test$standard_error
            attr(coefficient_test, "standard_error") <-
              standard_error
-           if (inference == "none") {
+           if (inference == "naive") {
              coefficient_test$p_value <-
                pnorm(-abs(coefficient_test$z_value))
              coefficient_test$lower <-

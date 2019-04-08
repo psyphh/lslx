@@ -28,77 +28,66 @@ lslxData$set("public",
                       auxiliary_variable,
                       group_variable,
                       name_response,
-                      name_group) {
+                      level_group) {
                if (!missing(data)) {
-                 if (!all(name_response %in% colnames(data))) {
-                   stop(
-                     "Some response variable in 'model' cannot be found in 'data'.",
-                     "\n  Response variables specified by 'model' are ",
-                     do.call(paste, as.list(name_response)),
-                     ".",
-                     "\n  Column names of 'data' are ",
-                     do.call(paste, as.list(colnames(data))),
-                     "."
-                   )
-                 } else {
-                   index <- 1:nrow(data)
-                   row.names(data) <- index
-                   if (is.null(group_variable)) {
-                     response <-
-                       list(data[, name_response, drop = FALSE])
-                     names(response) <- name_group
-                     if (is.null(weight_variable)) {
-                       weight <- 
-                         data.frame(weight = rep(1, nrow(data)), row.names = index)
-                       weight <- list(weight)
-                     } else {
-                       weight <- list(data[, weight_variable, drop = FALSE])
-                     }
-                     names(weight) <- name_group
-                     if (is.null(auxiliary_variable)) {
-                       auxiliary <- list()
-                     } else {
-                       if (length(auxiliary_variable) > 0) {
-                         auxiliary <- list(data[, auxiliary_variable, drop = FALSE])
-                       } else {
-                         auxiliary <- list()
-                       }
-                     }
+                 index <- 1:nrow(data)
+                 row.names(data) <- index
+                 if (length(group_variable) == 0) {
+                   response <-
+                     list(data[, name_response, drop = FALSE])
+                   names(response) <- level_group
+                   if (length(weight_variable) == 0) {
+                     weight <- 
+                       list(data.frame(weight = rep(1, nrow(data)),
+                                       row.names = index))
                    } else {
-                     data <-
-                       data[order(as.character(getElement(data, group_variable))), , drop = FALSE]
-                     data[, group_variable] <-
-                       as.character(getElement(data, group_variable))
-                     response <-
-                       split(data[, name_response, drop = FALSE],
+                     weight <- 
+                       list(data[, weight_variable, drop = FALSE])
+                   }
+                   names(weight) <- level_group
+                   if (length(auxiliary_variable) == 0) {
+                     auxiliary <- list()
+                   } else {
+                     auxiliary <- 
+                       list(data[, auxiliary_variable, drop = FALSE])
+                   }
+                 } else {
+                   data <-
+                     data[order(as.character(getElement(data, group_variable))), 
+                          , 
+                          drop = FALSE]
+                   data[, group_variable] <-
+                     as.character(getElement(data, group_variable))
+                   response <-
+                     split(data[, name_response, drop = FALSE],
+                           getElement(data, group_variable))
+                   if (length(weight_variable) == 0) {
+                     weight <- 
+                       split(data.frame(weight = rep(1, nrow(data)),
+                                        row.names = row.names(data)), 
                              getElement(data, group_variable))
-                     if (is.null(weight_variable)) {
-                       weight <- data.frame(weight = rep(1, nrow(data)),
-                                            row.names = row.names(data))
-                       weight <- split(weight,
-                                       getElement(data, group_variable))
-                     } else {
-                       weight <-
-                         split(data[, weight_variable, drop = FALSE],
-                               getElement(data, group_variable))
-                     }
-                     if (is.null(auxiliary_variable)) {
-                       auxiliary <- list()
-                     } else {
-                       auxiliary <-
-                         split(data[, auxiliary_variable, drop = FALSE],
-                               getElement(data, group_variable))
-                     }
+                   } else {
+                     weight <-
+                       split(data[, weight_variable, drop = FALSE],
+                             getElement(data, group_variable))
+                   }
+                   if (length(auxiliary_variable) == 0) {
+                     auxiliary <- list()
+                   } else {
+                     auxiliary <-
+                       split(data[, auxiliary_variable, drop = FALSE],
+                             getElement(data, group_variable))
                    }
                  }
                  if (!all(sapply(X = response, 
                                  FUN = function(response_i) {
                                    sapply(X = response_i,
                                           FUN = function(response_ij) {
-                                            return(is.numeric(response_ij))
+                                            return(is.numeric(response_ij) |
+                                                   is.ordered(response_ij))
                                           })
                                  }))) {
-                   stop("Response variable(s) cannot contain non-numeric variables.")
+                   stop("Response variables cannot contain non-numeric/ordered variables.")
                  }
                  if (length(auxiliary) > 0) {
                    if (!all(sapply(X = auxiliary, 
@@ -134,37 +123,22 @@ lslxData$set("public",
                  self$sample_size <- list()
                  self$sample_moment_acov <- list()
                } else {
-                 if (!all(name_response %in% colnames(sample_cov[[1]]))) {
-                   stop(
-                     "Some response variable in 'model' cannot be found in 'sample_cov'.",
-                     "\n  Response variables specified by 'model' are ",
-                     do.call(paste, as.list(name_response)),
-                     ".",
-                     "\n  Column names of 'sample_cov' are ",
-                     do.call(paste, as.list(colnames(sample_cov[[1]]))),
-                     ".",
-                     "\n  Row names of 'sample_cov' are ",
-                     do.call(paste, as.list(rownames(sample_cov[[1]]))),
-                     "."
+                 sample_cov <-
+                   lapply(
+                     X = sample_cov,
+                     FUN = function(sample_cov_i) {
+                       sample_cov_i <-
+                         sample_cov_i[name_response,
+                                      name_response,
+                                      drop = FALSE]
+                       return(sample_cov_i)
+                     }
                    )
-                 } else {
-                   sample_cov <-
-                     lapply(
-                       X = sample_cov,
-                       FUN = function(sample_cov_i) {
-                         sample_cov_i <-
-                           sample_cov_i[name_response,
-                                        name_response,
-                                        drop = FALSE]
-                         return(sample_cov_i)
-                       }
-                     )
-                   names(sample_cov) <- name_group
-                 }
+                 names(sample_cov) <- level_group
                  if (missing(sample_mean)) {
                    sample_mean <-
                      lapply(
-                       X = name_group,
+                       X = level_group,
                        FUN = function(i) {
                          sample_mean_i <- rep(0, ncol(sample_cov[[1]]))
                          names(sample_mean_i) <-
@@ -172,7 +146,7 @@ lslxData$set("public",
                          return(sample_mean_i)
                        }
                      )
-                   names(sample_mean) <- name_group
+                   names(sample_mean) <- level_group
                  } else {
                    if (!is.numeric(sample_mean) & !is.list(sample_mean)) {
                      stop("Argument 'sample_mean' must be 'numeric' or 'list' of 'numeric'.")
@@ -215,13 +189,13 @@ lslxData$set("public",
                      )
                    }
                    if (is.null(names(sample_mean))) {
-                     names(sample_mean) <- name_group
+                     names(sample_mean) <- level_group
                    } else {
-                     if (!all(name_group %in% names(sample_mean))) {
+                     if (!all(level_group %in% names(sample_mean))) {
                        stop(
                          "Argument 'sample_mean' contains unrecognized group name(s).",
                          "\n  Group name(s) currently recognized by 'lslx' is ",
-                         do.call(paste, as.list(name_group)),
+                         do.call(paste, as.list(level_group)),
                          " (possibly automatically created).",
                          "\n  Group name(s) specified in 'sample_mean' is ",
                          do.call(paste, as.list(names(
@@ -230,7 +204,7 @@ lslxData$set("public",
                          "."
                        )
                      } else{
-                       sample_mean <- sample_mean[name_group]
+                       sample_mean <- sample_mean[level_group]
                      }
                    }
                  }
@@ -255,13 +229,13 @@ lslxData$set("public",
                      )
                    }
                    if (is.null(names(sample_size))) {
-                     names(sample_size) <- name_group
+                     names(sample_size) <- level_group
                    } else {
-                     if (!all(name_group %in% names(sample_size))) {
+                     if (!all(level_group %in% names(sample_size))) {
                        stop(
                          "Argument 'sample_size' contains unrecognized group name(s).",
                          "\n  Group name(s) currently recognized by 'lslx' is ",
-                         do.call(paste, as.list(name_group)),
+                         do.call(paste, as.list(level_group)),
                          " (possibly automatically created).",
                          "\n  Group name(s) specified in 'sample_size' is ",
                          do.call(paste, as.list(names(
@@ -270,7 +244,7 @@ lslxData$set("public",
                          "."
                        )
                      } else{
-                       sample_size <- sample_size[name_group]
+                       sample_size <- sample_size[level_group]
                      }
                    }
                  }
@@ -333,13 +307,13 @@ lslxData$set("public",
                      )
                    }
                    if (is.null(names(sample_moment_acov))) {
-                     names(sample_moment_acov) <- name_group
+                     names(sample_moment_acov) <- level_group
                    } else {
-                     if (!all(name_group %in% names(sample_moment_acov))) {
+                     if (!all(level_group %in% names(sample_moment_acov))) {
                        stop(
                          "Argument 'sample_moment_acov' contains unrecognized group name(s).",
                          "\n  Group name(s) currently recognized by 'lslx' is ",
-                         do.call(paste, as.list(name_group)),
+                         do.call(paste, as.list(level_group)),
                          " (possibly automatically created).",
                          "\n  Group name(s) specified in 'sample_moment_acov' is ",
                          do.call(paste, as.list(names(
@@ -348,7 +322,7 @@ lslxData$set("public",
                          "."
                        )
                      } else{
-                       sample_moment_acov <- sample_moment_acov[name_group]
+                       sample_moment_acov <- sample_moment_acov[level_group]
                      }
                    }
                  } else {
