@@ -169,7 +169,7 @@ lslx$set("public",
                      )
                    ),
                    ifelse(
-                     private$fitting$control$penalty_method != "mcp",
+                     !(private$fitting$control$penalty_method %in% c("mcp", "elastic")),
                      "none",
                      ifelse(
                        length(private$fitting$control$delta_grid) == 1,
@@ -254,7 +254,7 @@ lslx$set("public",
                       "none",
                       numerical_condition[["lambda"]])
              numerical_condition[["delta"]] <-
-               ifelse(private$fitting$control$penalty_method != "mcp",
+               ifelse(private$fitting$control$penalty_method %in% c("none", "lasso", "ridge"),
                       "none",
                       numerical_condition[["delta"]])
              names(numerical_condition) <-
