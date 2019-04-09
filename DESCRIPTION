@@ -16,9 +16,8 @@ Imports: stats,
     ggplot2,
     lavaan
 Suggests: knitr,
-    rmarkdown,
-    R.rsp
-VignetteBuilder: knitr, R.rsp
+    rmarkdown
+VignetteBuilder: knitr
 LinkingTo: Rcpp,
     RcppEigen
 RoxygenNote: 6.1.1
