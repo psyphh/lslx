@@ -654,7 +654,7 @@
 #'
 #'}
 #'\item{\code{penalty_method}}{A \code{character} to specify the penalty method.
-#'   The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.}
+#'   The current version supports \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic"}, and \code{"mcp"}.}
 #'\item{\code{lambda_grid}}{A non-negative \code{numeric} to specify penalty levels for both \code{"lasso"} and \code{"mcp"}.
 #'   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 #'\item{\code{delta_grid}}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
@@ -706,16 +706,22 @@
 #' The success of these methods may depend on the specified fitting control.
 #' For details of optimization algorithm, see the section of \emph{Optimization Algorithm}.
 #'
-#' \code{$fit()} fits the specified model to data by minimizing a penalized ML loss function.
+#' \code{$fit()} fits the specified model to data by minimizing a penalized loss function.
 #' It is the most comprehensive fit method and hence many arguments can be specified.
 #'
-#' \code{$fit_none()} fits the specified model to data by minimizing a ML loss function without penalty.
+#' \code{$fit_none()} fits the specified model to data by minimizing a loss function without penalty.
 #' It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "none"}.
 #'
-#' \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996).
+#' \code{$fit_lasso()} fits the specified model to data by minimizing a loss function with lasso penalty (Tibshirani, 1996).
 #' It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "lasso"}.
 #'
-#' \code{$fit_mcp()} method fits the specified model to data by minimizing a ML loss function with mcp (Zhang, 2010).
+#' \code{$fit_ridge()} fits the specified model to data by minimizing a loss function with ridge penalty (Hoerl & Kennard, 1970).
+#' It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "ridge"}.
+#' 
+#' \code{$fit_elastic()} fits the specified model to data by minimizing a loss function with elastic net penalty (Zou & Hastie, 2005).
+#' It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "elastic"}.
+#' 
+#' \code{$fit_mcp()} method fits the specified model to data by minimizing a loss function with mcp (Zhang, 2010).
 #' It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mcp"}.
 #'
 #'
