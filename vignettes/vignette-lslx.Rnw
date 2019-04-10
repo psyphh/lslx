@@ -1,3 +1,4 @@
+%\VignetteIndexEntry{lslx Package Vignette}
 \documentclass[nojss]{jss}
 
 %% -- LaTeX packages and custom commands ---------------------------------------
