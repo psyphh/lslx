@@ -7,7 +7,7 @@
 #' @param data A \code{data.frame} of raw data. 
 #' It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).
 #' @param penalty_method A \code{character} to specify the penalty method.
-#'   The current version supports \code{"none"}, \code{"lasso"}, and \code{"mcp"}.
+#'   The current version supports \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic"}, and \code{"mcp"}.
 #' @param lambda_grid A non-negative \code{numeric} to specify penalty levels for both \code{"lasso"} and \code{"mcp"}.
 #'   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.
 #' @param delta_grid A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.

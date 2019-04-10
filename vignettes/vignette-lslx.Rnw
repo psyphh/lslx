@@ -29,9 +29,7 @@
 <<preliminaries, echo=FALSE, results=hide>>=
 library(lslx)
 library(ggplot2)
-library(dplyr)
 library(knitr)
-library(tidyr)
 options(prompt = "R> ", continue = "+  ", width = 80, useFancyQuotes = FALSE)
 options(digits = 3L)
 @
