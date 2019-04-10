@@ -42,7 +42,7 @@
 #' The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing.
 #' The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory.
 #' By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently identified by the sparsity pattern of these penalized parameters.
-#' The technical details of \pkg{lslx} can be found in its JSS paper (Huang, in press) or .
+#' The technical details of \pkg{lslx} can be found in its JSS paper (Huang, in press) or long vignette (https://github.com/psyphh/lslx/blob/master/vignettes/vignette-lslx.pdf).
 #'
 #' The main function \code{lslx} generates an object of \code{lslx} R6 class.
 #' R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object-oriented programming in \pkg{R} system.
