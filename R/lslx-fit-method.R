@@ -244,7 +244,7 @@ lslx$set("public",
            }
          })
 
-## \code{$fit_lasso()} fits the specified model to data by minimizing a ML loss function with lasso penalty (Tibshirani, 1996). ##
+## \code{$fit_lasso()} fits the specified model to data by minimizing a loss function with lasso penalty (Tibshirani, 1996). ##
 lslx$set("public",
          "fit_lasso",
          function(lambda_grid = "default",
@@ -254,7 +254,31 @@ lslx$set("public",
                     ...)
          })
 
-## \code{$fit_mcp()} method fits the specified model to data by minimizing a ML loss function with mcp (Zhang, 2010). ##
+## \code{$fit_ridge()} fits the specified model to data by minimizing a loss function with ridge penalty (Hoerl & Kennard, 1970). ##
+lslx$set("public",
+         "fit_ridge",
+         function(lambda_grid = "default",
+                  ...) {
+           self$fit(penalty_method = "ridge",
+                    lambda_grid = lambda_grid,
+                    ...)
+         })
+
+## \code{$fit_elastic()} method fits the specified model to data by minimizing a loss function with elastic net (Zou & Hastie, 2005). ##
+lslx$set("public",
+         "fit_elastic",
+         function(lambda_grid = "default",
+                  delta_grid = "default",
+                  ...) {
+           self$fit(
+             penalty_method = "elastic",
+             lambda_grid = lambda_grid,
+             delta_grid = delta_grid,
+             ...
+           )
+         })
+
+## \code{$fit_mcp()} method fits the specified model to data by minimizing a loss function with mcp (Zhang, 2010). ##
 lslx$set("public",
          "fit_mcp",
          function(lambda_grid = "default",
@@ -268,7 +292,7 @@ lslx$set("public",
            )
          })
 
-## \code{$fit_none()} method fits the specified model to data by minimizing a ML loss function without penalty. ##
+## \code{$fit_none()} method fits the specified model to data by minimizing a loss function without penalty. ##
 lslx$set("public",
          "fit_none",
          function(...) {
