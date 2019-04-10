@@ -42,6 +42,7 @@
 #' The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing.
 #' The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory.
 #' By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently identified by the sparsity pattern of these penalized parameters.
+#' The technical details of \pkg{lslx} can be found in its JSS paper (Huang, in press) or .
 #'
 #' The main function \code{lslx} generates an object of \code{lslx} R6 class.
 #' R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object-oriented programming in \pkg{R} system.
@@ -60,7 +61,7 @@
 #' Details of the model specification can be found in the sections of \emph{Model Syntax} and \emph{Set-Related Methods}.
 #'
 #' Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized maximum likelihood (ML) loss function.
-#' The penalty function can be set as lasso (Tibshirani, 1996) or mcp (minimax concave penalty; Zhang, 2010).
+#' The penalty function can be set as lasso (Tibshirani, 1996), ridge (Hoerl & Kennard, 1970), elastic net (Zou & Hastie, 2005), or mcp (minimax concave penalty; Zhang, 2010).
 #' \pkg{lslx} solves the optimization problem based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 #' The underlying optimizer is written by using \pkg{Rcpp} (Eddelbuettel & Francois, 2011) and \pkg{RcppEigen} (Bates & Eddelbuettel, 2013).
 #' Our experiences show that the algorithm can efficiently find a local minimum provided that (1) the starting value is reasonable, and (2) the saturated covariance matrix is not nearly singular.
@@ -80,6 +81,7 @@
 #' Given a penalty level, it is important to evaluate the goodness-of-fit of selected model and coefficients.
 #' In \pkg{lslx}, it is possible to make statistical inferences for goodness-of-fit and coefficients.
 #' However, the inference methods assume that no model selection is conducted, which is not true in the case of using PL.
+#' After version 0.6.4, several post-selection mehtods are available (Huang, 2019).
 #' Details of statistical inference can be found in the sections of \emph{Model Fit Evaluation} and \emph{Coefficient Evaluation}.
 #' Implementations of these methods can be found in the sections of \emph{Summarize Method} and \emph{Test-Related Methods}.
 #'
@@ -424,7 +426,8 @@
 #' \eqn{loss(\theta)}: the loss value under estimate \eqn{\theta};
 #' }
 #' \item{
-#' \eqn{df(\theta)}: the degree of freedom defined by \eqn{G * P * (P + 3) / 2 - e(\theta)} with \eqn{e(\theta)} being the number of non-zero elements in \eqn{\theta}.
+#' \eqn{df(\theta)}: the degree of freedom defined as (1) \eqn{G * P * (P + 3) / 2 - e(\theta)} with \eqn{e(\theta)} being the number of non-zero elements in \eqn{\theta} for Lasso and MCP; 
+#' or (2) the expectation of likelihood ratio statistics with ridge for ridge and elastic net.
 #' }
 #' }
 #' Note the formula for calculating the information criteria in \pkg{lslx} are different to other software solutions.
@@ -1028,8 +1031,12 @@
 #'
 #' Haughton, D. M. A., Oud, J. H. L., & Jansen, R. A. R. G. (1997). Information and other criteria in structural equation model selection. Communications in Statistics - Simulation and Computation, 26(4), 1477–1516.
 #'
-#' Huang PH (in press). A Penalized Likelihood Method for Multi-Group Structural Equation Modeling. British Journal of Mathematical and Statistical Psychology.
-#'
+#' Hoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for Nonorthogonal Problems. Technometrics, 12(1), 55–67.
+#' 
+#' Huang, P. H. (2018). A Penalized Likelihood Method for Multi-Group Structural Equation Modeling. British Journal of Mathematical and Statistical Psychology, 71(3),  499-522.
+#' 
+#' Huang, P. H. (2019). Post-selection inference in structural equation modeling. Under Revision.
+#' 
 #' Huang, P. H., Chen, H., & Weng, L. J. (2017). A Penalized Likelihood Method for Structural Equation Modeling. Psychometrika, 82(2), 329–354.
 #'
 #' Brosseau-Liard, P. E., Savalei, V., & Li, L. (2012). An Investigation of the Sample Performance of Two Nonnormality Corrections for RMSEA. Multivariate Behavioral Research, 47(6), 904-930.
@@ -1076,6 +1083,7 @@
 #'
 #' Zhang, C. H. (2010). Nearly unbiased variable selection under minimax concave penalty. Annals of Statistics, 38(2), 894–942.
 #'
+#' Zou, H., & Hastie, T. (2005). Regularization and Variable Selection via the Elastic Net. Journal of the Royal Statistical Society B, 67(2), 301–320.
 #'
 #' @examples
 #' ## EXAMPLE: Regression Analysis with Lasso Penalty ##
