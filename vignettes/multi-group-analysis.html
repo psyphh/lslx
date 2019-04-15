@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Po-Hsien Huang" />
+
+
+<title>Multi-Group Factor Analysis</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Multi-Group Factor Analysis</h1>
+<h4 class="author">Po-Hsien Huang</h4>
+
+
+
+<p>In this example, we will show how to use <code>lslx</code> to conduct multi-group factor analysis. The example uses data <code>HolzingerSwineford1939</code> in the package <code>lavaan</code>. Hence, <code>lavaan</code> must be installed.</p>
+<div id="model-specification" class="section level2">
+<h2>Model Specification</h2>
+<p>In the following specification, <code>x1</code> - <code>x9</code> is assumed to be measurements of 3 latent factors: <code>visual</code>, <code>textual</code>, and <code>speed</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">model_mgfa &lt;-<span class="st"> &quot;visual  :=&gt; 1 * x1 + x2 + x3 </span>
+<span class="st">               textual :=&gt; 1 * x4 + x5 + x6 </span>
+<span class="st">               speed   :=&gt; 1 * x7 + x8 + x9&quot;</span></code></pre></div>
+<p>The operator <code>:=&gt;</code> means that the LHS latent factors is defined by the RHS observed variables. In this model, <code>visual</code> is mainly measured by <code>x1</code> - <code>x3</code>, <code>textual</code> is mainly measured by <code>x4</code> - <code>x6</code>, and <code>speed</code> is mainly measured by <code>x7</code> - <code>x9</code>. Loadings of <code>x1</code>, <code>x4</code>, and <code>x7</code> are fixed at 1 for scale setting. The above specification is valid for both groups. Details of model syntax can be found in the section of Model Syntax via <code>?lslx</code>.</p>
+</div>
+<div id="object-initialization" class="section level2">
+<h2>Object Initialization</h2>
+<p><code>lslx</code> is written as an <code>R6</code> class. Everytime we conduct analysis with <code>lslx</code>, an <code>lslx</code> object must be initialized. The following code initializes an <code>lslx</code> object named <code>lslx_mgfa</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(lslx)
+lslx_mgfa &lt;-<span class="st"> </span>lslx<span class="op">$</span><span class="kw">new</span>(<span class="dt">model =</span> model_mgfa,
+                    <span class="dt">data =</span> lavaan<span class="op">::</span>HolzingerSwineford1939,
+                    <span class="dt">group_variable =</span> <span class="st">&quot;school&quot;</span>,
+                    <span class="dt">reference_group =</span> <span class="st">&quot;Pasteur&quot;</span>)</code></pre></div>
+<pre><code>An 'lslx' R6 class is initialized via 'data' argument. 
+  Response Variables: x1 x2 x3 x4 x5 x6 x7 x8 x9 
+  Latent Factors: visual textual speed 
+  Groups: Grant-White Pasteur 
+  Reference Group: Pasteur 
+NOTE: Because Pasteur is set as reference, coefficients in other groups actually represent increments from the reference.</code></pre>
+<p>Here, <code>lslx</code> is the object generator for <code>lslx</code> object and <code>new</code> is the build-in method of <code>lslx</code> to generate a new <code>lslx</code> object. The initialization of <code>lslx</code> requires users to specify a model for model specification (argument <code>model</code>) and a data set to be fitted (argument <code>sample_data</code>). The data set must contain all the observed variables specified in the given model. Because in this example a multi-group analysis is considered, variable for group labeling (argument <code>group_variable</code>) must be specified. In lslx, two types of parameterization can be used in multi-group analysis. The first type is the same with the traditional multi-group SEM, which treats model parameters in each group separately. The second type sets one group as reference and treats model parameters in other groups as increments with respect to the reference. Under the second type of parameterization, the group heterogeneity can be efficiently explored if we treat the increments as penalized parameters. In this example, <code>Pasteur</code> is set as reference. Hence, the parameters in <code>Grant-White</code> now reflect differences from the reference.</p>
+</div>
+<div id="model-respecification" class="section level2">
+<h2>Model Respecification</h2>
+<p>After an <code>lslx</code> object is initialized, the heterogeneity of a multi-group model can be quickly respecified by <code>$free_heterogeneity()</code>, <code>$fix_heterogeneity()</code>, and <code>$penalize_heterogeneity()</code> methods. The following code sets <code>x2&lt;-visual</code>, <code>x3&lt;-visual</code>, <code>x5&lt;-textual</code>, <code>x6&lt;-textual</code>, <code>x8&lt;-speed</code>, <code>x9&lt;-speed</code>, and <code>x2&lt;-1</code>, <code>x3&lt;-1</code>, <code>x5&lt;-1</code>, <code>x6&lt;-1</code>, <code>x8&lt;-1</code>, <code>x9&lt;-1</code> in <code>Grant-White</code> as penalized parameters. Note that parameters in <code>Grant-White</code> now reflect differences since <code>Pasteur</code> is set as reference.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lslx_mgfa<span class="op">$</span><span class="kw">penalize_heterogeneity</span>(<span class="dt">block =</span> <span class="kw">c</span>(<span class="st">&quot;y&lt;-1&quot;</span>, <span class="st">&quot;y&lt;-f&quot;</span>), <span class="dt">group =</span> <span class="st">&quot;Grant-White&quot;</span>)</code></pre></div>
+<pre><code>The relation x1&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x2&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x3&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x4&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x5&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x6&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x7&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x8&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x9&lt;-1 under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x2&lt;-visual under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x3&lt;-visual under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x5&lt;-textual under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x6&lt;-textual under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x8&lt;-speed under Grant-White is set as PENALIZED with starting value = 0. 
+The relation x9&lt;-speed under Grant-White is set as PENALIZED with starting value = 0. 
+NOTE: Because Pasteur is set as reference, a relation under other group actually represents an increment. 
+NOTE: Please check whether the starting value for the increment represents a difference. </code></pre>
+<p>Since the homogeneity of latent factor means may not be a reasonable assumption when examining measurement invariance, the following code relaxes this assumption</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lslx_mgfa<span class="op">$</span><span class="kw">free_block</span>(<span class="dt">block =</span> <span class="st">&quot;f&lt;-1&quot;</span>, <span class="dt">group =</span> <span class="st">&quot;Grant-White&quot;</span>)</code></pre></div>
+<pre><code>The relation visual&lt;-1 under Grant-White is set as FREE with starting value = NA. 
+The relation textual&lt;-1 under Grant-White is set as FREE with starting value = NA. 
+The relation speed&lt;-1 under Grant-White is set as FREE with starting value = NA. 
+NOTE: Because Pasteur is set as reference, a relation under other group actually represents an increment. 
+NOTE: Please check whether the starting value for the increment represents a difference. </code></pre>
+<p>To see more methods to modify a specified model, please check the section of Set-Related Method via <code>?lslx</code>.</p>
+</div>
+<div id="model-fitting" class="section level2">
+<h2>Model Fitting</h2>
+<p>After an <code>lslx</code> object is initialized, method <code>$fit_mcp()</code> can be used to fit the specified model into the given data with MCP.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lslx_mgfa<span class="op">$</span><span class="kw">fit_mcp</span>()</code></pre></div>
+<pre><code>CONGRATS: Algorithm converges under EVERY specified penalty level.
+  Specified Tolerance for Convergence: 0.001 
+  Specified Maximal Number of Iterations: 100 </code></pre>
+<p>All the fitting result will be stored in the <code>fitting</code> field of <code>lslx_mgfa</code>.</p>
+</div>
+<div id="model-summarizing" class="section level2">
+<h2>Model Summarizing</h2>
+<p>Unlike traditional SEM analysis, <code>lslx</code> fits the model into data under all the penalty levels considered. To summarize the fitting result, a selector to determine an optimal penalty level must be specified. Available selectors can be found in the section of Penalty Level Selection via <code>?lslx</code>. The following code summarize the fitting result under the penalty level selected by Haughton’s Bayesian information criterion (HBIC).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lslx_mgfa<span class="op">$</span><span class="kw">summarize</span>(<span class="dt">selector =</span> <span class="st">&quot;hbic&quot;</span>)</code></pre></div>
+<pre><code>General Information                                                            
+   number of observations                                301
+   number of complete observations                       301
+   number of missing patterns                           none
+   number of groups                                        2
+   number of responses                                     9
+   number of factors                                       3
+   number of free coefficients                            48
+   number of penalized coefficients                       15
+
+Numerical Conditions                                                            
+   selected lambda                                     0.115
+   selected delta                                      3.063
+   objective value                                     0.470
+   objective gradient absolute maximum                 0.001
+   objective Hessian convexity                         0.188
+   number of iterations                                3.000
+   loss value                                          0.430
+   number of non-zero coefficients                    50.000
+   degrees of freedom                                 58.000
+   robust degrees of freedom                          60.650
+   scaling factor                                      1.046
+
+Fit Indices                                                            
+   root mean square error of approximation (rmsea)     0.090
+   comparative fit index (cfi)                         0.919
+   non-normed fit index (nnfi)                         0.900
+   standardized root mean of residual (srmr)           0.085
+
+Likelihood Ratio Test
+                    statistic         df    p-value
+   unadjusted         129.425     58.000      0.000
+   mean-adjusted      123.769     58.000      0.000
+
+Root Mean Square Error of Approximation Test
+                     estimate      lower      upper
+   unadjusted           0.090      0.065      0.115
+   mean-adjusted        0.089      0.063      0.114
+
+Coefficient Test (Group = &quot;Pasteur&quot;, Std.Error = &quot;sandwich&quot;)
+  Factor Loading (reference component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+       x1&lt;-visual    fixed     1.000        -        -        -      -      -  
+       x2&lt;-visual     free     0.602      0.143    4.219    0.000  0.322  0.882
+       x3&lt;-visual     free     0.786      0.156    5.046    0.000  0.481  1.092
+      x4&lt;-textual    fixed     1.000        -        -        -      -      -  
+      x5&lt;-textual     free     1.120      0.067   16.597    0.000  0.988  1.252
+      x6&lt;-textual     free     0.932      0.064   14.678    0.000  0.808  1.057
+        x7&lt;-speed    fixed     1.000        -        -        -      -      -  
+        x8&lt;-speed     free     1.201      0.134    8.959    0.000  0.938  1.463
+        x9&lt;-speed     free     1.044      0.211    4.955    0.000  0.631  1.456
+
+  Covariance (reference component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+ textual&lt;-&gt;visual     free     0.407      0.134    3.030    0.001  0.144  0.670
+   speed&lt;-&gt;visual     free     0.169      0.066    2.569    0.005  0.040  0.298
+  speed&lt;-&gt;textual     free     0.172      0.059    2.898    0.002  0.056  0.289
+
+  Variance (reference component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+  visual&lt;-&gt;visual     free     0.804      0.229    3.504    0.000  0.354  1.254
+textual&lt;-&gt;textual     free     0.879      0.135    6.537    0.000  0.616  1.143
+    speed&lt;-&gt;speed     free     0.304      0.083    3.664    0.000  0.141  0.466
+          x1&lt;-&gt;x1     free     0.554      0.180    3.070    0.001  0.200  0.908
+          x2&lt;-&gt;x2     free     1.269      0.172    7.374    0.000  0.932  1.607
+          x3&lt;-&gt;x3     free     0.881      0.130    6.769    0.000  0.626  1.137
+          x4&lt;-&gt;x4     free     0.446      0.070    6.329    0.000  0.308  0.584
+          x5&lt;-&gt;x5     free     0.502      0.083    6.019    0.000  0.339  0.666
+          x6&lt;-&gt;x6     free     0.263      0.058    4.519    0.000  0.149  0.377
+          x7&lt;-&gt;x7     free     0.850      0.113    7.509    0.000  0.628  1.072
+          x8&lt;-&gt;x8     free     0.517      0.095    5.455    0.000  0.331  0.703
+          x9&lt;-&gt;x9     free     0.656      0.118    5.550    0.000  0.424  0.887
+
+  Intercept (reference component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+            x1&lt;-1     free     4.915      0.095   51.575    0.000  4.728  5.101
+            x2&lt;-1     free     6.088      0.080   75.962    0.000  5.931  6.245
+            x3&lt;-1     free     2.487      0.093   26.781    0.000  2.305  2.669
+            x4&lt;-1     free     2.778      0.087   31.914    0.000  2.608  2.949
+            x5&lt;-1     free     4.035      0.103   39.169    0.000  3.833  4.237
+            x6&lt;-1     free     1.926      0.075   25.774    0.000  1.779  2.072
+            x7&lt;-1     free     4.432      0.087   51.183    0.000  4.263  4.602
+            x8&lt;-1     free     5.569      0.074   75.611    0.000  5.425  5.713
+            x9&lt;-1     free     5.409      0.070   77.060    0.000  5.272  5.547
+
+Coefficient Test (Group = &quot;Grant-White&quot;, Std.Error = &quot;sandwich&quot;)
+  Factor Loading (increment component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+       x1&lt;-visual    fixed     0.000        -        -        -      -      -  
+       x2&lt;-visual      pen     0.000        -        -        -      -      -  
+       x3&lt;-visual      pen     0.000        -        -        -      -      -  
+      x4&lt;-textual    fixed     0.000        -        -        -      -      -  
+      x5&lt;-textual      pen     0.000        -        -        -      -      -  
+      x6&lt;-textual      pen     0.000        -        -        -      -      -  
+        x7&lt;-speed    fixed     0.000        -        -        -      -      -  
+        x8&lt;-speed      pen     0.000        -        -        -      -      -  
+        x9&lt;-speed      pen     0.000        -        -        -      -      -  
+
+  Covariance (increment component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+ textual&lt;-&gt;visual     free     0.020      0.145    0.138    0.445 -0.263  0.303
+   speed&lt;-&gt;visual     free     0.145      0.106    1.373    0.085 -0.062  0.352
+  speed&lt;-&gt;textual     free     0.051      0.108    0.471    0.319 -0.161  0.264
+
+  Variance (increment component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+  visual&lt;-&gt;visual     free    -0.085      0.199   -0.428    0.334 -0.475  0.305
+textual&lt;-&gt;textual     free    -0.009      0.167   -0.056    0.478 -0.336  0.317
+    speed&lt;-&gt;speed     free     0.170      0.094    1.800    0.036 -0.015  0.354
+          x1&lt;-&gt;x1     free     0.094      0.178    0.530    0.298 -0.254  0.442
+          x2&lt;-&gt;x2     free    -0.328      0.221   -1.488    0.068 -0.761  0.104
+          x3&lt;-&gt;x3     free    -0.276      0.138   -1.999    0.023 -0.547 -0.005
+          x4&lt;-&gt;x4     free    -0.103      0.094   -1.100    0.136 -0.286  0.080
+          x5&lt;-&gt;x5     free    -0.126      0.103   -1.221    0.111 -0.327  0.076
+          x6&lt;-&gt;x6     free     0.174      0.093    1.874    0.030 -0.008  0.356
+          x7&lt;-&gt;x7     free    -0.249      0.133   -1.879    0.030 -0.510  0.011
+          x8&lt;-&gt;x8     free    -0.108      0.142   -0.762    0.223 -0.387  0.170
+          x9&lt;-&gt;x9     free    -0.126      0.142   -0.890    0.187 -0.405  0.152
+
+  Intercept (increment component)
+                      type  estimate  std.error  z-value  p-value  lower  upper
+        visual&lt;-1     free     0.049      0.132    0.372    0.355 -0.210  0.309
+       textual&lt;-1     free     0.576      0.120    4.789    0.000  0.340  0.812
+         speed&lt;-1     free    -0.071      0.089   -0.807    0.210 -0.245  0.102
+            x1&lt;-1      pen     0.000        -        -        -      -      -  
+            x2&lt;-1      pen     0.000        -        -        -      -      -  
+            x3&lt;-1      pen    -0.530      0.117   -4.519    0.000 -0.760 -0.300
+            x4&lt;-1      pen     0.000        -        -        -      -      -  
+            x5&lt;-1      pen     0.000        -        -        -      -      -  
+            x6&lt;-1      pen     0.000        -        -        -      -      -  
+            x7&lt;-1      pen    -0.440      0.108   -4.066    0.000 -0.652 -0.228
+            x8&lt;-1      pen     0.000        -        -        -      -      -  
+            x9&lt;-1      pen     0.000        -        -        -      -      -  </code></pre>
+<p>In this example, we can see that all of the loadings are invariant across the two groups. However, the intercepts of <code>x3</code> and <code>x7</code> seem to be not invariant. The <code>$summarize()</code> method also shows the result of significance tests for the coefficients. In <code>lslx</code>, the default standard errors are calculated based on sandwich formula whenever raw data is available. It is generally valid even when the model is misspecified and the data is not normal. However, it may not be valid after selecting an optimal penalty level.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
