@@ -35,8 +35,8 @@ lslxFitting$set("private",
                          data,
                          control) {
                   self$control <- control
-                  if (!(self$control$penalty_method %in% c("none", "lasso", "ridge", "elastic", "mcp"))) {
-                    stop("Argument 'penalty_method' can be only either 'none', 'lasso', 'ridge', 'elastic', or 'mcp'.")
+                  if (!(self$control$penalty_method %in% c("none", "lasso", "ridge", "elastic_net", "mcp", "forward", "backward"))) {
+                    stop("Argument 'penalty_method' can be only either 'none', 'lasso', 'ridge', 'elastic_net', 'mcp', 'forward', or 'backward'.")
                   }
                   if (!is.numeric(self$control$lambda_grid)) {
                     if (!is.character(self$control$lambda_grid)) {
@@ -72,7 +72,7 @@ lslxFitting$set("private",
                   }
                   if (!(self$control$missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
                     stop(
-                      "Argument 'start_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
+                      "Argument 'missing_method' can be only 'default', 'two_stage', or 'listwise_deletion'."
                     )
                   }
                   if (!(self$control$start_method %in% c("default", "none", "mh", "heuristic"))) {
@@ -81,7 +81,6 @@ lslxFitting$set("private",
                   if (!(self$control$lambda_direction %in% c("default", "manual", "decrease", "increase"))) {
                     stop("Argument 'lambda_direction' can be only 'default', 'manual', 'decrease', or 'increase'.")
                   }
-                  
                   if (!is.null(self$control$subset)) {
                     if (!(is.integer(self$control$subset) | is.logical(self$control$subset))) {
                       stop("Argument 'subset' must be a integer or logical vector.")
@@ -204,7 +203,7 @@ lslxFitting$set("private",
                   } else {
                     self$control$auxiliary <- FALSE
                   }
-                  if (self$control$penalty_method == "none") {
+                  if (self$control$penalty_method %in% c("none", "forward", "backward")) {
                     self$control$regularizer <- FALSE
                   } else {
                     self$control$regularizer <- TRUE
@@ -234,12 +233,12 @@ lslxFitting$set("private",
                       self$control$delta_grid <- 1
                     } else if (self$control$penalty_method == "ridge") {
                       self$control$delta_grid <- 0
-                    } else if (self$control$penalty_method == "elastic") {
+                    } else if (self$control$penalty_method == "elastic_net") {
                       if (self$control$delta_grid[[1]] == "default") {
                       } else {
                         if (any(self$control$delta_grid < 0) | any(self$control$delta_grid > 1)) {
                           stop(
-                            "When argument 'penalty_method' is set as 'elastic', any element in argument 'delta_grid' must be in [0, 1]."
+                            "When argument 'penalty_method' is set as 'elastic_net', any element in argument 'delta_grid' must be in [0, 1]."
                           )
                         }
                       }
@@ -278,10 +277,9 @@ lslxFitting$set("private",
                   }
                   if (self$control$regularizer & (!self$control$enforce_cd)) {
                     stop(
-                      "If some penalty method is used, argument 'enforce_cd' must be true."
+                      "If a regularizer is specified, argument 'enforce_cd' must be true."
                     )
                   }
-                  
                   if (!is.null(self$control$subset)) {
                     if (self$control$response) {
                       if (is.logical(self$control$subset)) {
@@ -1356,7 +1354,7 @@ lslxFitting$set("private",
                               length.out = self$control$lambda_length))
                   } 
                   if (self$control$delta_grid[[1]] == "default") {
-                    if (self$control$penalty_method %in% c("elastic")) {
+                    if (self$control$penalty_method %in% c("elastic_net")) {
                       if (self$control$delta_length == 1) {
                         self$control$delta_grid <- 0.5
                       } else {
