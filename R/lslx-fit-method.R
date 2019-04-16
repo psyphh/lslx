@@ -264,14 +264,14 @@ lslx$set("public",
                     ...)
          })
 
-## \code{$fit_elastic()} method fits the specified model to data by minimizing a loss function with elastic net (Zou & Hastie, 2005). ##
+## \code{$fit_elastic_net()} method fits the specified model to data by minimizing a loss function with elastic net (Zou & Hastie, 2005). ##
 lslx$set("public",
-         "fit_elastic",
+         "fit_elastic_net",
          function(lambda_grid = "default",
                   delta_grid = "default",
                   ...) {
            self$fit(
-             penalty_method = "elastic",
+             penalty_method = "elastic_net",
              lambda_grid = lambda_grid,
              delta_grid = delta_grid,
              ...

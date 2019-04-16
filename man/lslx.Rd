@@ -657,17 +657,19 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
   minimum_variance = 1e-4, enforce_cd = FALSE, verbose = TRUE)
 $fit_none(...)
 $fit_lasso(lambda_grid = "default", ...)
+$fit_ridge(lambda_grid = "default", ...)
+$fit_elastic_net(lambda_grid = "default", delta_grid = "default", ...)
 $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \describe{
 \item{\bold{Arguments}}{
 
 }
 \item{\code{penalty_method}}{A \code{character} to specify the penalty method.
-  The current version supports \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic"}, and \code{"mcp"}.}
-\item{\code{lambda_grid}}{A non-negative \code{numeric} to specify penalty levels for both \code{"lasso"} and \code{"mcp"}.
+  The current version supports \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic_net"}, and \code{"mcp"}.}
+\item{\code{lambda_grid}}{A non-negative \code{numeric} to specify penalty levels for the regularizer.
   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
-\item{\code{delta_grid}}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
-  If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
+\item{\code{delta_grid}}{A non-negative \code{numeric} to specify the combination weight for \code{"elastic_net"} or the convexity level for \code{"mcp"}.
+  If it is set as \code{"default"}, its value will be generated automatically.}
 \item{\code{loss}}{A \code{character} to determine the loss function.
   The current version supports \code{"ml"} (maximum likelihood), \code{"uls"} (unweighted least squares), 
   \code{"dwls"} (diagonal weighted least squres), and \code{"wls"} (weighted least squares). 
@@ -727,8 +729,8 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "la
 \code{$fit_ridge()} fits the specified model to data by minimizing a loss function with ridge penalty (Hoerl & Kennard, 1970).
 It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "ridge"}.
 
-\code{$fit_elastic()} fits the specified model to data by minimizing a loss function with elastic net penalty (Zou & Hastie, 2005).
-It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "elastic"}.
+\code{$fit_elastic_net()} fits the specified model to data by minimizing a loss function with elastic net penalty (Zou & Hastie, 2005).
+It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "elastic_net"}.
 
 \code{$fit_mcp()} method fits the specified model to data by minimizing a loss function with mcp (Zhang, 2010).
 It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mcp"}.
