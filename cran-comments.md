@@ -10,16 +10,12 @@ no ERRORs, WARNINGs or NOTEs
 ## devtools::build_win() results
 no ERRORs or WARNINGs, but 1 NOTE
 
-  checking sizes of PDF files under 'inst/doc' ... NOTE
+checking sizes of PDF files under 'inst/doc' ... NOTE
 
-  'qpdf' made some significant size reductions: 
+'qpdf' made some significant size reductions: compacted 'vignette-lslx.pdf' from 744Kb to 639Kb
 
-  compacted 'vignette-lslx.pdf' from 744Kb to 639Kb
+consider running tools::compactPDF() on these files
 
-  consider running tools::compactPDF() on these files
+'gs+qpdf' made some significant size reductions: compacted 'vignette-lslx.pdf' from 639Kb to 333Kb
 
-  'gs+qpdf' made some significant size reductions:
-
-  compacted 'vignette-lslx.pdf' from 639Kb to 333Kb
-
-  consider running tools::compactPDF(gs_quality = "ebook") on these files
+consider running tools::compactPDF(gs_quality = "ebook") on these files
