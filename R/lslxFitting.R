@@ -64,6 +64,20 @@ lslxFitting$set("private",
                       }
                     }
                   }
+                  if (!is.numeric(self$control$step_grid)) {
+                    if (!is.character(self$control$step_grid)) {
+                      stop("Argument 'step_grid' can be only a numeric vector or set as 'default'.")
+                    } else if (is.character(self$control$step_grid) &
+                               (length(self$control$step_grid) != 1)) {
+                      stop("Argument 'step_grid' can be only a numeric vector or set as 'default'.")
+                    } else if (is.character(self$control$step_grid) &
+                               (length(self$control$step_grid) == 1)) {
+                      if (self$control$step_grid != "default") {
+                        stop("Argument 'step_grid' can be only a numeric vector or set as 'default'.")
+                      }
+                    }
+                  }
+                  
                   if (!(self$control$loss %in% c("default", "ml", "uls", "dwls", "wls"))) {
                     stop("Argument 'default' can be only 'default', 'ml', 'uls', 'dwls', or 'wls'.")
                   }
@@ -203,10 +217,15 @@ lslxFitting$set("private",
                   } else {
                     self$control$auxiliary <- FALSE
                   }
-                  if (self$control$penalty_method %in% c("none", "forward", "backward")) {
-                    self$control$regularizer <- FALSE
-                  } else {
+                  if (self$control$penalty_method %in% c("lasso", "ridge", "elastic_net", "mcp")) {
                     self$control$regularizer <- TRUE
+                  } else {
+                    self$control$regularizer <- FALSE
+                  }
+                  if (self$control$penalty_method %in% c("none", "forward", "backward")) {
+                    self$control$searcher <- TRUE
+                  } else {
+                    self$control$searcher <- FALSE
                   }
                   if (self$control$penalty_method == "none" & 
                       any(model$specification$type == "pen")) {
@@ -214,46 +233,64 @@ lslxFitting$set("private",
                       "When the specified model includes penalized coefficients, 'penalty_method' cannot be 'none'."
                     )
                   }
-                  if (self$control$penalty_method == "none") {
-                    self$control$lambda_grid <- 0
-                  } else {
-                    if (self$control$lambda_grid[[1]] == "default") {
-                    } else {
+                  if (self$control$regularizer) {
+                    self$control$regularizer_type <- self$control$penalty_method
+                    if (self$control$lambda_grid[[1]] != "default") {
                       if (any(self$control$lambda_grid < 0)) {
                         stop(
-                          "When argument 'penalty_method' is set as 'lasso' or 'mcp', any element in argument 'lambda_grid' cannot be smaller than 0."
+                          "When 'penalty_method' is set as 'lasso' or 'mcp', any element in 'lambda_grid' must be non-negative."
                         )
                       }
                     }
-                  }
-                  if (self$control$penalty_method %in% c("none")) {
-                    self$control$delta_grid <- Inf
-                  } else {
-                    if (self$control$penalty_method == "lasso") {
-                      self$control$delta_grid <- 1
-                    } else if (self$control$penalty_method == "ridge") {
-                      self$control$delta_grid <- 0
-                    } else if (self$control$penalty_method == "elastic_net") {
-                      if (self$control$delta_grid[[1]] == "default") {
-                      } else {
+                    if (self$control$delta_grid[[1]] != "default") {
+                      if (self$control$penalty_method %in% c("lasso", "ridge")) {
+                        stop(
+                          "When 'penalty_method' is set as 'lasso' or 'ridge', 'delta_grid' must be set as 'default'."
+                        )
+                      } else if (self$control$penalty_method == "elastic_net") {
                         if (any(self$control$delta_grid < 0) | any(self$control$delta_grid > 1)) {
                           stop(
-                            "When argument 'penalty_method' is set as 'elastic_net', any element in argument 'delta_grid' must be in [0, 1]."
+                            "When 'penalty_method' is set as 'elastic_net', any element in 'delta_grid' must be in [0, 1]."
                           )
                         }
-                      }
-                    } else if (self$control$penalty_method == "mcp") {
-                      if (self$control$delta_grid[[1]] == "default") {
-                      } else {
+                      } else if (self$control$penalty_method == "mcp") {
                         if (any(self$control$delta_grid <= 0)) {
                           stop(
-                            "When argument 'penalty_method' is set as 'mcp', any element in argument 'delta_grid' must be positive."
+                            "When 'penalty_method' is set as 'mcp', any element in 'delta_grid' must be positive."
                           )
                         }
-                      }
-                    } else {
+                      } else {}
                     }
-                  } 
+                  } else {
+                    self$control$regularizer_type <- "none"
+                    if (self$control$lambda_grid[[1]] != "default") {
+                      stop(
+                        "When 'penalty_method' is set as 'none', 'forward', or 'backward', 'lambda_grid' must be set as 'default'."
+                      )
+                    }
+                    if (self$control$delta_grid[[1]] != "default") {
+                      stop(
+                        "When 'penalty_method' is set as 'none', 'forward', or 'backward', 'delta_grid' must be set as 'default'."
+                      )
+                    }
+                    if (self$control$lambda_direction != "default") {
+                      stop(
+                        "When 'penalty_method' is set as 'none', 'forward', or 'backward', 'lambda_direction' must be set as 'default'."
+                      )
+                    }
+                  }
+
+                  if (self$control$searcher) {
+                    self$control$searcher_type <- self$control$penalty_method
+                  } else {
+                    self$control$searcher_type <- "none"
+                    if (self$control$step_grid[[1]] != "default") {
+                      stop(
+                        "When 'penalty_method' is set as 'lasso', 'ridge', 'elastic_net', or mcp', 'step_grid' must be set as 'default'."
+                      )
+                    }
+                  }
+                  
                   if (self$control$loss == "default") {
                     self$control$loss <- "ml"
                   }
@@ -277,7 +314,7 @@ lslxFitting$set("private",
                   }
                   if (self$control$regularizer & (!self$control$enforce_cd)) {
                     stop(
-                      "If a regularizer is specified, argument 'enforce_cd' must be true."
+                      "If any regularizer is specified, 'enforce_cd' must be set as TRUE."
                     )
                   }
                   if (!is.null(self$control$subset)) {
@@ -287,7 +324,7 @@ lslxFitting$set("private",
                       } 
                     } else {
                       stop(
-                        "When only moment data is available, argument 'subset' cannot be specified."
+                        "When only moment data is available, 'subset' must be set as NULL."
                       )
                     }
                   } else {
@@ -329,6 +366,8 @@ lslxFitting$set("private",
                         (length(model$name_response) + 3) / 2,
                       n_group = length(model$level_group),
                       n_theta = nrow(model$specification),
+                      n_theta_is_free = NA_real_,
+                      n_theta_is_pen = NA_real_,
                       eta_is_exogenous = model$name_eta %in% model$name_exogenous,
                       eta_is_endogenous = model$name_eta %in% model$name_endogenous,
                       theta_name = rownames(model$specification),
@@ -404,6 +443,10 @@ lslxFitting$set("private",
                         )
                       )
                     )
+                  self$reduced_model$n_theta_is_free <- 
+                    sum(self$reduced_model$theta_is_free)
+                  self$reduced_model$n_theta_is_pen <- 
+                    sum(self$reduced_model$theta_is_pen)
                 })
 
 ## \code{$initialize_reduced_data()} initializes a reduced data. ##
@@ -1330,74 +1373,92 @@ lslxFitting$set("private",
                   } else {
                     eta_is_endogenous <- rep(TRUE, self$reduced_model$n_eta)
                   }
-                  if (self$control$lambda_grid[[1]] == "default") {
-                    if (self$control$start_method == "mh") {
-                      beta_start_inv <- 
-                        solve(diag(self$reduced_model$n_eta) - self$supplied_result$beta_start)
-                      sigma_eta_start <- 
-                        beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
-                      lambda_max <-  
-                        sqrt(quantile(diag(sigma_eta_start)[eta_is_exogenous], 0.6)) / 
-                        quantile(diag(self$supplied_result$phi_start)[eta_is_endogenous] /
-                                   sqrt(diag(sigma_eta_start)[eta_is_endogenous]), 0.4) *
-                        self$control$threshold_value
-                    } else if (self$control$start_method == "heuristic") {
-                      saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
-                      lambda_max <- 
-                        1 / quantile((saturated_var * 0.3) / sqrt(saturated_var), 0.3) * 
-                        self$control$threshold_value
-                    } else {
-                    }
-                    lambda_min <- (log(self$reduced_data$n_observation)/ self$reduced_data$n_observation)
-                    self$control$lambda_grid <- 
-                      exp(seq(log(lambda_max), log(lambda_min), 
-                              length.out = self$control$lambda_length))
-                  } 
-                  if (self$control$delta_grid[[1]] == "default") {
-                    if (self$control$penalty_method %in% c("elastic_net")) {
-                      if (self$control$delta_length == 1) {
-                        self$control$delta_grid <- 0.5
-                      } else {
-                        self$control$delta_grid <- seq(0, 1, length.out = self$control$delta_length)
-                      }
-                    } else if (self$control$penalty_method %in% c("mcp")) {
+                  if (self$control$regularizer) {
+                    if (self$control$lambda_grid[[1]] == "default") {
                       if (self$control$start_method == "mh") {
                         beta_start_inv <- 
                           solve(diag(self$reduced_model$n_eta) - self$supplied_result$beta_start)
                         sigma_eta_start <- 
                           beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
-                        delta_min <- 
-                          2 * max(diag(sigma_eta_start)[eta_is_endogenous]) / 
-                          min(diag(sigma_eta_start)[eta_is_exogenous])
+                        lambda_max <-  
+                          sqrt(quantile(diag(sigma_eta_start)[eta_is_exogenous], 0.6)) / 
+                          quantile(diag(self$supplied_result$phi_start)[eta_is_endogenous] /
+                                     sqrt(diag(sigma_eta_start)[eta_is_endogenous]), 0.4) *
+                          self$control$threshold_value
                       } else if (self$control$start_method == "heuristic") {
                         saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
-                        delta_min <- 2 * max(saturated_var, 1) / 1
-                      } else {
-                      }
-                      if (self$control$delta_length == 1) {
-                        self$control$delta_grid <- Inf
-                      } else {
-                        self$control$delta_grid <- 
-                          c(delta_min * (1:(self$control$delta_length - 1)), Inf) 
-                      }
-                    } else {}
-                  }
-                  if (self$control$lambda_direction == "default") {
-                    if (min(self$control$lambda_grid) == 0) {
-                      self$control$lambda_direction <- "decrease"
-                    } else {
-                      self$control$lambda_direction <- "increase"
+                        lambda_max <- 
+                          1 / quantile((saturated_var * 0.3) / sqrt(saturated_var), 0.3) * 
+                          self$control$threshold_value
+                      } else {}
+                      lambda_min <- (log(self$reduced_data$n_observation)/ self$reduced_data$n_observation)
+                      self$control$lambda_grid <- 
+                        exp(seq(log(lambda_max), log(lambda_min), 
+                                length.out = self$control$lambda_length))
+                    } 
+                    if (self$control$delta_grid[[1]] == "default") {
+                      if (self$control$penalty_method == "lasso") {
+                        self$control$delta_grid <- 1
+                      } else if (self$control$penalty_method == "ridge") {
+                        self$control$delta_grid <- 0
+                      } else if (self$control$penalty_method == "elastic_net") {
+                        if (self$control$delta_length == 1) {
+                          self$control$delta_grid <- 0.5
+                        } else {
+                          self$control$delta_grid <- seq(0, 1, length.out = self$control$delta_length)
+                        }
+                      } else if (self$control$penalty_method %in% c("mcp")) {
+                        if (self$control$start_method == "mh") {
+                          beta_start_inv <- 
+                            solve(diag(self$reduced_model$n_eta) - self$supplied_result$beta_start)
+                          sigma_eta_start <- 
+                            beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
+                          delta_min <- 
+                            2 * max(diag(sigma_eta_start)[eta_is_endogenous]) / 
+                            min(diag(sigma_eta_start)[eta_is_exogenous])
+                        } else if (self$control$start_method == "heuristic") {
+                          saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
+                          delta_min <- 2 * max(saturated_var, 1) / 1
+                        } else {
+                        }
+                        if (self$control$delta_length == 1) {
+                          self$control$delta_grid <- Inf
+                        } else {
+                          self$control$delta_grid <- 
+                            c(delta_min * (1:(self$control$delta_length - 1)), Inf) 
+                        }
+                      } else {}
                     }
+                    if (self$control$lambda_direction == "default") {
+                      if (min(self$control$lambda_grid) == 0) {
+                        self$control$lambda_direction <- "decrease"
+                      } else {
+                        self$control$lambda_direction <- "increase"
+                      }
+                    }
+                    if (self$control$lambda_direction == "decrease") {
+                      self$control$lambda_grid <-
+                        sort(self$control$lambda_grid, decreasing = TRUE)
+                    } else if (self$control$lambda_direction == "increase") {
+                      self$control$lambda_grid <-
+                        sort(self$control$lambda_grid, decreasing = FALSE)
+                    } else {}
+                    self$control$delta_grid <-
+                      sort(self$control$delta_grid, decreasing = TRUE)
+                  } else {
+                    self$control$lambda_grid <- 0
+                    self$control$delta_grid <- Inf
                   }
-                  if (self$control$lambda_direction == "decrease") {
-                    self$control$lambda_grid <-
-                      sort(self$control$lambda_grid, decreasing = TRUE)
-                  } else if (self$control$lambda_direction == "increase") {
-                    self$control$lambda_grid <-
-                      sort(self$control$lambda_grid, decreasing = FALSE)
-                  } else {}
-                  self$control$delta_grid <-
-                    sort(self$control$delta_grid, decreasing = TRUE)
+                  if (self$control$searcher) {
+                    if (self$control$step_grid[[1]] == "default") {
+                      self$control$step_grid <- 
+                        0:self$reduced_model$n_theta_is_pen
+                    } else {
+                      self$control$step_grid <- 
+                        0:min(self$reduced_model$n_theta_is_pen, 
+                              max(round(self$control$step_grid)))
+                    }
+                  } else {self$control$step_grid = 0}
                 })
 
 
@@ -1406,34 +1467,37 @@ lslxFitting$set("private",
                 "initialize_fitted_result",
                 function() {
                   self$fitted_result <- list()
+                  if (self$control$regularizer) {
+                    length_fitted_result <-  
+                      length(self$control$lambda_grid) * 
+                      length(self$control$delta_grid)
+                  } else {
+                    length_fitted_result <-
+                      length(self$control$step_grid)
+                  }
                   self$fitted_result$numerical_condition <-
                     vector(
                       mode = "list",
-                      length = length(self$control$lambda_grid) *
-                        length(self$control$delta_grid)
+                      length = length_fitted_result
                     )
                   self$fitted_result$information_criterion <-
                     vector(
                       mode = "list",
-                      length = length(self$control$lambda_grid) *
-                        length(self$control$delta_grid)
+                      length = length_fitted_result
                     )
                   self$fitted_result$fit_index <-
                     vector(
                       mode = "list",
-                      length = length(self$control$lambda_grid) *
-                        length(self$control$delta_grid)
+                      length = length_fitted_result
                     )
                   self$fitted_result$cv_error <-
                     vector(
                       mode = "list",
-                      length = length(self$control$lambda_grid) *
-                        length(self$control$delta_grid)
+                      length = length_fitted_result
                     )
                   self$fitted_result$coefficient <-
                     vector(
                       mode = "list",
-                      length = length(self$control$lambda_grid) *
-                        length(self$control$delta_grid)
+                      length = length_fitted_result
                     )
                 })

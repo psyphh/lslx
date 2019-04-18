@@ -4,11 +4,16 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  step,
                   include_faulty = FALSE) {
+           if (is.null(private$fitting)) {
+             stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
+           }
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
                                               lambda = lambda,
                                               delta = delta,
+                                              step = step,
                                               include_faulty = include_faulty)
            lr_test <-
              data.frame(
@@ -48,22 +53,29 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  step,
                   alpha_level = .05,
                   include_faulty = FALSE) {
+           if (is.null(private$fitting)) {
+             stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
+           }
            numerical_condition <-
              self$extract_numerical_condition(selector = selector,
                                               lambda = lambda,
                                               delta = delta,
+                                              step = step,
                                               include_faulty = include_faulty)
            fit_index <-
              self$extract_fit_index(selector = selector,
                                      lambda = lambda,
                                      delta = delta,
+                                    step = step,
                                      include_faulty = include_faulty)
            lr_test <-
              self$test_lr(selector = selector,
                           lambda = lambda,
                           delta = delta,
+                          step = step,
                           include_faulty = include_faulty)
            rmsea_test <-
              data.frame(
@@ -95,7 +107,6 @@ lslx$set("public",
                  lower_ncp <- 0
                  if (pchisq(lr_statistic,
                             lr_df, lower_ncp) < (1 - alpha_level / 2)) {
-                   
                  } else {
                    lower_ncp_1 <- lower_ncp
                    lower_ncp_2 <- 0
@@ -122,7 +133,6 @@ lslx$set("public",
                  upper_ncp <- 0
                  if (pchisq(lr_statistic,
                             lr_df, upper_ncp) < (alpha_level / 2)) {
-                   
                  } else {
                    upper_ncp_1 <- upper_ncp
                    upper_ncp_2 <- 0
@@ -187,11 +197,15 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  step,
                   standard_error = "default",
                   debias = "default",
                   inference = "default",
                   alpha_level = .05,
                   include_faulty = FALSE) {
+           if (is.null(private$fitting)) {
+             stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
+           }
            if (!(
              standard_error %in% c("default", "sandwich", "observed_information", "expected_information")
            )) {
@@ -230,25 +244,40 @@ lslx$set("public",
                debias <- "one_step"
              }
              if (debias == "none") {
-               stop(
-                 "'debias' cannot be 'none' under 'inference' == 'polyhedral'."
-               )
+               stop("Argument 'debias' cannot be 'none' under 'inference' == 'polyhedral'.")
              }
-           } else {
+           } else if (inference == "scheffe") {
              if (debias == "default") {
                debias <- "none"
              }
+           } else {}
+           if (private$fitting$control$penalty_method == "none") {
+             if (inference %in% c("polyhedral", "scheffe")) {
+               stop(
+                 "When 'penalty_method' is 'none', 'inference' cannot be 'polyhedral' or 'scheffe'."
+               )
+             }
            }
+           if (private$fitting$control$penalty_method %in% c("forward", "backward", "ridge")) {
+             if (inference %in% c("polyhedral")) {
+               stop(
+                 "When 'penalty_method' is 'forward' or 'backward', 'inference' cannot be 'polyhedral'."
+               )
+             }
+           }
+           
            coefficient <-
              self$extract_coefficient(selector = selector,
                                       lambda = lambda,
                                       delta = delta,
+                                      step = step,
                                       include_faulty = include_faulty)
            coefficient_acov <-
              self$extract_coefficient_acov(
                selector = selector,
                lambda = lambda,
                delta = delta,
+               step = step,
                standard_error = standard_error,
                include_faulty = include_faulty
              )
@@ -261,6 +290,7 @@ lslx$set("public",
                self$extract_debiased_coefficient(selector = selector,
                                                  lambda = lambda,
                                                  delta = delta,
+                                                 step = step,
                                                  include_faulty = include_faulty)
              coefficient_test <-
                data.frame(estimate = debiased_coefficient,

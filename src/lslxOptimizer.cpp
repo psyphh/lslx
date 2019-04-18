@@ -15,16 +15,16 @@ using namespace Eigen;
 // define lslxOptimizer
 class lslxOptimizer {
 public:
-  std::string loss, algorithm, penalty_method;
+  std::string loss, algorithm, regularizer_type, searcher_type;
   int iter_in_max, iter_out_max, iter_other_max, iter_armijo_max;
   double tol_in, tol_out, tol_other;
   double step_size, armijo;
   double ridge_cov, ridge_hessian;
   bool warm_start, positive_variance, enforce_cd;
   double minimum_variance;
-  bool response, regularizer;
+  bool response, regularizer, searcher;
 
-  double lambda, delta;
+  double lambda, delta, step;
   int iter_out;
   
   int n_observation;
@@ -37,6 +37,9 @@ public:
   Rcpp::LogicalVector theta_is_free, theta_is_pen, theta_is_diag;
   Rcpp::IntegerVector theta_matrix_idx, theta_group_idx;
   Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx;
+  Rcpp::NumericVector theta_start, theta_value, theta_direction;
+  Rcpp::LogicalVector theta_is_est, theta_is_search; 
+  Rcpp::IntegerVector theta_is_est_idx, theta_is_search_idx;
   
   double baseline_loss_value;
   int baseline_degrees_of_freedom;
@@ -44,9 +47,6 @@ public:
   Eigen::MatrixXd identity_y, identity_eta, identity_theta;  
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
   Eigen::SparseMatrix<double> elimination_y, duplication_eta, commutation_y;
-  
-  Rcpp::NumericVector theta_start, theta_value, theta_direction;
-  Rcpp::IntegerVector theta_est_idx;
   
   Rcpp::List alpha, beta, beta_pinv, phi;
   Rcpp::List mu, sigma, sigma_inv;
@@ -85,8 +85,10 @@ public:
                 Rcpp::List control,
                 Rcpp::List supplied_result);
   
-  void set_regularizer(Rcpp::CharacterVector penalty_method_, double lambda_, double delta_);
+  void set_regularizer(Rcpp::CharacterVector regularizer_type_, double lambda_, double delta_);
+  void set_searcher(Rcpp::CharacterVector searcher_type_, Rcpp::LogicalVector theta_is_search_);
   void set_theta_value(Rcpp::NumericVector theta_value_);
+  
   void update_coefficient_matrix();
   void update_implied_moment();
   void update_model_jacobian();
@@ -105,10 +107,15 @@ public:
   void update_theta_direction();
   void update_theta_value();
   void update_theta_start();
+  
+  void update_coefficient();
   void update_numerical_condition();
   void update_information_criterion();
   void update_fit_index();
-  void update_coefficient();
+  
+  void complete_estimation();
+  void complete_searching();
+
   Rcpp::NumericVector extract_numerical_condition();
   Rcpp::NumericVector extract_information_criterion();
   Rcpp::NumericVector extract_fit_index();
@@ -125,6 +132,7 @@ public:
   Eigen::MatrixXd vech(Eigen::MatrixXd x);
   Eigen::SparseMatrix<double> create_commutation(int n);
   Eigen::SparseMatrix<double> create_duplication(int n);
+  Rcpp::IntegerVector which(Rcpp::LogicalVector x);
   int sign(double x);
 };
 
@@ -135,7 +143,8 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
                              Rcpp::List supplied_result) {
   loss = Rcpp::as<std::string>(control["loss"]);
   algorithm = Rcpp::as<std::string>(control["algorithm"]);
-  penalty_method = Rcpp::as<std::string>(control["penalty_method"]);
+  regularizer_type = Rcpp::as<std::string>(control["regularizer_type"]);
+  searcher_type = Rcpp::as<std::string>(control["searcher_type"]);
   iter_in_max = Rcpp::as<int>(control["iter_in_max"]);
   iter_out_max = Rcpp::as<int>(control["iter_out_max"]);
   iter_other_max =  Rcpp::as<int>(control["iter_other_max"]);
@@ -155,6 +164,10 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   enforce_cd = Rcpp::as<bool>(control["enforce_cd"]);
   response = Rcpp::as<bool>(control["response"]);
   regularizer = Rcpp::as<bool>(control["regularizer"]);
+  searcher = Rcpp::as<bool>(control["searcher"]);
+  lambda = 0;
+  delta = 1;
+  step = 0;
   iter_out = -1;
   
   n_response = Rcpp::as<int>(reduced_model["n_response"]);
@@ -174,6 +187,25 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_left_idx = Rcpp::as<IntegerVector>(reduced_model["theta_left_idx"]) - 1;
   theta_right_idx = Rcpp::as<IntegerVector>(reduced_model["theta_right_idx"]) - 1;
   theta_flat_idx = Rcpp::as<IntegerVector>(reduced_model["theta_flat_idx"]) - 1;
+  if (regularizer) {
+    theta_is_est = (theta_is_free | theta_is_pen);
+    theta_is_est_idx = which(theta_is_est);
+  } else {}
+  if (searcher) {
+    if (searcher_type == "forward") {
+      theta_is_est = Rcpp::clone(theta_is_free);
+    } else if (searcher_type == "backward") {
+      theta_is_est = (theta_is_free | theta_is_pen);
+    } else {}
+    theta_is_est_idx = which(theta_is_est);
+    theta_is_search = Rcpp::clone(theta_is_pen);
+    theta_is_search_idx = which(theta_is_search);
+  } else {}
+  
+  theta_start = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
+  theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
+  theta_direction = Rcpp::rep(0.0, n_theta);
+  theta_value.attr("names") = theta_name;
   
   identity_y.resize(n_response, n_response);
   identity_y.setIdentity();
@@ -226,16 +258,6 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   baseline_loss_value = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["loss_value"]);
   baseline_degrees_of_freedom = Rcpp::as<double>(Rcpp::as<Rcpp::NumericVector>(supplied_result["baseline_model"])["degrees_of_freedom"]);
   
-  theta_start = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
-  theta_value = Rcpp::clone(Rcpp::as<NumericVector>(supplied_result["fitted_start"]));
-  theta_direction = Rcpp::rep(0.0, n_theta);
-  theta_value.attr("names") = theta_name;
-  Rcpp::LogicalVector theta_est_idc = ((theta_is_pen) | (theta_is_free));
-  for (i = 0; i < n_theta; i++) {
-    if (theta_est_idc[i]) {
-      theta_est_idx.push_back(i);
-    }
-  }
   loss_gradient = Eigen::MatrixXd::Zero(n_theta, 1);
   loss_gradient_diff = Eigen::MatrixXd::Zero(n_theta, 1);
   loss_expected_hessian = Eigen::MatrixXd::Identity(n_theta, n_theta);
@@ -246,11 +268,11 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   objective_gradient= Eigen::MatrixXd::Zero(n_theta, 1);
 }
 
-// method for setting regularizer type
-void lslxOptimizer::set_regularizer(Rcpp::CharacterVector penalty_method_,
+// method for setting the regularizer
+void lslxOptimizer::set_regularizer(Rcpp::CharacterVector regularizer_type_,
                                     double lambda_, 
                                     double delta_) {
-  penalty_method = Rcpp::as<std::string>(penalty_method_[0]);
+  regularizer_type = Rcpp::as<std::string>(regularizer_type_[0]);
   lambda = lambda_;
   delta = delta_;
 }
@@ -258,6 +280,15 @@ void lslxOptimizer::set_regularizer(Rcpp::CharacterVector penalty_method_,
 // method for setting theta value
 void lslxOptimizer::set_theta_value(Rcpp::NumericVector theta_value_) {
   theta_value = Rcpp::clone(theta_value_);
+}
+
+// method for setting the searcher
+void lslxOptimizer::set_searcher(Rcpp::CharacterVector regularizer_type_, 
+                                 Rcpp::LogicalVector theta_is_search_) {
+  theta_is_search = Rcpp::clone(theta_is_search_);
+  theta_is_est = ((theta_is_free | theta_is_pen) & (!theta_is_search));
+  theta_is_search_idx = which(theta_is_search);
+  theta_is_est_idx = which(theta_is_est);  
 }
 
 
@@ -679,7 +710,7 @@ void lslxOptimizer::update_loss_observed_hessian() {
     update_implied_moment();
     if (loss == "ml") {
       update_loss_gradient_direct(); 
-    } else if ((loss == "uls")|(loss == "dwls")|(loss == "wls")) {
+    } else if ((loss == "uls") | (loss == "dwls") | (loss == "wls")) {
       update_model_jacobian();
       update_loss_gradient(); 
     } else {}
@@ -699,12 +730,12 @@ void lslxOptimizer::update_loss_bfgs_hessian() {
   if (iter_out <= 0) {
     loss_bfgs_hessian = loss_expected_hessian;
     loss_bfgs_hessian_inv = 
-      expand_both(slice_both(loss_expected_hessian, theta_est_idx, theta_est_idx).inverse(),
-                  theta_est_idx, theta_est_idx,
+      expand_both(slice_both(loss_expected_hessian, theta_is_est_idx, theta_is_est_idx).inverse(),
+                  theta_is_est_idx, theta_is_est_idx,
                   n_theta, n_theta);
   } else {
     rho = 1.0 / (sign(((loss_gradient_diff.transpose() * theta_diff).value())) * 
-      std::max(std::fabs((loss_gradient_diff.transpose() * theta_diff).value()), DBL_EPSILON));
+      std::max(std::abs((loss_gradient_diff.transpose() * theta_diff).value()), DBL_EPSILON));
     for (i = 0; i < n_theta; i++) {
       if (!(theta_is_free[i] | theta_is_pen[i])) {
         loss_gradient_diff(i, 0) = 0;
@@ -729,13 +760,13 @@ void lslxOptimizer::update_regularizer_value() {
     if (lambda > DBL_EPSILON) {
       for (i = 0; i < n_theta; i++) {
         if (theta_is_pen[i]) {
-          if ((penalty_method == "lasso") | (penalty_method == "ridge") | (penalty_method == "elastic_net")) {
+          if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
             regularizer_value_i = 
-              lambda * (delta * std::fabs(theta_value[i]) + (1 - delta) * std::pow(theta_value[i], 2));
-          } else if (penalty_method == "mcp") {
-            if (std::fabs(theta_value[i]) < (lambda * delta)) {
+              lambda * (delta * std::abs(theta_value[i]) + (1 - delta) * std::pow(theta_value[i], 2));
+          } else if (regularizer_type == "mcp") {
+            if (std::abs(theta_value[i]) < (lambda * delta)) {
               regularizer_value_i = 
-                lambda * (std::fabs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * delta));
+                lambda * (std::abs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * delta));
             } else {
               regularizer_value_i = (std::pow(lambda, 2) * delta) / 2.0;
             }
@@ -757,7 +788,7 @@ void lslxOptimizer::update_regularizer_gradient() {
     if (lambda > DBL_EPSILON) {
       for (i = 0; i < n_theta; i++) {
         if (theta_is_pen[i]) {
-          if ((penalty_method == "lasso") | (penalty_method == "ridge") | (penalty_method == "elastic_net")) {
+          if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
             if (theta_value[i] > DBL_EPSILON) {
               regularizer_gradient(i, 0) = lambda * delta + 2 * lambda * (1 - delta) * theta_value[i];
             } else if (theta_value[i] < - DBL_EPSILON) {
@@ -765,7 +796,7 @@ void lslxOptimizer::update_regularizer_gradient() {
             } else {
               regularizer_gradient(i, 0) = sign(theta_value[i]) * lambda * delta;
             }
-          } else if (penalty_method == "mcp") {
+          } else if (regularizer_type == "mcp") {
             if ((theta_value[i] <= (lambda * delta)) & (theta_value[i] > DBL_EPSILON)) {
               regularizer_gradient(i, 0) = lambda - (theta_value[i] / delta);
             } else if ((- theta_value[i] <= (lambda * delta)) & (theta_value[i] < - DBL_EPSILON)) {
@@ -792,15 +823,15 @@ void lslxOptimizer::update_objective_gradient() {
   int i;
   if (regularizer) {
     for (i = 0; i < n_theta; i++) {
-      if (std::fabs(theta_value[i]) > DBL_EPSILON) {
+      if (std::abs(theta_value[i]) > DBL_EPSILON) {
         objective_gradient(i, 0) = loss_gradient(i, 0) + regularizer_gradient(i, 0);
       } else {
-        if ((penalty_method == "lasso") | (penalty_method == "ridge") | (penalty_method == "elastic_net")) {
+        if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
           objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
-            std::max((std::fabs(loss_gradient(i, 0)) - lambda * delta), 0.0);
-        } else if (penalty_method == "mcp") {
+            std::max((std::abs(loss_gradient(i, 0)) - lambda * delta), 0.0);
+        } else if (regularizer_type == "mcp") {
           objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
-            std::max((std::fabs(loss_gradient(i, 0)) - lambda), 0.0);
+            std::max((std::abs(loss_gradient(i, 0)) - lambda), 0.0);
         } else {}
       }
     }
@@ -842,10 +873,10 @@ void lslxOptimizer::update_theta_direction() {
         h_ij = h(j, j);
         if (regularizer) {
           if (lambda > DBL_EPSILON) {
-            if (theta_is_free[j]) {
+            if (theta_is_free[j] & theta_is_est[j]) {
               z[j] = (-g_ij / h_ij);
-            } else if (theta_is_pen[j]) {
-              if ((penalty_method == "lasso") | (penalty_method == "ridge") | (penalty_method == "elastic_net")) {
+            } else if (theta_is_pen[j] & theta_is_est[j]) {
+              if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
                 z_r = (- g_ij - 2 * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) - lambda * delta) / (h_ij + 2 * lambda * (1.0 - delta));
                 z_l = (- g_ij - 2 * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) + lambda * delta) / (h_ij + 2 * lambda * (1.0 - delta));           
                 if (z_r >= - (theta_value[j] + theta_direction[j])) {
@@ -855,7 +886,7 @@ void lslxOptimizer::update_theta_direction() {
                 } else {
                   z[j] = - (theta_value[j] + theta_direction[j]);
                 }
-              } else if (penalty_method == "mcp") {
+              } else if (regularizer_type == "mcp") {
                 z_r = ((theta_value[j] + theta_direction[j]) / delta - g_ij - lambda) / (h_ij - (1.0 / delta));
                 z_l = ((theta_value[j] + theta_direction[j]) / delta - g_ij + lambda) / (h_ij - (1.0 / delta));
                 if (z_r >= - (theta_value[j] + theta_direction[j])) {
@@ -878,14 +909,14 @@ void lslxOptimizer::update_theta_direction() {
               z[j] = 0;
             }
           } else {
-            if (theta_is_free[j] | theta_is_pen[j]) {
+            if ((theta_is_free[j] | theta_is_pen[j]) & theta_is_est[j]) {
               z[j] = (-g_ij / h_ij);
             } else {
               z[j] = 0;
             }
           }
         } else {
-          if (theta_is_free[j]) {
+          if ((theta_is_free[j] | theta_is_pen[j]) & theta_is_est[j]) {
             z[j] = (-g_ij / h_ij);
           } else {
             z[j] = 0;
@@ -905,8 +936,8 @@ void lslxOptimizer::update_theta_direction() {
       h = loss_bfgs_hessian_inv;
     } else if (algorithm == "fisher") {
       h = expand_both(slice_both(
-        loss_expected_hessian, theta_est_idx, theta_est_idx).inverse(),
-        theta_est_idx, theta_est_idx,
+        loss_expected_hessian, theta_is_est_idx, theta_is_est_idx).inverse(),
+        theta_is_est_idx, theta_is_est_idx,
         n_theta, n_theta);
     } else {}
     if (algorithm == "gd") {
@@ -990,8 +1021,8 @@ void lslxOptimizer::update_coefficient() {
     n_iter_out = 0;
     iter_out = 0;
     for (i = 0; i < n_theta; i++) {
-      if (theta_is_free[i] | theta_is_pen[i]) {
-        objective_gradient_abs[i] = std::fabs(objective_gradient(i, 0));
+      if ((theta_is_free[i] | theta_is_pen[i]) & theta_is_est[i]) {
+        objective_gradient_abs[i] = std::abs(objective_gradient(i, 0));
       } else {
         objective_gradient_abs[i] = - INFINITY;
       }
@@ -1022,7 +1053,7 @@ void lslxOptimizer::update_coefficient() {
       update_objective_gradient();
       update_theta_start();
       for (i = 0; i < n_theta; i++) {
-        if (theta_is_free[i] | theta_is_pen[i]) {
+        if ((theta_is_free[i] | theta_is_pen[i]) & theta_is_est[i]) {
           objective_gradient_abs[i] = std::fabs(objective_gradient(i, 0));
         } else {
           objective_gradient_abs[i] = - INFINITY;
@@ -1053,21 +1084,20 @@ void lslxOptimizer::update_numerical_condition() {
   } else{}
   int i;
   for (i = 0; i < n_theta; i++) {
-    if (theta_is_free[i]) {
+    if (theta_is_free[i] & theta_is_est[i]) {
       objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
       idx_is_effective.push_back(i);
-    } else if (theta_is_pen[i]) {
-      if ((penalty_method == "lasso")|(penalty_method == "ridge")|(penalty_method == "elastic_net")) {
+    } else if (theta_is_pen[i] & theta_is_est[i]) {
+      if ((regularizer_type == "lasso")|(regularizer_type == "ridge")|(regularizer_type == "elastic_net")) {
         objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian + 2 * lambda * (1 - delta);
-      } else if (penalty_method == "mcp") {
+      } else if (regularizer_type == "mcp") {
         objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian - (1 / delta);
       } else {
         objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
       }
       if (std::abs(theta_value[i]) > DBL_EPSILON) {
         idx_is_effective.push_back(i);
-      } else {
-      }
+      } else {}
     } else {
       objective_hessian_diagonal[i] = INFINITY;
     }
@@ -1097,9 +1127,9 @@ void lslxOptimizer::update_numerical_condition() {
           n_moment, n_theta) = model_jacobian_i;
       }
       loss_hessian = model_jacobian_matrix.transpose() * residual_weight_matrix * model_jacobian_matrix;
-      if ((penalty_method == "ridge")|(penalty_method == "elastic_net")) {
+      if ((regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
         for (i = 0; i < n_theta; i++) {
-          if (theta_is_pen[i]) {
+          if (theta_is_pen[i] & theta_is_pen[i]) {
             loss_hessian(i, i) = loss_hessian(i, i) + 2 * lambda * (1 - delta);            
           }
         }
@@ -1110,7 +1140,7 @@ void lslxOptimizer::update_numerical_condition() {
         (residual_weight_matrix - (residual_weight_matrix * model_jacobian_matrix) *
         loss_hessian.inverse() *
         (model_jacobian_matrix.transpose() * residual_weight_matrix))).diagonal().sum();
-      if ((penalty_method == "ridge")|(penalty_method == "elastic_net")) {
+      if ((regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
         degrees_of_freedom = robust_degrees_of_freedom;
         robust_degrees_of_freedom = NAN;
         scaling_factor = NAN;
@@ -1213,12 +1243,66 @@ void lslxOptimizer::update_fit_index() {
   }
 }
 
+// method for completing estimation
+void lslxOptimizer::complete_estimation() {
+  update_coefficient();
+  update_numerical_condition();
+  update_information_criterion();
+  update_fit_index();
+}
+
+// method for completing estimation
+void lslxOptimizer::complete_searching() {
+  if (searcher) {
+    Rcpp::LogicalVector theta_is_est_zero = Rcpp::clone(theta_is_est);
+    Rcpp::NumericVector theta_value_zero = Rcpp::clone(theta_value);
+    Rcpp::NumericVector loss_value_all(theta_is_search_idx.size());
+    int i;
+    if (theta_is_search_idx.size() > 0) {
+      for (i = 0; i < theta_is_search_idx.size(); i++) {
+        theta_start = Rcpp::clone(theta_value_zero);
+        theta_value = Rcpp::clone(theta_value_zero);
+        theta_is_est = Rcpp::clone(theta_is_est_zero);
+        if (searcher_type == "forward") {
+          theta_is_est[theta_is_search_idx[i]] = 1;
+          update_coefficient();
+        } else if (searcher_type == "backward") {
+          theta_is_est[theta_is_search_idx[i]] = 0;
+          update_coefficient();
+        } else {}
+        loss_value_all[i] = loss_value;
+      }
+      if (searcher_type == "forward") {
+        i = Rcpp::which_min(loss_value_all);
+      } else if (searcher_type == "backward") {
+        i = Rcpp::which_max(loss_value_all);
+      } else {}
+      theta_start = Rcpp::clone(theta_value_zero);
+      theta_value = Rcpp::clone(theta_value_zero);
+      theta_is_est = Rcpp::clone(theta_is_est_zero);
+      if (searcher_type == "forward") {
+        theta_is_est[theta_is_search_idx[i]] = 1;
+      } else if (searcher_type == "backward") {
+        theta_is_est[theta_is_search_idx[i]] = 0;
+        theta_start[theta_is_search_idx[i]] = 0;
+        theta_value[theta_is_search_idx[i]] = 0;
+      } else {}
+      theta_is_est_idx = which(theta_is_est);
+      theta_is_search[theta_is_search_idx[i]] = 0;
+      theta_is_search_idx = which(theta_is_search);    
+      complete_estimation();
+      step = step + 1;
+    } else {}
+  } else {}
+}
+
 // method for extracting final numerical condition
 Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
   Rcpp::NumericVector numerical_condition = 
     Rcpp::NumericVector::create(
       _["lambda"] = lambda,
       _["delta"] = delta,
+      _["step"] = step,
       _["objective_value"] = objective_value,
       _["objective_gradient_abs_max"] = objective_gradient_abs_max,
       _["objective_hessian_convexity"] = objective_hessian_convexity,
@@ -1359,6 +1443,12 @@ Eigen::SparseMatrix<double> lslxOptimizer::create_duplication(int n) {
   return duplication;
 }
 
+// method for which function
+Rcpp::IntegerVector lslxOptimizer::which(Rcpp::LogicalVector x) {
+  Rcpp::IntegerVector y = Rcpp::seq(0, x.size()-1);
+  return y[x];
+}
+
 // method for sign function
 int lslxOptimizer::sign(double x) {
   int y;
@@ -1371,6 +1461,7 @@ int lslxOptimizer::sign(double x) {
   }
   return(y);
 }
+
 
 // compute solution path
 // [[Rcpp::export]]
@@ -1399,12 +1490,9 @@ void compute_regularized_path_cpp(
     }
     for (j = 0; j < delta_grid.size(); j++) {
       optimizer.set_regularizer(
-        Rcpp::as< Rcpp::CharacterVector >(control["penalty_method"]), 
+        Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 
         lambda_grid[i], delta_grid[j]);
-      optimizer.update_coefficient();
-      optimizer.update_numerical_condition();
-      optimizer.update_information_criterion();
-      optimizer.update_fit_index();
+      optimizer.complete_estimation();
       idx = i * delta_grid.size() + j;
       coefficient[idx] = optimizer.extract_coefficient();
       numerical_condition[idx] = optimizer.extract_numerical_condition();
@@ -1413,6 +1501,51 @@ void compute_regularized_path_cpp(
     }
   }
 }
+
+
+
+// compute stepwise solution path made by forward or backward selection
+// [[Rcpp::export]]
+void compute_stepwise_path_cpp(
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result,
+    Rcpp::List fitted_result) {
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  Rcpp::NumericVector theta_start_zero = Rcpp::clone(optimizer.theta_start);
+  optimizer.set_regularizer(
+    Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 0.0, INFINITY);
+  Rcpp::IntegerVector step_grid = Rcpp::as<Rcpp::IntegerVector>(control["step_grid"]);
+  Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
+  Rcpp::List information_criterion = Rcpp::as<Rcpp::List>(fitted_result["information_criterion"]);
+  Rcpp::List fit_index = Rcpp::as<Rcpp::List>(fitted_result["fit_index"]);
+  Rcpp::List coefficient = Rcpp::as<Rcpp::List>(fitted_result["coefficient"]);
+  
+  int i;
+  for (i = 0; i < step_grid.size(); i++) {
+    if (!optimizer.warm_start) {
+      optimizer.set_theta_value(theta_start_zero);
+    }
+    if (i == 0) {
+      optimizer.complete_estimation();
+      coefficient[i] = optimizer.extract_coefficient();
+      numerical_condition[i] = optimizer.extract_numerical_condition();
+      information_criterion[i] = optimizer.extract_information_criterion();
+      fit_index[i] = optimizer.extract_fit_index();
+    } else {
+      optimizer.complete_searching();
+      coefficient[i] = optimizer.extract_coefficient();
+      numerical_condition[i] = optimizer.extract_numerical_condition();
+      information_criterion[i] = optimizer.extract_information_criterion();
+      fit_index[i] = optimizer.extract_fit_index();
+    }
+  }
+}
+
 
 // compute coefficient matrix
 // [[Rcpp::export]]
@@ -1682,7 +1815,7 @@ Rcpp::NumericMatrix compute_regularizer_gradient_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, delta);
+  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["regularizer_type"]), lambda, delta);
   optimizer.update_regularizer_gradient();
   regularizer_gradient = optimizer.regularizer_gradient;
   return Rcpp::wrap(regularizer_gradient);
@@ -1704,7 +1837,7 @@ Rcpp::NumericMatrix compute_objective_gradient_cpp(
                           control,
                           supplied_result);
   optimizer.set_theta_value(theta_value);
-  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["penalty_method"]), lambda, delta);
+  optimizer.set_regularizer(Rcpp::as<Rcpp::CharacterVector>(control["regularizer_type"]), lambda, delta);
   
   optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();

@@ -799,10 +799,10 @@ $test_coefficient(selector, lambda, delta, standard_error = "default",
 \item{\code{selector}}{A \code{character} to specify a selector for determining an optimal penalty level.
   Its value can be any one in \code{"aic"}, \code{"aic3"}, \code{"caic"}, \code{"bic"}, \code{"abic"}, \code{"hbic"},
   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
-\item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level. 
-  If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
-\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
+\item{\code{delta}}{A \code{numeric} to specific a chosen optimal weight for elastic net or convexity level for mcp.
   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
+\item{\code{step}}{A \code{numeric} to specific a chosen step for stepwise searching.
+  If the specified \code{step} is not in \code{step_grid}, a nearest legitimate value will be used.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as
@@ -837,10 +837,10 @@ For details of standard error formula for coefficients, see the section of \emph
 
 \section{Plot-Related Methods}{
 
-\preformatted{$plot_numerical_condition(condition, lambda_scale = "default", mode = "default")
-$plot_information_criterion(criterion, lambda_scale = "default", mode = "default")
-$plot_fit_index(index, lambda_scale = "default", mode = "default")
-$plot_coefficient(block, left, right, both, lambda_scale = "default", 
+\preformatted{$plot_numerical_condition(condition, x_scale = "default", mode = "default")
+$plot_information_criterion(criterion, x_scale = "default", mode = "default")
+$plot_fit_index(index, x_scale = "default", mode = "default")
+$plot_coefficient(block, left, right, both, x_scale = "default", 
   mode = "default")}
 \describe{
 \item{\bold{Arguments}}{
@@ -911,43 +911,46 @@ $extract_saturated_cov()
 $extract_saturated_mean()
 $extract_saturated_moment_acov()
 
-$extract_penalty_level(selector, lambda, delta, include_faulty = FALSE)
+$extract_penalty_level(selector, lambda, delta, step, include_faulty = FALSE)
 
-$extract_numerical_condition(selector, lambda, delta, include_faulty = FALSE)
-$extract_information_criterion(selector, lambda, delta, include_faulty = FALSE)
-$extract_fit_index(selector, lambda, delta, include_faulty = FALSE)
-$extract_cv_error(selector, lambda, delta, include_faulty = FALSE)
-$extract_coefficient(selector, lambda, delta, type = "default", 
+$extract_numerical_condition(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_information_criterion(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_fit_index(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_cv_error(selector, lambda, delta, step, include_faulty = FALSE)
+
+$extract_coefficient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-
-$extract_implied_cov(selector, lambda, delta, include_faulty = FALSE)
-$extract_implied_mean(selector, lambda, delta, include_faulty = FALSE)
-$extract_residual_cov(selector, lambda, delta, include_faulty = FALSE)
-$extract_residual_mean(selector, lambda, delta, include_faulty = FALSE)
-
-$extract_coefficient_matrix(selector, lambda, delta, block, 
+$extract_debiased_coefficient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
 
-$extract_moment_jacobian(selector, lambda, delta, type = "default", 
+$extract_implied_cov(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_implied_mean(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_residual_cov(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_residual_mean(selector, lambda, delta, step, include_faulty = FALSE)
+
+$extract_coefficient_matrix(selector, lambda, delta, step, block, 
   include_faulty = FALSE)
 
-$extract_expected_information(selector, lambda, delta, type = "default", 
-  include_faulty = FALSE)
-$extract_observed_information(selector, lambda, delta, type = "default", 
+$extract_moment_jacobian(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
 
-$extract_bfgs_hessian(selector, lambda, delta, type = "default", 
+$extract_expected_information(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_score_acov(selector, lambda, delta, type = "default", 
+$extract_observed_information(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_coefficient_acov(selector, lambda, delta, standard_error = "default",
+
+$extract_bfgs_hessian(selector, lambda, delta, step, type = "default", 
+  include_faulty = FALSE)
+$extract_score_acov(selector, lambda, delta, step, type = "default", 
+  include_faulty = FALSE)
+$extract_coefficient_acov(selector, lambda, delta, step, standard_error = "default",
   type = "default", include_faulty = FALSE)
 
-$extract_loss_gradient(selector, lambda, delta, type = "default", 
+$extract_loss_gradient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_regularizer_gradient(selector, lambda, delta, type = "default", 
+$extract_regularizer_gradient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_objective_gradient(selector, lambda, delta, type = "default", 
+$extract_objective_gradient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)}
 \describe{
 \item{\bold{Arguments}}{
@@ -958,8 +961,10 @@ $extract_objective_gradient(selector, lambda, delta, type = "default",
   or their robust counterparts \code{"raic"}, \code{"raic3"}, \code{"rcaic"}, \code{"rbic"}, \code{"rabic"}, \code{"rhbic"} if raw data is available.}
 \item{\code{lambda}}{A \code{numeric} to specific a chosen optimal penalty level. 
   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
-\item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
+\item{\code{delta}}{A \code{numeric} to specific a chosen optimal weight for elastic net or convexity level for mcp.
   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
+\item{\code{step}}{A \code{numeric} to specific a chosen step for stepwise searching.
+  If the specified \code{step} is not in \code{step_grid}, a nearest legitimate value will be used.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as

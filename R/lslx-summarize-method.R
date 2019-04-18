@@ -4,6 +4,7 @@ lslx$set("public",
          function(selector,
                   lambda,
                   delta,
+                  step,
                   standard_error = "default",
                   debias = "default",
                   inference = "default",
@@ -29,43 +30,6 @@ lslx$set("public",
            if (is.null(private$fitting)) {
              stop("Fitting field is not yet derived. Please use fit-related methods first.\n")
            }
-           if (!(
-             standard_error %in% c("default", "sandwich", "observed_information", "expected_information")
-           )) {
-             stop(
-               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
-             )
-           }
-           if (!(inference %in% c("default", "naive", "polyhedral", "scheffe"))) {
-             stop("Argument 'inference' can be only either 'default', 'naive', 'polyhedral', or 'scheffe'.")
-           }
-           if (!(debias %in% c("default", "none", "one_step"))) {
-             stop("Argument 'debias' can be only either 'default', 'none', or 'one_step'.")
-           }
-           if (standard_error == "default") {
-             if (private$fitting$control$response) {
-               standard_error <- "sandwich"
-             } else {
-               standard_error <- "observed_information"
-             }
-           }
-           if (inference == "default") {
-             inference <- "naive"
-             if (debias == "default") {
-               debias <- "none"
-             }
-           } else if (inference == "polyhedral") {
-             if (debias == "default") {
-               debias <- "one_step"
-             }
-             if (debias == "none") {
-               stop("Argument 'debias' cannot be 'none' under 'inference' == 'polyhedral'.")
-             }
-           } else {
-             if (debias == "default") {
-               debias <- "none"
-             }
-           }
            if (mode == "default") {
              mode <- "print"
            } else {
@@ -76,7 +40,6 @@ lslx$set("public",
            if (!(style %in% c("default", "manual", "minimal", "maximal"))) {
              stop("Argument 'style' can be only either 'default', 'manual', 'mininal', or 'maximal'.")
            }
-
            if (style == "default") {
              output <- list(
                general_information = TRUE,
@@ -109,11 +72,10 @@ lslx$set("public",
                       })
            } else if (style == "manual") {
              
-           }
+           } else {}
            if (private$fitting$control$cv_fold == 1L) {
              output$cv_error <- FALSE
            }
- 
            ##generating output informations
            if (output$general_information) {
              general_information <-
@@ -149,14 +111,13 @@ lslx$set("public",
            } else {
              general_information <- NULL
            }
-           
            if (output$fitting_information) {
              fitting_information <-
                formatC(
                  x = c(
                    private$fitting$control$penalty_method,
                    ifelse(
-                     private$fitting$control$penalty_method == "none",
+                     private$fitting$control$penalty_method %in% c("none", "forward", "backward"),
                      "none",
                      ifelse(
                        length(private$fitting$control$lambda_grid) == 1,
@@ -169,7 +130,7 @@ lslx$set("public",
                      )
                    ),
                    ifelse(
-                     !(private$fitting$control$penalty_method %in% c("mcp", "elastic")),
+                     (private$fitting$control$penalty_method %in% c("none", "forward", "backward", "lasso", "ridge")),
                      "none",
                      ifelse(
                        length(private$fitting$control$delta_grid) == 1,
@@ -177,6 +138,19 @@ lslx$set("public",
                        paste(
                          min(private$fitting$control$delta_grid),
                          max(private$fitting$control$delta_grid),
+                         sep = " - "
+                       )
+                     )
+                   ),
+                   ifelse(
+                     (private$fitting$control$penalty_method %in% c("none", "lasso", "ridge", "elastic_net", "mcp")),
+                     "none",
+                     ifelse(
+                       length(private$fitting$control$step_grid) == 1,
+                       private$fitting$control$step_grid,
+                       paste(
+                         min(private$fitting$control$step_grid),
+                         max(private$fitting$control$step_grid),
                          sep = " - "
                        )
                      )
@@ -201,6 +175,7 @@ lslx$set("public",
                  "penalty method",
                  "lambda grid",
                  "delta grid",
+                 "step grid",
                  "algorithm",
                  "missing method",
                  "tolerance for convergence"
@@ -245,22 +220,28 @@ lslx$set("public",
                  x = self$extract_numerical_condition(selector = selector,
                                                       lambda = lambda,
                                                       delta = delta,
+                                                      step = step,
                                                       include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
                )
              numerical_condition[["lambda"]] <-
-               ifelse(private$fitting$control$penalty_method == "none",
+               ifelse(private$fitting$control$penalty_method %in% c("none", "forward", "backward"),
                       "none",
                       numerical_condition[["lambda"]])
              numerical_condition[["delta"]] <-
-               ifelse(private$fitting$control$penalty_method %in% c("none", "lasso", "ridge"),
+               ifelse(private$fitting$control$penalty_method %in% c("none", "forward", "backward", "lasso", "ridge"),
                       "none",
                       numerical_condition[["delta"]])
+             numerical_condition[["step"]] <-
+               ifelse(private$fitting$control$penalty_method %in% c("none", "lasso", "ridge", "elastic_net", "mcp"),
+                      "none",
+                      numerical_condition[["step"]])
              names(numerical_condition) <-
                c(
                  "selected lambda",
                  "selected delta",
+                 "selected step",
                  "objective value",
                  "objective gradient absolute maximum",
                  "objective Hessian convexity",
@@ -281,6 +262,7 @@ lslx$set("public",
                  x = self$extract_information_criterion(selector = selector,
                                                         lambda = lambda,
                                                         delta = delta,
+                                                        step = step,
                                                         include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
@@ -310,6 +292,7 @@ lslx$set("public",
                  x = self$extract_fit_index(selector = selector,
                                              lambda = lambda,
                                              delta = delta,
+                                             step = step,
                                              include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
@@ -331,6 +314,7 @@ lslx$set("public",
                  x = self$extract_cv_error(selector = selector,
                                            lambda = lambda,
                                            delta = delta,
+                                           step = step,
                                            include_faulty = include_faulty),
                  digits = digit,
                  format = "f"
@@ -370,6 +354,7 @@ lslx$set("public",
                self$test_lr(selector = selector,
                             lambda = lambda,
                             delta = delta,
+                            step = step,
                             include_faulty = include_faulty)
              lr_test[] <-
                data.frame(sapply(
@@ -398,6 +383,7 @@ lslx$set("public",
                  selector = selector,
                  lambda = lambda,
                  delta = delta,
+                 step = step,
                  alpha_level = alpha_level,
                  include_faulty = include_faulty
                )
@@ -427,6 +413,7 @@ lslx$set("public",
                  selector = selector,
                  lambda = lambda,
                  delta = delta,
+                 step = step,
                  standard_error = standard_error,
                  alpha_level = alpha_level,
                  debias = debias,
@@ -587,7 +574,7 @@ lslx$set("public",
                    cat(
                      paste0(
                        "Coefficient Test",
-                       " (St.Error = \"",
+                       " (Std.Error = \"",
                        standard_error,
                        "\")\n"
                      )

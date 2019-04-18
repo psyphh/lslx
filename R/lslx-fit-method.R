@@ -4,6 +4,7 @@ lslx$set("public",
          function(penalty_method = "mcp",
                   lambda_grid = "default",
                   delta_grid = "default",
+                  step_grid = "default",
                   loss = "default",
                   algorithm = "default",
                   missing_method = "default",
@@ -37,6 +38,7 @@ lslx$set("public",
                penalty_method = penalty_method,
                lambda_grid = lambda_grid,
                delta_grid = delta_grid,
+               step_grid = step_grid,
                loss = loss,
                algorithm = algorithm,
                missing_method = missing_method,
@@ -69,13 +71,23 @@ lslx$set("public",
              lslxFitting$new(model = private$model,
                              data = private$data,
                              control = control)
-           compute_regularized_path_cpp(
-             private$fitting$reduced_data,
-             private$fitting$reduced_model,
-             private$fitting$control,
-             private$fitting$supplied_result,
-             private$fitting$fitted_result
-           )
+           if (private$fitting$control$regularizer) {
+             compute_regularized_path_cpp(
+               private$fitting$reduced_data,
+               private$fitting$reduced_model,
+               private$fitting$control,
+               private$fitting$supplied_result,
+               private$fitting$fitted_result
+             )
+           } else {
+             compute_stepwise_path_cpp(
+               private$fitting$reduced_data,
+               private$fitting$reduced_model,
+               private$fitting$control,
+               private$fitting$supplied_result,
+               private$fitting$fitted_result
+             )
+           }
            
            private$fitting$fitted_result$is_finite <-
              sapply(
@@ -185,24 +197,38 @@ lslx$set("public",
              }
            }
            
-           name_grid <-
-             paste0(
-               "ld=",
-               sapply(
-                 X = private$fitting$fitted_result$numerical_condition,
-                 FUN = function(x) {
-                   getElement(x, "lambda")
-                 }
-               ),
-               "/",
-               "gm=",
-               sapply(
-                 X = private$fitting$fitted_result$numerical_condition,
-                 FUN = function(x) {
-                   getElement(x, "delta")
-                 }
+           if (private$fitting$control$regularizer) {
+             name_grid <-
+               paste0(
+                 "ld=",
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(x, "lambda")
+                   }
+                 ),
+                 "/",
+                 "gm=",
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(x, "delta")
+                   }
+                 )
                )
-             )
+           } else {
+             name_grid <-
+               paste0(
+                 "step=",
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(x, "step")
+                   }
+                 )
+               )
+           }
+
 
            names(private$fitting$fitted_result$numerical_condition) <-
              name_grid
