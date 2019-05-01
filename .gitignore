@@ -4,5 +4,4 @@ doc
 .DS_Store
 .RData
 .Rhistory
-inst/doc
 inst/comparison
