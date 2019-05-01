@@ -5,3 +5,4 @@ doc
 .RData
 .Rhistory
 inst/doc
+inst/comparison
