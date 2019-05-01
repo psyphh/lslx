@@ -4,4 +4,6 @@ doc
 .DS_Store
 .RData
 .Rhistory
+.Rbuildignore
+.gitignore
 inst/comparison
