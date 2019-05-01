@@ -1,4 +1,3 @@
-%\VignetteIndexEntry{lslx Package Vignette}
 \documentclass[nojss]{jss}
 
 %% -- LaTeX packages and custom commands ---------------------------------------
@@ -30,7 +29,9 @@
 <<preliminaries, echo=FALSE, results=hide>>=
 library(lslx)
 library(ggplot2)
+library(dplyr)
 library(knitr)
+library(tidyr)
 options(prompt = "R> ", continue = "+  ", width = 80, useFancyQuotes = FALSE)
 options(digits = 3L)
 @
@@ -75,11 +76,11 @@ There are many popular software packages for conducting SEM analysis, including 
 
 Before \pkg{lslx}, there were four packages that could fit SEM-related models via PL: \pkg{sparseSEM} \citep{sparseSEM}, \pkg{lsl} \citep{Huang2017a}, \pkg{regsem} \citep{Jacobucci2017}, and \pkg{lvnet} \citep{lvnet}. However, only \pkg{lsl} and \pkg{regsem} were able to fit the commonly used class of SEM models. Package \pkg{sparseSEM} cannot handle latent variables \citep{Cai2013}, while package \pkg{lvnet} mainly utilizes PL to explore the precision matrix of the latent factors or residuals \citep{Epskamp2017}.
 
-Package \pkg{lsl} employs the PL method developed by \cite{Huang}, and it is a predecessor of \pkg{lslx}. It supports SEM models that can be represented by the J{\"{o}}reskog-Keesling-Wiley model \citep{Keesling1972, Joreskog1973, Wiley1973} via matrix specifications. Except for variance parameters, every coefficient can be set as free, fixed, or penalized. The solution path of the PL estimates can be obtained by an expectation-conditional maximization (ECM) algorithm \citep{Meng1993}. However, \pkg{lsl} has two major drawbacks: (1) model specification through pattern matrices is not user-friendly; (2) the optimization via the ECM algorithm has only linear convergence \citep{Meng1994}. In addition, since ECM relies on the functional form of normal theory likelihood, it cannot be extended to other types of fitting functions. Package \pkg{regsem} implements the regularized SEM proposed by \cite{Jacobucci2016}, adopting the reticular action model \citep[RAM;][]{McArdle1984a} as a framework for model representation. Because it receives the outputs from \pkg{lavaan} for subsequent PL analysis, model specification in \pkg{regsem} is relatively convenient. The central problem with \pkg{regsem} is that its optimization algorithm often misses optimal solutions. A detailed account of this issue is presented in Section \ref{sec:comparison}.
+Package \pkg{lsl} employs the PL method developed by \cite{Huang}, and it is a predecessor of \pkg{lslx}. It supports SEM models that can be represented by the J{\"{o}}reskog-Keesling-Wiley model \citep{Keesling1972, Joreskog1973, Wiley1973} via matrix specifications. Except for variance parameters, every coefficient can be set as free, fixed, or penalized. The solution path of the PL estimates can be obtained by an expectation-conditional maximization (ECM) algorithm \citep{Meng1993}. However, \pkg{lsl} has two major drawbacks: (1) model specification through pattern matrices is not user-friendly; (2) the optimization via the ECM algorithm has only linear convergence \citep{Meng1994}. In addition, since ECM relies on the functional form of normal theory likelihood, it cannot be extended to other types of fitting functions. Package \pkg{regsem} implements the regularized SEM proposed by \cite{Jacobucci2016}, adopting the reticular action model \citep[RAM;][]{McArdle1984a} as a framework for model representation. Because it receives the outputs from \pkg{lavaan} for subsequent PL analysis, model specification in \pkg{regsem} is relatively convenient. The central problem with \pkg{regsem} is that its optimization algorithm often misses optimal solutions. 
 
 Package \pkg{lslx} was constructed to overcome the drawbacks of existing packages for SEM with PL. The author believes that \pkg{lslx} has at least four advantages: (1) Model specification is relatively easy. It adopts a \pkg{lavaan}-like model syntax with carefully designed operators and prefixes. Through the model syntax, users can set each coefficient as free, fixed, or penalized. When the syntax is not convenient enough, built-in methods can be also used to modify the initially specified model. (2) The optimization algorithm in \pkg{lslx} is reliable. Motivated by the works of \cite{Friedman2010} and \cite{Yuan:2012:IGL:2503308.2343708}, \pkg{lslx} implemented a quasi-Newton method that conducts line-search and checks the first-order condition in every iteration to ensure optimality. Furthermore, related numerical conditions can be plotted to monitor the optimization quality. (3) \pkg{lslx} is reasonably fast. The implemented quasi-Newton algorithm can achieve locally superlinear convergence under suitable conditions \citep{Yuan:2012:IGL:2503308.2343708}. In addition, the core of \pkg{lslx} is written via \pkg{Rcpp} \citep{Rcpp1} and \pkg{RcppEigen} \citep{RcppEigen}. As we shall see in Section \ref{sec:comparison}, \pkg{lslx} is significantly faster than both \pkg{lsl} and \pkg{regsem}. (4) \pkg{lslx} has several additional functionalities. Like usual SEM packages, \pkg{lslx} provides formal statistical test results, including tests for goodness-of-fit and coefficients. Besides, \pkg{lslx} handles missing data via a two-stage method with auxiliary variables \citep{Savalei2009}, and conducts multi-group analysis with a reparameterized SEM formulation \citep{Huang2018}.
 
-This paper is organized as follows. Section \ref{sec:sem} describes the PL method for semi-confirmatory SEM. In Section \ref{sec:opt}, a quasi-Newton algorithm for optimizing the PL criterion is introduced. Section \ref{sec:lslx} demonstrates how to implement the semi-confirmatory SEM with \pkg{lslx}. In Section \ref{sec:adv}, advanced functionalities for \pkg{lslx} are described, including a two-stage method for missing data and multi-group SEM analysis. Section \ref{sec:comparison} presents a numerical comparison. Finally, merits, limitations, and further directions concerning \pkg{lslx} are discussed.
+This paper is organized as follows. Section \ref{sec:sem} describes the PL method for semi-confirmatory SEM. In Section \ref{sec:opt}, a quasi-Newton algorithm for optimizing the PL criterion is introduced. Section \ref{sec:lslx} demonstrates how to implement the semi-confirmatory SEM with \pkg{lslx}. In Section \ref{sec:adv}, advanced functionalities for \pkg{lslx} are described, including a two-stage method for missing data and multi-group SEM analysis. Finally, merits, limitations, and further directions concerning \pkg{lslx} are discussed.
 
 \section{Semi-confirmatory SEM and PL} \label{sec:sem}
 In this section, the SEM formulation adopted for \pkg{lslx} and the theory of a semi-confirmatory SEM via PL are described. 
@@ -504,7 +505,7 @@ To fit the specified model to the imported data, the \code{$fit()} method can be
 lslx_fa$fit(penalty_method = "mcp",
   lambda_grid = seq(.01, .60, .01), delta_grid = c(1.5, 3.0, Inf))
 @
-The \code{$fit()} method requires users to mainly specify three arguments: \code{penalty_method}, \code{lambda_grid}, and \code{delta_grid}. The \code{penalty_method} argument is used to specify the penalty function by values of \code{"none"}, \code{"lasso"} (for LASSO), or \code{"mcp"} (for MCP). The \code{lambda_grid} and \code{delta_grid} arguments are designed to set the penalty and convexity levels, respectively. The above sample code implements Algorithm \ref{alg:opt} to compute PL estimates with MCP under $\Lambda \times \Delta=\{.01,.02,...,.60\} \times \{1.5,3.0, \infty\}$. By default, a message will be printed to show whether the optimization algorithm converges across all penalty and convexity levels. The fitting results are stored in \code{lslx_fa} and can be later manipulated by other built-in methods of \code{lslx} class. 
+The \code{$fit()} method requires users to mainly specify three arguments: \code{penalty_function}, \code{lambda_grid}, and \code{delta_grid}. The \code{penalty_function} argument is used to specify the penalty function by values of \code{"none"}, \code{"lasso"} (for LASSO), or \code{"mcp"} (for MCP). The \code{lambda_grid} and \code{delta_grid} arguments are designed to set the penalty and convexity levels, respectively. The above sample code implements Algorithm \ref{alg:opt} to compute PL estimates with MCP under $\Lambda \times \Delta=\{.01,.02,...,.60\} \times \{1.5,3.0, \infty\}$. By default, a message will be printed to show whether the optimization algorithm converges across all penalty and convexity levels. The fitting results are stored in \code{lslx_fa} and can be later manipulated by other built-in methods of \code{lslx} class. 
 
 After deriving the fitting results, the easiest way to probe their content is to implement the \code{$summarize()} method with a selector specified in argument \code{selector}
 <<>>=
@@ -788,163 +789,6 @@ t(intercept$"Grant-White" - intercept$"Pasteur")
 @
 The result shows that the loadings are invariant across the two schools. However, the intercepts of \code{x3} and \code{x7} are different. We conclude that the condition of strong factorial invariance is violated. The measurement only satisfies the condition of weak factorial invariance \citep{Meredith1993}, i.e., only loadings are homogeneous across the two schools.
 
-
-
-\section[Numerical comparison with lsl and regsem]{Numerical comparison with \pkg{lsl} and \pkg{regsem}} \label{sec:comparison}
-In this section, a numerical comparison between \pkg{lslx} (ver.0.6.1), \pkg{lsl} (ver.0.5.6), and \pkg{regsem} (ver.0.9.2) is reported. So far, no studies have strictly evaluated whether existing packages can reliably find PL estimates for SEM. To this end, the minimum function values obtained by the three packages are compared. In addition, the number of iterations and the computation time are also evaluated to understand the performance aspects of existing algorithms.
-
-A multiple indicators and multiple causes (MIMIC) model \citep{Joreskog1975} with nine indicators ($y_1$ - $y_9$), three latent factors ($f_1$ - $f_3$), and six causes ($x_1$ - $x_6$) is considered. The population model for generating data is presented in Figure \ref{fig:true_model}. Data are generated from a multivariate normal distribution with zero mean and the covariance implied by the model.
-
-\begin{figure}[t!]
-\centering
-\begin{tikzpicture}[auto,node distance=.5cm,
-latent/.style={circle,draw,thick,inner sep=0pt,minimum size=9mm,align=center},
-manifest/.style={rectangle,draw,thick,inner sep=0pt,minimum width=9mm, minimum height=6mm},
-error/.style={circle,thick, inner sep = 0pt, minimum size=6mm},
-paths/.style={->, thick, >=stealth'},
-dpaths/.style={->, thick, dashed, >=stealth'},
-corr/.style={<->,thick, >=stealth', bend left=60},
-]
-\node [manifest] (Y1) at (0,0) {$y_1$};
-\node [manifest] (Y2) [right= 0.4cm of Y1] {$y_2$};
-\node [manifest] (Y3) [right= 0.4cm of Y2] {$y_3$};
-\node [manifest] (Y4) [right= 0.4cm of Y3] {$y_4$};
-\node [manifest] (Y5) [right= 0.4cm of Y4] {$y_5$};
-\node [manifest] (Y6) [right= 0.4cm of Y5] {$y_6$};
-\node [manifest] (Y7) [right= 0.4cm of Y6] {$y_7$};
-\node [manifest] (Y8) [right= 0.4cm of Y7] {$y_8$};
-\node [manifest] (Y9) [right= 0.4cm of Y8] {$y_9$};
-
-\node [manifest] (X1) at (2.6, 5.2) {$x_1$};
-\node [manifest] (X2) [right= 0.15cm of X1] {$x_2$};
-\node [manifest] (X3) [right= 0.15cm of X2] {$x_3$};
-\node [manifest] (X4) [right= 0.15cm of X3] {$x_4$};
-\node [manifest] (X5) [right= 0.15cm of X4] {$x_5$};
-\node [manifest] (X6) [right= 0.15cm of X5] {$x_6$};
-
-\node [latent] (Eta1) [above=1.7cm of Y2] {$f_1$};
-\node [latent] (Eta2) [above=1.7cm of Y5] {$f_2$};
-\node [latent] (Eta3) [above=1.7cm of Y8] {$f_3$};
-
-
-\node [error] (E1) [below=of Y1]{};
-\node [error] (E2) [below=of Y2]{};
-\node [error] (E3) [below=of Y3]{};
-\node [error] (E4) [below=of Y4]{};
-\node [error] (E5) [below=of Y5]{};
-\node [error] (E6) [below=of Y6]{};
-\node [error] (E7) [below=of Y7]{};
-\node [error] (E8) [below=of Y8]{};
-\node [error] (E9) [below=of Y9]{};
-
-
-\foreach \va in {Y1, Y2, Y3, Y5}
-{
-\draw [paths] (Eta1.south) to node { } (\va.north);
-}
-
-\foreach \vb in {Y4, Y5, Y6, Y8}
-{
-\draw [paths] (Eta2.south) to node {} (\vb.north);
-}
-\foreach \vc in {Y2, Y7, Y8, Y9}
-{
-\draw [paths] (Eta3.south) to node {} (\vc.north);
-}
-
-\foreach \vd in {Eta1}
-{
-\draw [paths] (X1.south) to node { } (\vd.north);
-\draw [paths] (X2.south) to node { } (\vd.north);
-\draw [paths] (X3.south) to node { } (\vd.north);
-\draw [paths] (X4.south) to node { } (\vd.north);
-}
-\foreach \vd in {Eta2}
-{
-\draw [paths] (X2.south) to node { } (\vd.north);
-\draw [paths] (X3.south) to node { } (\vd.north);
-\draw [paths] (X4.south) to node { } (\vd.north);
-\draw [paths] (X5.south) to node { } (\vd.north);
-}
-\foreach \vd in {Eta3}
-{
-\draw [paths] (X3.south) to node { } (\vd.north);
-\draw [paths] (X4.south) to node { } (\vd.north);
-\draw [paths] (X5.south) to node { } (\vd.north);
-\draw [paths] (X6.south) to node { } (\vd.north);
-}
-
-
-\draw [paths] (E1.north) to node {} (Y1.south);
-\draw [paths] (E2.north) to node {} (Y2.south);
-\draw [paths] (E3.north) to node {} (Y3.south);
-\draw [paths] (E4.north) to node {} (Y4.south);
-\draw [paths] (E5.north) to node {} (Y5.south);
-\draw [paths] (E6.north) to node {} (Y6.south);
-\draw [paths] (E7.north) to node {} (Y7.south);
-\draw [paths] (E8.north) to node {} (Y8.south);
-\draw [paths] (E9.north) to node {} (Y9.south);
-
-\node [error] (D1) [right= 0mm of Eta1]{};
-\node [error] (D2) [right= 0mm of Eta2]{};
-\node [error] (D3) [right= 0mm of Eta3]{};
-
-
-\draw [paths] (D1.north) to node {}  (Eta1.east);
-\draw [paths] (D2.north) to node {}  (Eta2.east);
-\draw [paths] (D3.north) to node {}  (Eta3.east);
-
-\draw [corr] (D1.north) to node {} (D2.north);
-\draw [corr] (D1.north) to node {} (D3.north);
-\draw [corr] (D2.north) to node {} (D3.north);
-
-\foreach \ve in {X2, X3, X4, X5, X6}
-{
-\draw [corr] (X1.north) to node { } (\ve.north);
-}
-
-\foreach \vf in {X3, X4, X5, X6}
-{
-\draw [corr] (X2.north) to node { } (\vf.north);
-}
-
-\foreach \vg in {X4, X5, X6}
-{
-\draw [corr] (X3.north) to node { } (\vg.north);
-}
-
-\foreach \vh in {X5, X6}
-{
-\draw [corr] (X4.north) to node { } (\vh.north);
-}
-\draw [corr] (X5.north) to node {} (X6.north);
-
-\end{tikzpicture}
-\caption{\label{fig:true_model}The population MIMIC model for generating data includes nine indicators ($y_1$ - $y_9$), three latent factors ($f_1$ - $f_3$), and six causes ($x_1$ - $x_6$). The loadings in the independent cluster part are set to 0.7. Other non-zero loadings are specified as 0.2. The covariances of the residuals of latent factors and the regression coefficients are all set to 0.2. The covariance among causes is specified as 0.3. The values of the residual variances are so chosen that indicators, factors, and causes are all standardized.}
-\end{figure}
-
-
-
-The numerical comparison is made with different sample sizes (200, 400, 600, and 800) and model specifications (simple and complex). For the simple case, the measurement model is assumed to satisfy an independent cluster structure (i.e., \code{y2<-f3}, \code{y5<-f1}, and \code{y8<-f2} are omitted) with \code{y1}, \code{y4}, and \code{y7} set as anchors. The regression coefficients from causes (\code{x1} - \code{x6}) to factors (\code{f1} - \code{f3}) are all estimated with penalty. Other parameters are set as free or fixed according to the sparsity pattern in Figure \ref{fig:true_model}. For the complex case, the model specification is similar to that of the simple one except that all loadings in the non-independent cluster part are now estimated with penalization.
-
-\begin{figure}[t!]
-\centering
-\includegraphics[width=6in]{vignette-lslx-figure-5a.pdf}
-\\~\\
-\includegraphics[width=6in]{vignette-lslx-figure-5b.pdf}
-\caption{\label{fig:comparison} Boxplots of minimum function values, number of iterations, and computation times in seconds for the four algorithms under different sample sizes (200, 400, 600, and 800) and model specifications (simple and complex). The four algorithms are Fisher scoring, Broyden-Fletcher-Goldfarb-Shanno (BFGS), expectation-conditional maximization (ECM), and coordinate descent (CD).}
-\end{figure}
-
-
-
-
-The following five implementations are evaluated: the Fisher scoring (\code{lslx-fisher}) and the Broyden-Fletcher-Goldfarb-Shanno (\code{lslx-bfgs}) from \pkg{lslx}, the expectation-conditional maximization (\code{lsl-ecm}) from \pkg{lsl}, the so-called default (\code{regsem-default}) and the coordinate descent (\code{regsem-cd}) from \pkg{regsem}. The LASSO penalty is implemented with fixed penalty level $\lambda = 0.1$. The maximal number of outer and inner (if needed) iterations is 1000 and 50, respectively. The tolerance is specified as $10^{-5}$, although these packages utilize different rules for assessing convergence. In each condition, the number of replications is set to 500. 
-
-The probabilities of non-convergent samples were first evaluated. Both \pkg{lslx} and \pkg{lsl} yielded nearly minimal non-convergence probabilities. Across all conditions, the probabilities for \code{lslx-fisher} and \code{lslx-bfgs} were 0\% - 0.4\% and 0\% - 1.2\%, respectively. For each condition, \code{lsl-ecm} yielded a perfect convergence rate. On the other hand, \pkg{regsem} produced several incomplete results. The non-convergence probability of \code{regsem-cd} was acceptable between 0.8\% and 13.2\%. However, the probability for \code{regsem-default} was between 43.4\% and 95.6\%. We decided to drop \code{regsem-default} from the rest of the evaluations.
-
-Figure \ref{fig:comparison} shows the comparison results for each condition based on 500 successful replications (with respect to the remaining four algorithms). The minimum function values indicated that \pkg{lslx} and \pkg{lsl} yield similar optimization results. It is interesting to note that the two packages implement conceptually different algorithms. Thus, their consistency cannot be explained by the similarity of the underlying algorithms. However, \pkg{regsem} always yielded larger function values than \pkg{lslx} and \pkg{lsl}. 
-
-As for the number of iterations and the computation time, \code{lslx-fisher} and \code{lslx-bfgs} performed equally well, \code{lsl-ecm} was slower with more iterations, and \code{regsem-cd} was the slowest with the most iterations. Note that the difference in computation time cannot be attributed purely to the nature of algorithms, since the computation cores of \pkg{lsl} and \pkg{regsem} could be speeded up by using compiled code. We observed that \code{lslx-fisher} requires fewer iterations than \code{lslx-bfgs}, but spends similar time to achieve convergence. This is likely due to the difference between the more exact but tedious expected Hessian and the less accurate but simpler BFGS Hessian. 
 
 \section{Conclusions} \label{sec:conclusion}
 In this work, an \proglang{R} package \pkg{lslx} is described for semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL). The package implements a quasi-Newton method to optimize the PL criterion with either LASSO or MCP. To ensure the optimality of the obtained solution, the algorithm checks the first-order condition in each outer iteration. A numerical comparison between competing packages shows that \pkg{lslx} can reliably and efficiently find PL estimates.

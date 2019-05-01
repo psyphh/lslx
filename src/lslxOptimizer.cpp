@@ -1268,15 +1268,13 @@ void lslxOptimizer::complete_searching() {
           update_coefficient();
         } else if (searcher_type == "backward") {
           theta_is_est[theta_is_search_idx[i]] = 0;
+          theta_start[theta_is_search_idx[i]] = 0;
+          theta_value[theta_is_search_idx[i]] = 0;
           update_coefficient();
         } else {}
         loss_value_all[i] = loss_value;
       }
-      if (searcher_type == "forward") {
-        i = Rcpp::which_min(loss_value_all);
-      } else if (searcher_type == "backward") {
-        i = Rcpp::which_max(loss_value_all);
-      } else {}
+      i = Rcpp::which_min(loss_value_all);
       theta_start = Rcpp::clone(theta_value_zero);
       theta_value = Rcpp::clone(theta_value_zero);
       theta_is_est = Rcpp::clone(theta_is_est_zero);
