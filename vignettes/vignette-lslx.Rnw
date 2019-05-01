@@ -1,6 +1,9 @@
 \documentclass[nojss]{jss}
 
-%% -- LaTeX packages and custom commands ---------------------------------------
+%\VignetteIndexEntry{Vignette for Package lslx}
+%\VignetteDepends{lslx}
+%\VignetteKeywords{structural equation modeling, factor analysis, penalized likelihood}
+%\VignettePackage{lslx}
 
 %% recommended packages
 \usepackage{thumbpdf,lmodern}
@@ -29,9 +32,7 @@
 <<preliminaries, echo=FALSE, results=hide>>=
 library(lslx)
 library(ggplot2)
-library(dplyr)
 library(knitr)
-library(tidyr)
 options(prompt = "R> ", continue = "+  ", width = 80, useFancyQuotes = FALSE)
 options(digits = 3L)
 @
@@ -127,7 +128,7 @@ where $\mathcal{U}(\theta,\lambda)$ is a PL objective function with the form
 \mathcal{U}(\theta,\lambda) = \mathcal{D}(\theta) + \mathcal{R}(\theta,\lambda),
 \end{equation}
 %
-$\mathcal{R}(\theta,\lambda)$ is a penalty term (or regularizer), and $\lambda>0$ is a regularization parameter to control the penalty level. In particular, the penalty term can be written as $\mathcal{R}(\theta,\lambda) = \sum_{q=1}^Q c_{\theta_q} \rho(|\theta_q|, \lambda)$ with $\rho(|\theta_q|, \lambda)$ being a penalty function and $c_{\theta_q} \in \{0,1\} $ being an indicator to show whether $\theta_q$ is penalized. The fist version of \pkg{lslx} implements the minimax concave penalty \citep[MCP;][]{Zhang2010}
+$\mathcal{R}(\theta,\lambda)$ is a penalty term (or regularizer), and $\lambda>0$ is a regularization parameter to control the penalty level. In particular, the penalty term can be written as $\mathcal{R}(\theta,\lambda) = \sum_{q=1}^Q c_{\theta_q} \rho(|\theta_q|, \lambda)$ with $\rho(|\theta_q|, \lambda)$ being a penalty function and $c_{\theta_q} \in \{0,1\} $ being an indicator to show whether $\theta_q$ is penalized. The first version of \pkg{lslx} implements the minimax concave penalty \citep[MCP;][]{Zhang2010}
 %
 \begin{equation} \label{eq:mcp}
 \rho(|\theta_q|, \lambda) =
@@ -505,7 +506,7 @@ To fit the specified model to the imported data, the \code{$fit()} method can be
 lslx_fa$fit(penalty_method = "mcp",
   lambda_grid = seq(.01, .60, .01), delta_grid = c(1.5, 3.0, Inf))
 @
-The \code{$fit()} method requires users to mainly specify three arguments: \code{penalty_function}, \code{lambda_grid}, and \code{delta_grid}. The \code{penalty_function} argument is used to specify the penalty function by values of \code{"none"}, \code{"lasso"} (for LASSO), or \code{"mcp"} (for MCP). The \code{lambda_grid} and \code{delta_grid} arguments are designed to set the penalty and convexity levels, respectively. The above sample code implements Algorithm \ref{alg:opt} to compute PL estimates with MCP under $\Lambda \times \Delta=\{.01,.02,...,.60\} \times \{1.5,3.0, \infty\}$. By default, a message will be printed to show whether the optimization algorithm converges across all penalty and convexity levels. The fitting results are stored in \code{lslx_fa} and can be later manipulated by other built-in methods of \code{lslx} class. 
+The \code{$fit()} method requires users to mainly specify three arguments: \code{penalty_method}, \code{lambda_grid}, and \code{delta_grid}. The \code{penalty_method} argument is used to specify the penalty function by values of \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic_net"} (for EN), or \code{"mcp"} (for MCP). The \code{lambda_grid} and \code{delta_grid} arguments are designed to set the penalty level and the shape of penalty function, respectively. The above sample code implements Algorithm \ref{alg:opt} to compute PL estimates with MCP under $\Lambda \times \Delta=\{.01,.02,...,.60\} \times \{1.5,3.0, \infty\}$. By default, a message will be printed to show whether the optimization algorithm converges across all penalty and convexity levels. The fitting results are stored in \code{lslx_fa} and can be later manipulated by other built-in methods of \code{lslx} class. 
 
 After deriving the fitting results, the easiest way to probe their content is to implement the \code{$summarize()} method with a selector specified in argument \code{selector}
 <<>>=
@@ -791,7 +792,7 @@ The result shows that the loadings are invariant across the two schools. However
 
 
 \section{Conclusions} \label{sec:conclusion}
-In this work, an \proglang{R} package \pkg{lslx} is described for semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL). The package implements a quasi-Newton method to optimize the PL criterion with either LASSO or MCP. To ensure the optimality of the obtained solution, the algorithm checks the first-order condition in each outer iteration. A numerical comparison between competing packages shows that \pkg{lslx} can reliably and efficiently find PL estimates.
+In this work, an \proglang{R} package \pkg{lslx} is described for semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL). The package implements a quasi-Newton method to optimize the PL criterion with either minimax concave penalty (MCP) or elastic-net (EN). To ensure the optimality of the obtained solution, the algorithm checks the first-order condition in each outer iteration. Our experiences show that \pkg{lslx} can reliably and efficiently find PL estimates.
 
 Package \pkg{lslx} adopts a \pkg{lavaan}-like syntax for model specification. The current version also offers an \proglang{S3} interface for using \code{lslx} objects, including a wrapper function \code{plsem()} and related \proglang{S3} methods. The author believes that most \pkg{lavaan} users can easily learn to use \pkg{lslx}. The semi-confirmatory SEM is most appropriate when limited substantive theory is available for model specification. Although \pkg{lslx} is not the first package for SEM with PL, it is probably the most sophiscated one in terms of usability, dependability, efficiency, and functionality.
 

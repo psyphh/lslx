@@ -33,7 +33,11 @@
 #' \code{r6_lslx$summarize(selector)}
 #' }
 #' }
-#'
+#' 
+#' To cite \pkg{lslx} in publications use:
+#' 
+#' Po-Hsien Huang (in press). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software
+#' 
 #'
 #'
 #' @section Overview:

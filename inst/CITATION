@@ -4,7 +4,7 @@ bibentry(bibtype = "Article",
                           family = "Huang")),
   journal      = "Journal of Statistical Software",
   year         = "in press",
-  header       = "To cite lme4 in publications use:",
+  header       = "To cite lslx in publications use:",
   textVersion  =
   paste("Po-Hsien Huang (in press).",
         "lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood.",
