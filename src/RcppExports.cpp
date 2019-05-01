@@ -6,6 +6,51 @@
 
 using namespace Rcpp;
 
+// compute_saturated_moment_cpp
+void compute_saturated_moment_cpp(Rcpp::List y_obs, Rcpp::List w, Rcpp::List m_idx, Rcpp::List saturated_mean, Rcpp::List saturated_cov, int iter_other_max, double tol_other);
+RcppExport SEXP _lslx_compute_saturated_moment_cpp(SEXP y_obsSEXP, SEXP wSEXP, SEXP m_idxSEXP, SEXP saturated_meanSEXP, SEXP saturated_covSEXP, SEXP iter_other_maxSEXP, SEXP tol_otherSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type y_obs(y_obsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type w(wSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type m_idx(m_idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_mean(saturated_meanSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
+    Rcpp::traits::input_parameter< int >::type iter_other_max(iter_other_maxSEXP);
+    Rcpp::traits::input_parameter< double >::type tol_other(tol_otherSEXP);
+    compute_saturated_moment_cpp(y_obs, w, m_idx, saturated_mean, saturated_cov, iter_other_max, tol_other);
+    return R_NilValue;
+END_RCPP
+}
+// compute_saturated_moment_acov_response_cpp
+void compute_saturated_moment_acov_response_cpp(Rcpp::List y_obs, Rcpp::List w, Rcpp::List m_idx, Rcpp::List m2_idx, Rcpp::List saturated_mean, Rcpp::List saturated_cov, Rcpp::List saturated_moment_acov);
+RcppExport SEXP _lslx_compute_saturated_moment_acov_response_cpp(SEXP y_obsSEXP, SEXP wSEXP, SEXP m_idxSEXP, SEXP m2_idxSEXP, SEXP saturated_meanSEXP, SEXP saturated_covSEXP, SEXP saturated_moment_acovSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type y_obs(y_obsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type w(wSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type m_idx(m_idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type m2_idx(m2_idxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_mean(saturated_meanSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_moment_acov(saturated_moment_acovSEXP);
+    compute_saturated_moment_acov_response_cpp(y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov);
+    return R_NilValue;
+END_RCPP
+}
+// compute_saturated_moment_acov_moment_cpp
+void compute_saturated_moment_acov_moment_cpp(int n_observation, Rcpp::List sample_proportion, Rcpp::List saturated_cov, Rcpp::List saturated_moment_acov);
+RcppExport SEXP _lslx_compute_saturated_moment_acov_moment_cpp(SEXP n_observationSEXP, SEXP sample_proportionSEXP, SEXP saturated_covSEXP, SEXP saturated_moment_acovSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n_observation(n_observationSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type sample_proportion(sample_proportionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_moment_acov(saturated_moment_acovSEXP);
+    compute_saturated_moment_acov_moment_cpp(n_observation, sample_proportion, saturated_cov, saturated_moment_acov);
+    return R_NilValue;
+END_RCPP
+}
 // compute_regularized_path_cpp
 void compute_regularized_path_cpp(Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result, Rcpp::List fitted_result);
 RcppExport SEXP _lslx_compute_regularized_path_cpp(SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP, SEXP fitted_resultSEXP) {
@@ -218,53 +263,11 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_saturated_moment_cpp
-void compute_saturated_moment_cpp(Rcpp::List y_obs, Rcpp::List w, Rcpp::List m_idx, Rcpp::List saturated_mean, Rcpp::List saturated_cov, int iter_other_max, double tol_other);
-RcppExport SEXP _lslx_compute_saturated_moment_cpp(SEXP y_obsSEXP, SEXP wSEXP, SEXP m_idxSEXP, SEXP saturated_meanSEXP, SEXP saturated_covSEXP, SEXP iter_other_maxSEXP, SEXP tol_otherSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type y_obs(y_obsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type w(wSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type m_idx(m_idxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_mean(saturated_meanSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
-    Rcpp::traits::input_parameter< int >::type iter_other_max(iter_other_maxSEXP);
-    Rcpp::traits::input_parameter< double >::type tol_other(tol_otherSEXP);
-    compute_saturated_moment_cpp(y_obs, w, m_idx, saturated_mean, saturated_cov, iter_other_max, tol_other);
-    return R_NilValue;
-END_RCPP
-}
-// compute_saturated_moment_acov_response_cpp
-void compute_saturated_moment_acov_response_cpp(Rcpp::List y_obs, Rcpp::List w, Rcpp::List m_idx, Rcpp::List m2_idx, Rcpp::List saturated_mean, Rcpp::List saturated_cov, Rcpp::List saturated_moment_acov);
-RcppExport SEXP _lslx_compute_saturated_moment_acov_response_cpp(SEXP y_obsSEXP, SEXP wSEXP, SEXP m_idxSEXP, SEXP m2_idxSEXP, SEXP saturated_meanSEXP, SEXP saturated_covSEXP, SEXP saturated_moment_acovSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type y_obs(y_obsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type w(wSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type m_idx(m_idxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type m2_idx(m2_idxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_mean(saturated_meanSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_moment_acov(saturated_moment_acovSEXP);
-    compute_saturated_moment_acov_response_cpp(y_obs, w, m_idx, m2_idx, saturated_mean, saturated_cov, saturated_moment_acov);
-    return R_NilValue;
-END_RCPP
-}
-// compute_saturated_moment_acov_moment_cpp
-void compute_saturated_moment_acov_moment_cpp(int n_observation, Rcpp::List sample_proportion, Rcpp::List saturated_cov, Rcpp::List saturated_moment_acov);
-RcppExport SEXP _lslx_compute_saturated_moment_acov_moment_cpp(SEXP n_observationSEXP, SEXP sample_proportionSEXP, SEXP saturated_covSEXP, SEXP saturated_moment_acovSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n_observation(n_observationSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type sample_proportion(sample_proportionSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_cov(saturated_covSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type saturated_moment_acov(saturated_moment_acovSEXP);
-    compute_saturated_moment_acov_moment_cpp(n_observation, sample_proportion, saturated_cov, saturated_moment_acov);
-    return R_NilValue;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_lslx_compute_saturated_moment_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_cpp, 7},
+    {"_lslx_compute_saturated_moment_acov_response_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_acov_response_cpp, 7},
+    {"_lslx_compute_saturated_moment_acov_moment_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_acov_moment_cpp, 4},
     {"_lslx_compute_regularized_path_cpp", (DL_FUNC) &_lslx_compute_regularized_path_cpp, 5},
     {"_lslx_compute_stepwise_path_cpp", (DL_FUNC) &_lslx_compute_stepwise_path_cpp, 5},
     {"_lslx_compute_coefficient_matrix_cpp", (DL_FUNC) &_lslx_compute_coefficient_matrix_cpp, 5},
@@ -279,9 +282,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lslx_compute_loss_gradient_cpp", (DL_FUNC) &_lslx_compute_loss_gradient_cpp, 5},
     {"_lslx_compute_regularizer_gradient_cpp", (DL_FUNC) &_lslx_compute_regularizer_gradient_cpp, 7},
     {"_lslx_compute_objective_gradient_cpp", (DL_FUNC) &_lslx_compute_objective_gradient_cpp, 7},
-    {"_lslx_compute_saturated_moment_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_cpp, 7},
-    {"_lslx_compute_saturated_moment_acov_response_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_acov_response_cpp, 7},
-    {"_lslx_compute_saturated_moment_acov_moment_cpp", (DL_FUNC) &_lslx_compute_saturated_moment_acov_moment_cpp, 4},
     {NULL, NULL, 0}
 };
 
