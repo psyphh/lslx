@@ -1,9 +1,11 @@
 Meta
 doc
+/src/*.o
+/src/*.o-*
+/src/*.d
+/src/*.so
 .Rproj.user
 .DS_Store
 .RData
 .Rhistory
-.Rbuildignore
-.gitignore
-inst/comparison
+
