@@ -389,15 +389,16 @@ lslxModel$set("private",
                                                  fromLast = TRUE),]
                 if (length(self$ordered_variable) > 0) {
                   relation_gamma <- 
-                    setdiff(x = mapply(
+                    setdiff(x = unlist(mapply(
                       FUN = function(ordered_variable_i, 
                                      nlevel_ordered_i) {
                         paste0(ordered_variable_i,
                                "|",
                                paste0("t", 1:(nlevel_ordered_i - 1)))
-                    },
-                    self$ordered_variable,
-                    self$nlevel_ordered),
+                      },
+                      self$ordered_variable,
+                      self$nlevel_ordered),
+                      use.names = FALSE),
                     y = self$specification$relation)
                 } else {
                   relation_gamma <- character(0)
