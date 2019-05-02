@@ -13,10 +13,10 @@ Depends:
 Imports: stats, 
     Rcpp,
     R6,
-    ggplot2,
-    lavaan
+    ggplot2
 Suggests: knitr,
-    rmarkdown
+    rmarkdown,
+    lavaan
 VignetteBuilder: knitr
 LinkingTo: Rcpp,
     RcppEigen

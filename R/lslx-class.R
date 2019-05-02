@@ -3,6 +3,7 @@
 #' @docType class
 #' @useDynLib lslx
 #' @import stats
+#' @import ggplot2
 #' @importFrom Rcpp sourceCpp
 #' @importFrom R6 R6Class
 #' @keywords NULL
