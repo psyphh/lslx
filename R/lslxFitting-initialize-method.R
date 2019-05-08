@@ -9,11 +9,19 @@ lslxFitting$set("public",
                                              control = control)
                   private$initialize_reduced_model(model = model)
                   private$initialize_reduced_data(data = data)
+                })
+
+## \code{$complete()} complete the initialization. ##
+lslxFitting$set("public",
+                "complete",
+                function() {
                   private$initialize_weight_matrix()
                   private$initialize_supplied_result()
                   private$initialize_grid()
                   private$initialize_fitted_result()
                 })
+
+
 
 ## \code{$initialize_control()} initializes control options. ##
 lslxFitting$set("private",
@@ -22,8 +30,20 @@ lslxFitting$set("private",
                          data,
                          control) {
                   self$control <- control
-                  if (!(self$control$penalty_method %in% c("none", "lasso", "ridge", "elastic_net", "mcp", "forward", "backward"))) {
-                    stop("Argument 'penalty_method' can be only either 'none', 'lasso', 'ridge', 'elastic_net', 'mcp', 'forward', or 'backward'.")
+                  if (!(
+                    self$control$penalty_method %in% c(
+                      "none",
+                      "lasso",
+                      "ridge",
+                      "elastic_net",
+                      "mcp",
+                      "forward",
+                      "backward"
+                    )
+                  )) {
+                    stop(
+                      "Argument 'penalty_method' can be only either 'none', 'lasso', 'ridge', 'elastic_net', 'mcp', 'forward', or 'backward'."
+                    )
                   }
                   if (!is.numeric(self$control$lambda_grid)) {
                     if (!is.character(self$control$lambda_grid)) {
@@ -80,66 +100,87 @@ lslxFitting$set("private",
                     stop("Argument 'start_method' can be only 'default', 'none', 'mh', or 'heuristic'.")
                   }
                   if (!(self$control$lambda_direction %in% c("default", "manual", "decrease", "increase"))) {
-                    stop("Argument 'lambda_direction' can be only 'default', 'manual', 'decrease', or 'increase'.")
+                    stop(
+                      "Argument 'lambda_direction' can be only 'default', 'manual', 'decrease', or 'increase'."
+                    )
                   }
                   if (!is.null(self$control$subset)) {
-                    if (!(is.integer(self$control$subset) | is.logical(self$control$subset))) {
+                    if (!(is.integer(self$control$subset) |
+                          is.logical(self$control$subset))) {
                       stop("Argument 'subset' must be a integer or logical vector.")
                     }
                   }
-                  if (!(is.numeric(self$control$lambda_length) & (self$control$lambda_length > 0))) {
+                  if (!(is.numeric(self$control$lambda_length) &
+                        (self$control$lambda_length > 0))) {
                     stop("Argument 'lambda_length' must be a positive integer.")
                   }
-                  if (!(is.numeric(self$control$delta_length) & (self$control$delta_length > 0))) {
+                  if (!(is.numeric(self$control$delta_length) &
+                        (self$control$delta_length > 0))) {
                     stop("Argument 'delta_length' must be a positive integer.")
                   }
-                  if (!(is.numeric(self$control$threshold_value) & (self$control$threshold_value > 0))) {
+                  if (!(is.numeric(self$control$threshold_value) &
+                        (self$control$threshold_value > 0))) {
                     stop("Argument 'threshold_value' must be a positive value.")
                   }
-                  if (!(is.numeric(self$control$cv_fold) & (self$control$cv_fold > 0))) {
+                  if (!(is.numeric(self$control$cv_fold) &
+                        (self$control$cv_fold > 0))) {
                     stop("Argument 'cv_fold' must be a positive integer.")
                   }
-                  if (!(is.numeric(self$control$iter_out_max) & (length(self$control$iter_out_max) == 1))) {
+                  if (!(is.numeric(self$control$iter_out_max) &
+                        (length(self$control$iter_out_max) == 1))) {
                     stop("Argument 'iter_out_max' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$iter_in_max) & (length(self$control$iter_in_max) == 1))) {
+                  if (!(is.numeric(self$control$iter_in_max) &
+                        (length(self$control$iter_in_max) == 1))) {
                     stop("Argument 'iter_in_max' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$iter_armijo_max) & (length(self$control$iter_armijo_max) == 1))) {
+                  if (!(is.numeric(self$control$iter_armijo_max) &
+                        (length(self$control$iter_armijo_max) == 1))) {
                     stop("Argument 'iter_armijo_max' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$tol_out) & (length(self$control$tol_out) == 1))) {
+                  if (!(is.numeric(self$control$tol_out) &
+                        (length(self$control$tol_out) == 1))) {
                     stop("Argument 'tol_out' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$tol_in) & (length(self$control$tol_in) == 1))) {
+                  if (!(is.numeric(self$control$tol_in) &
+                        (length(self$control$tol_in) == 1))) {
                     stop("Argument 'tol_in' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$step_size) & (length(self$control$step_size) == 1))) {
+                  if (!(is.numeric(self$control$step_size) &
+                        (length(self$control$step_size) == 1))) {
                     stop("Argument 'step_size' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$armijo) & (length(self$control$armijo) == 1))) {
+                  if (!(is.numeric(self$control$armijo) &
+                        (length(self$control$armijo) == 1))) {
                     stop("Argument 'armijo' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$ridge_cov) & (length(self$control$ridge_cov) == 1))) {
+                  if (!(is.numeric(self$control$ridge_cov) &
+                        (length(self$control$ridge_cov) == 1))) {
                     stop("Argument 'ridge_cov' must be a numeric vector with length one.")
                   }
-                  if (!(is.numeric(self$control$ridge_hessian) & (length(self$control$ridge_hessian) == 1))) {
+                  if (!(is.numeric(self$control$ridge_hessian) &
+                        (length(self$control$ridge_hessian) == 1))) {
                     stop("Argument 'ridge_hessian' must be a numeric vector with length one.")
                   }
-                  if (!(is.logical(self$control$warm_start) & (length(self$control$warm_start) == 1))) {
+                  if (!(is.logical(self$control$warm_start) &
+                        (length(self$control$warm_start) == 1))) {
                     stop("Argument 'warm_start' must be a logical vector with length one.")
                   }
-                  if (!(is.logical(self$control$positive_variance) & (length(self$control$positive_variance) == 1))) {
+                  if (!(is.logical(self$control$positive_variance) &
+                        (length(self$control$positive_variance) == 1))) {
                     stop("Argument 'positive_variance' must be a logical vector with length one.")
                   }
-                  if (!(is.numeric(self$control$minimum_variance) & (length(self$control$minimum_variance) == 1))) {
+                  if (!(is.numeric(self$control$minimum_variance) &
+                        (length(self$control$minimum_variance) == 1))) {
                     stop("Argument 'minimum_variance' must be a numeric vector with length one.")
                   }
-                  if (!(is.logical(self$control$enforce_cd) & (length(self$control$minimum_variance) == 1))) {
+                  if (!(is.logical(self$control$enforce_cd) &
+                        (length(self$control$minimum_variance) == 1))) {
                     stop("Argument 'enforce_cd' must be a logical vector with length one.")
                   }
                   if (!is.null(self$control$weight_matrix)) {
-                    if (!is.list(self$control$weight_matrix) & !is.matrix(self$control$weight_matrix)) {
+                    if (!is.list(self$control$weight_matrix) &
+                        !is.matrix(self$control$weight_matrix)) {
                       stop(
                         "Argument 'weight_matrix' must be a 'matrix' (for single group analysis)",
                         " or a 'list' of 'matrix' (for multiple group analysis)."
@@ -159,38 +200,45 @@ lslxFitting$set("private",
                         "."
                       )
                     }
-                    if (length(dim(self$control$weight_matrix[[1]])) != 2 | 
+                    if (length(dim(self$control$weight_matrix[[1]])) != 2 |
                         !is.numeric(self$control$weight_matrix[[1]])) {
                       stop("Some element in 'weight_matrix' is not a matrix.")
                     }
-                    n_moment <- length(model$name_response) * (length(model$name_response) + 3) / 2
+                    n_moment <-
+                      length(model$name_response) * (length(model$name_response) + 3) / 2
                     if (!all(dim(self$control$weight_matrix[[1]]) == c(n_moment, n_moment))) {
-                      stop("The dimension of some element in 'weight_matrix' is not correct.",
-                           "\n  The correct dimension is ", n_moment, " by ", n_moment, ".")
+                      stop(
+                        "The dimension of some element in 'weight_matrix' is not correct.",
+                        "\n  The correct dimension is ",
+                        n_moment,
+                        " by ",
+                        n_moment,
+                        "."
+                      )
                     }
                   }
                   if (length(model$name_factor) == 0) {
                     if (!(c("y<-y") %in% model$specification$block)) {
-                      self$control$model_class <- "ca" 
+                      self$control$model_class <- "ca"
                     } else {
-                      self$control$model_class <- "pa" 
+                      self$control$model_class <- "pa"
                     }
                   } else {
                     if (!any(c("f<-f", "f<-y", "y<-y", "y<->f", "f<->y") %in% model$specification$block)) {
                       if ("y<-f" %in% model$specification$block) {
                         if (all(model$specification$type[model$specification$block == "y<-f"] == "pen")) {
-                          self$control$model_class <- "efa" 
+                          self$control$model_class <- "efa"
                         } else {
-                          self$control$model_class <- "fa" 
+                          self$control$model_class <- "fa"
                         }
                       } else {
-                        self$control$model_class <- "sem" 
+                        self$control$model_class <- "sem"
                       }
                     } else {
                       if (!any(c("f<-f", "y<->f", "f<->y") %in% model$specification$block)) {
-                        self$control$model_class <- "mimic" 
+                        self$control$model_class <- "mimic"
                       } else {
-                        self$control$model_class <- "sem" 
+                        self$control$model_class <- "sem"
                       }
                     }
                   }
@@ -204,6 +252,11 @@ lslxFitting$set("private",
                   } else {
                     self$control$auxiliary <- FALSE
                   }
+                  if (length(model$ordered_variable) == 0) {
+                    self$control$continuous <- TRUE
+                  } else {
+                    self$control$continuous <- FALSE
+                  }
                   if (self$control$penalty_method %in% c("lasso", "ridge", "elastic_net", "mcp")) {
                     self$control$regularizer <- TRUE
                   } else {
@@ -214,7 +267,7 @@ lslxFitting$set("private",
                   } else {
                     self$control$searcher <- FALSE
                   }
-                  if (self$control$penalty_method == "none" & 
+                  if (self$control$penalty_method == "none" &
                       any(model$specification$type == "pen")) {
                     stop(
                       "When the specified model includes penalized coefficients, 'penalty_method' cannot be 'none'."
@@ -235,7 +288,8 @@ lslxFitting$set("private",
                           "When 'penalty_method' is set as 'lasso' or 'ridge', 'delta_grid' must be set as 'default'."
                         )
                       } else if (self$control$penalty_method == "elastic_net") {
-                        if (any(self$control$delta_grid < 0) | any(self$control$delta_grid > 1)) {
+                        if (any(self$control$delta_grid < 0) |
+                            any(self$control$delta_grid > 1)) {
                           stop(
                             "When 'penalty_method' is set as 'elastic_net', any element in 'delta_grid' must be in [0, 1]."
                           )
@@ -246,7 +300,8 @@ lslxFitting$set("private",
                             "When 'penalty_method' is set as 'mcp', any element in 'delta_grid' must be positive."
                           )
                         }
-                      } else {}
+                      } else {
+                      }
                     }
                   } else {
                     self$control$regularizer_type <- "none"
@@ -266,7 +321,7 @@ lslxFitting$set("private",
                       )
                     }
                   }
-
+                  
                   if (self$control$searcher) {
                     self$control$searcher_type <- self$control$penalty_method
                   } else {
@@ -279,7 +334,11 @@ lslxFitting$set("private",
                   }
                   
                   if (self$control$loss == "default") {
-                    self$control$loss <- "ml"
+                    if (self$control$continuous) {
+                      self$control$loss <- "ml"
+                    } else {
+                      self$control$loss <- "dwls"
+                    }
                   }
                   if (!is.null(self$control$weight_matrix)) {
                     if (self$control$loss != "wls") {
@@ -290,8 +349,12 @@ lslxFitting$set("private",
                     self$control$algorithm <- "fisher"
                   }
                   if (self$control$missing_method == "default") {
-                    if (self$control$response) {
-                      self$control$missing_method <- "two_stage"
+                    if (self$control$continuous) {
+                      if (self$control$response) {
+                        self$control$missing_method <- "two_stage"
+                      } else {
+                        self$control$missing_method <- "listwise_deletion"
+                      }
                     } else {
                       self$control$missing_method <- "listwise_deletion"
                     }
@@ -299,27 +362,24 @@ lslxFitting$set("private",
                   if (self$control$start_method == "default") {
                     self$control$start_method <- "mh"
                   }
-                  if (self$control$regularizer & (!self$control$enforce_cd)) {
-                    stop(
-                      "If any regularizer is specified, 'enforce_cd' must be set as TRUE."
-                    )
+                  if (self$control$regularizer &
+                      (!self$control$enforce_cd)) {
+                    stop("When any regularizer is specified, 'enforce_cd' must be set as TRUE.")
                   }
                   if (!is.null(self$control$subset)) {
                     if (self$control$response) {
                       if (is.logical(self$control$subset)) {
                         self$control$subset <- which(self$control$subset)
-                      } 
+                      }
                     } else {
-                      stop(
-                        "When only moment data is available, 'subset' must be set as NULL."
-                      )
+                      stop("When only moment data is available, 'subset' must be set as NULL.")
                     }
                   } else {
                     if (self$control$response) {
-                      self$control$subset <- 
+                      self$control$subset <-
                         1:sum(sapply(data$response, FUN = nrow))
                     } else {
-                      self$control$subset <- 
+                      self$control$subset <-
                         1:sum(unlist(data$sample_size))
                     }
                   }
@@ -430,9 +490,9 @@ lslxFitting$set("private",
                         )
                       )
                     )
-                  self$reduced_model$n_theta_is_free <- 
+                  self$reduced_model$n_theta_is_free <-
                     sum(self$reduced_model$theta_is_free)
-                  self$reduced_model$n_theta_is_pen <- 
+                  self$reduced_model$n_theta_is_pen <-
                     sum(self$reduced_model$theta_is_pen)
                 })
 
@@ -447,18 +507,22 @@ lslxFitting$set("private",
                       n_complete_observation = integer(),
                       n_missing_pattern = integer(),
                       sample_proportion = list(),
-                      saturated_cov = list(),
+                      saturated_threshold = list(),
                       saturated_mean = list(),
+                      saturated_cov = list(),
+                      saturated_moment = list(),
                       saturated_moment_acov = list()
                     )
                   if (self$control$response) {
                     idc_subset <-
-                      lapply(data$response, 
-                             FUN = function(response_i) {
-                               idc_subset_i <- 
-                                 (row.names(response_i) %in% self$control$subset)
-                               return(idc_subset_i)
-                             })
+                      lapply(
+                        data$response,
+                        FUN = function(response_i) {
+                          idc_subset_i <-
+                            (row.names(response_i) %in% self$control$subset)
+                          return(idc_subset_i)
+                        }
+                      )
                     idc_complete <-
                       lapply(
                         X = data$pattern,
@@ -470,83 +534,18 @@ lslxFitting$set("private",
                           return(as.logical(idc_complete_i))
                         }
                       )
-                    if (self$control$missing_method == "two_stage") {
+                    if (self$control$missing_method %in% c("two_stage")) {
                       idc_use <-
                         mapply(
                           FUN = function(pattern_i,
                                          idc_subset_i) {
-                            idc_use_i <- 
-                              ((rowSums(pattern_i) > 0) & idc_subset_i)
+                            idc_use_i <-
+                              ((rowSums(pattern_i) > 0) &
+                                 idc_subset_i)
                             return(idc_use_i)
                           },
                           data$pattern,
                           idc_subset,
-                          SIMPLIFY = FALSE,
-                          USE.NAMES = TRUE
-                        )
-                      if (self$control$auxiliary) {
-                        response <-
-                          mapply(
-                            FUN = function(response_i,
-                                           auxiliary_i,
-                                           idc_use_i) {
-                              return(cbind(response_i[idc_use_i, , drop = FALSE],
-                                           auxiliary_i[idc_use_i, , drop = FALSE]))
-                            },
-                            data$response,
-                            data$auxiliary,
-                            idc_use,
-                            SIMPLIFY = FALSE,
-                            USE.NAMES = TRUE
-                          )
-                        pattern <-
-                          mapply(
-                            FUN = function(pattern_i,
-                                           auxiliary_i,
-                                           idc_use_i) {
-                              return(cbind(pattern_i[idc_use_i, , drop = FALSE], 
-                                           !is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
-                            },
-                            data$pattern,
-                            data$auxiliary,
-                            idc_use,
-                            SIMPLIFY = FALSE,
-                            USE.NAMES = TRUE
-                          )
-                      } else {
-                        response <-
-                          mapply(
-                            FUN = function(response_i,
-                                           idc_use_i) {
-                              return(response_i[idc_use_i, , drop = FALSE])
-                            },
-                            data$response,
-                            idc_use,
-                            SIMPLIFY = FALSE,
-                            USE.NAMES = TRUE
-                          )
-                        pattern <-
-                          mapply(
-                            FUN = function(pattern_i,
-                                           idc_use_i) {
-                              return(pattern_i[idc_use_i, , drop = FALSE])
-                            },
-                            data$pattern,
-                            idc_use,
-                            SIMPLIFY = FALSE,
-                            USE.NAMES = TRUE
-                          )
-                      }
-                      weight <-
-                        mapply(
-                          FUN = function(weight_i,
-                                         idc_use_i) {
-                            weight_i <- weight_i[idc_use_i,]
-                            weight_i <- weight_i / sum(weight_i)
-                            return(weight_i)
-                          },
-                          data$weight,
-                          idc_use,
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
@@ -563,6 +562,38 @@ lslxFitting$set("private",
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
+                    } else {
+                    }
+                    if (self$control$auxiliary &
+                        self$control$missing_method == "two_stage") {
+                      response <-
+                        mapply(
+                          FUN = function(response_i,
+                                         auxiliary_i,
+                                         idc_use_i) {
+                            return(cbind(response_i[idc_use_i, , drop = FALSE],
+                                         auxiliary_i[idc_use_i, , drop = FALSE]))
+                          },
+                          data$response,
+                          data$auxiliary,
+                          idc_use,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
+                      pattern <-
+                        mapply(
+                          FUN = function(pattern_i,
+                                         auxiliary_i,
+                                         idc_use_i) {
+                            return(cbind(pattern_i[idc_use_i, , drop = FALSE],!is.na(auxiliary_i[idc_use_i, , drop = FALSE])))
+                          },
+                          data$pattern,
+                          data$auxiliary,
+                          idc_use,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
+                    } else {
                       response <-
                         mapply(
                           FUN = function(response_i,
@@ -585,22 +616,20 @@ lslxFitting$set("private",
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
-                      weight <-
-                        mapply(
-                          FUN = function(weight_i,
-                                         idc_use_i) {
-                            weight_i <- weight_i[idc_use_i,]
-                            weight_i <- weight_i / sum(weight_i)
-                            return(weight_i)
-                          },
-                          data$weight,
-                          idc_use,
-                          SIMPLIFY = FALSE,
-                          USE.NAMES = TRUE
-                        )
-                    } else {
-                      
                     }
+                    weight <-
+                      mapply(
+                        FUN = function(weight_i,
+                                       idc_use_i) {
+                          weight_i <- weight_i[idc_use_i, ]
+                          weight_i <- weight_i / sum(weight_i)
+                          return(weight_i)
+                        },
+                        data$weight,
+                        idc_use,
+                        SIMPLIFY = FALSE,
+                        USE.NAMES = TRUE
+                      )
                     self$reduced_data$n_observation <-
                       sum(sapply(X = response, FUN = nrow))
                     self$reduced_data$n_complete_observation <-
@@ -614,17 +643,6 @@ lslxFitting$set("private",
                           return(sample_proportion_i)
                         }
                       )
-                    self$reduced_data$saturated_mean <-
-                      lapply(
-                        X = response,
-                        FUN = function(response_i) {
-                          as.matrix(colMeans(response_i, na.rm = TRUE))
-                        }
-                      )
-                    self$reduced_data$saturated_cov <-
-                      lapply(X = response,
-                             FUN = cov,
-                             use = "pairwise.complete.obs")
                     m_factor <-
                       lapply(
                         X = pattern,
@@ -639,111 +657,205 @@ lslxFitting$set("private",
                           ))
                         }
                       )
-                    m_idx <-
-                      lapply(
-                        X = m_factor,
-                        FUN = function(m_factor_i) {
-                          m_idx_i <-
-                            lapply(
-                              X = strsplit(levels(m_factor_i),
-                                           split = "/"),
-                              FUN = function(x) {
-                                return(as.integer(which(as.logical(x))) - 1)
-                              }
-                            )
-                          names(m_idx_i) <- levels(m_factor_i)
-                          return(m_idx_i)
-                        }
-                      )
-                    y_obs <-
-                      mapply(
-                        FUN = function(response_i,
-                                       m_factor_i,
-                                       m_idx_i) {
-                          y_i <- split(response_i, m_factor_i)
-                          mapply(
-                            FUN = function(y_ij,
-                                           m_idx_ij) {
-                              y_obs_ij <- as.matrix(y_ij[, (m_idx_ij + 1) , drop = FALSE])
-                              storage.mode(y_obs_ij) <- "double"
-                              return(y_obs_ij)
-                            },
-                            y_i,
-                            m_idx_i,
-                            SIMPLIFY = FALSE,
-                            USE.NAMES = TRUE
-                          )
-                        },
-                        response,
-                        m_factor,
-                        m_idx,
-                        SIMPLIFY = FALSE,
-                        USE.NAMES = TRUE
-                      )
-                    w <-
-                      mapply(
-                        FUN = function(weight_i,
-                                       m_factor_i) {
-                          split(weight_i, m_factor_i)
-                        },
-                        weight,
-                        m_factor,
-                        SIMPLIFY = FALSE,
-                        USE.NAMES = TRUE
-                      )
-                    
-                    compute_saturated_moment_cpp(
-                      y_obs = y_obs,
-                      w = w,
-                      m_idx = m_idx,
-                      saturated_mean = self$reduced_data$saturated_mean,
-                      saturated_cov = self$reduced_data$saturated_cov,
-                      iter_other_max = self$control$iter_other_max,
-                      tol_other = self$control$tol_other
-                    )
-                    m2_idx <-
-                      lapply(
-                        X = m_factor,
-                        FUN = function(m_factor_i) {
-                          m2_idx_i <-
-                            lapply(
-                              X = strsplit(levels(m_factor_i),
-                                           split = "/"),
-                              FUN = function(x) {
-                                m2_idx_i <- tcrossprod(as.matrix(as.logical(x)))
-                                m2_idx_i <-
-                                  as.logical(m2_idx_i[lower.tri(m2_idx_i, diag = TRUE)])
-                                return(as.integer(which(m2_idx_i)) - 1)
-                              }
-                            )
-                          names(m2_idx_i) <- levels(m_factor_i)
-                          return(m2_idx_i)
-                        }
-                      )
-                    self$reduced_data$saturated_moment_acov <-
-                      lapply(
-                        X = self$reduced_data$saturated_cov,
-                        FUN = function(saturated_cov_i) {
-                          
-                        }
-                      )
-                    compute_saturated_moment_acov_response_cpp(
-                      y_obs = y_obs,
-                      w = w,
-                      m_idx = m_idx,
-                      m2_idx = m2_idx,
-                      saturated_mean = self$reduced_data$saturated_mean,
-                      saturated_cov = self$reduced_data$saturated_cov,
-                      saturated_moment_acov = self$reduced_data$saturated_moment_acov
-                    )
                     self$reduced_data$n_missing_pattern <-
                       nlevels(unlist(m_factor))
-                  } else {
-                    if (self$control$missing_method == "two_stage") {
-                      stop(
-                        "Argument 'missing_method' cannot be 'two_stage' when only moment data is available."
+                    
+                    if (self$control$continuous) {
+                      self$reduced_data$saturated_mean <-
+                        lapply(
+                          X = response,
+                          FUN = function(response_i) {
+                            as.matrix(colMeans(response_i, na.rm = TRUE))
+                          }
+                        )
+                      self$reduced_data$saturated_cov <-
+                        lapply(X = response,
+                               FUN = cov,
+                               use = "pairwise.complete.obs")
+                      m_idx <-
+                        lapply(
+                          X = m_factor,
+                          FUN = function(m_factor_i) {
+                            m_idx_i <-
+                              lapply(
+                                X = strsplit(levels(m_factor_i),
+                                             split = "/"),
+                                FUN = function(x) {
+                                  return(as.integer(which(as.logical(x))) - 1)
+                                }
+                              )
+                            names(m_idx_i) <- levels(m_factor_i)
+                            return(m_idx_i)
+                          }
+                        )
+                      m2_idx <-
+                        lapply(
+                          X = m_factor,
+                          FUN = function(m_factor_i) {
+                            m2_idx_i <-
+                              lapply(
+                                X = strsplit(levels(m_factor_i),
+                                             split = "/"),
+                                FUN = function(x) {
+                                  m2_idx_i <- tcrossprod(as.matrix(as.logical(x)))
+                                  m2_idx_i <-
+                                    as.logical(m2_idx_i[lower.tri(m2_idx_i, diag = TRUE)])
+                                  return(as.integer(which(m2_idx_i)) - 1)
+                                }
+                              )
+                            names(m2_idx_i) <- levels(m_factor_i)
+                            return(m2_idx_i)
+                          }
+                        )
+                      y_obs <-
+                        mapply(
+                          FUN = function(response_i,
+                                         m_factor_i,
+                                         m_idx_i) {
+                            y_i <- split(response_i, m_factor_i)
+                            mapply(
+                              FUN = function(y_ij,
+                                             m_idx_ij) {
+                                y_obs_ij <- as.matrix(y_ij[, (m_idx_ij + 1) , drop = FALSE])
+                                storage.mode(y_obs_ij) <- "double"
+                                return(y_obs_ij)
+                              },
+                              y_i,
+                              m_idx_i,
+                              SIMPLIFY = FALSE,
+                              USE.NAMES = TRUE
+                            )
+                          },
+                          response,
+                          m_factor,
+                          m_idx,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
+                      w <-
+                        mapply(
+                          FUN = function(weight_i,
+                                         m_factor_i) {
+                            split(weight_i, m_factor_i)
+                          },
+                          weight,
+                          m_factor,
+                          SIMPLIFY = FALSE,
+                          USE.NAMES = TRUE
+                        )
+                      compute_saturated_moment_cpp(
+                        y_obs = y_obs,
+                        w = w,
+                        m_idx = m_idx,
+                        saturated_mean = self$reduced_data$saturated_mean,
+                        saturated_cov = self$reduced_data$saturated_cov,
+                        iter_other_max = self$control$iter_other_max,
+                        tol_other = self$control$tol_other
                       )
+                      self$reduced_data$saturated_moment_acov <-
+                        lapply(
+                          X = self$reduced_data$saturated_cov,
+                          FUN = function(saturated_cov_i) {
+                            
+                          }
+                        )
+                      compute_saturated_moment_acov_response_cpp(
+                        y_obs = y_obs,
+                        w = w,
+                        m_idx = m_idx,
+                        m2_idx = m2_idx,
+                        saturated_mean = self$reduced_data$saturated_mean,
+                        saturated_cov = self$reduced_data$saturated_cov,
+                        saturated_moment_acov = self$reduced_data$saturated_moment_acov
+                      )
+                    } else {
+                      if (self$control$missing_method == "two_stage") {
+                        stop(
+                          "When some response variable is ordered, 'two_stage' method for missingness is not available."
+                        )
+                      } else {
+                        level_group <- as.list(names(response))
+                        names(level_group) <- level_group
+                        lav_data <-
+                          mapply(
+                            FUN = function(response_i,
+                                           level_group_i) {
+                              response_i$.group <- level_group_i
+                              return(as.data.frame(response_i))
+                            },
+                            response,
+                            level_group,
+                            SIMPLIFY = FALSE
+                          )
+                        if (length(response) > 1) {
+                          lav_data <- do.call(rbind.data.frame, lav_data)
+                        } else {
+                          lav_data <- lav_data[[1]]
+                        }
+                        lav_fit <- lavaan::lavCor(
+                          lav_data,
+                          meanstructure = TRUE,
+                          group = ".group",
+                          missing = "listwise",
+                          se = "robust.huber.white",
+                          output = "fit"
+                        )
+                        saturated_moment <- lavaan::fitted(lav_fit)
+                        if (length(response) > 1) {
+                          saturated_moment <- saturated_moment[names(response)]
+                        } else {
+                          saturated_moment <- list(saturated_moment)
+                          names(saturated_moment) <- names(response)
+                        }
+                        self$reduced_data$saturated_threshold <-
+                          lapply(
+                            X = saturated_moment,
+                            FUN = function(saturated_moment_i) {
+                              return(saturated_moment_i$th[])
+                            }
+                          )
+                        self$reduced_data$saturated_mean <-
+                          lapply(
+                            X = saturated_moment,
+                            FUN = function(saturated_moment_i) {
+                              return(as.matrix(saturated_moment_i$mean[]))
+                            }
+                          )
+                        self$reduced_data$saturated_cov <-
+                          lapply(
+                            X = saturated_moment,
+                            FUN = function(saturated_moment_i) {
+                              return(as.matrix(saturated_moment_i$cov[]))
+                            }
+                          )
+                        self$reduced_data$saturated_moment_acov <-
+                          lav_fit@SampleStats@NACOV
+                        if (length(response) > 1) {
+                          names(self$reduced_data$saturated_moment_acov) <-
+                            lav_fit@Data@group.label
+                          self$reduced_data$saturated_moment_acov <-
+                            self$reduced_data$saturated_moment_acov[names(self$reduced_data$saturated_cov)]
+                        } else {
+                          names(self$reduced_data$saturated_moment_acov) <-
+                            names(self$reduced_data$saturated_cov)
+                        }
+                        self$reduced_data$saturated_moment_acov <-
+                          mapply(
+                            FUN = function(saturated_moment_acov_i,
+                                           sample_proportion_i,
+                                           n_observation_i) {
+                              saturated_moment_acov_i <-
+                                saturated_moment_acov_i /
+                                (sample_proportion_i * n_observation_i)
+                            },
+                            self$reduced_data$saturated_moment_acov,
+                            self$reduced_data$sample_proportion,
+                            self$reduced_data$n_observation,
+                            SIMPLIFY = FALSE
+                          )
+                      }
                     }
+                  } else {
                     self$reduced_data$n_observation <-
                       sum(unlist(data$sample_size))
                     self$reduced_data$n_complete_observation <-
@@ -757,6 +869,15 @@ lslxFitting$set("private",
                           return(sample_proportion_i)
                         }
                       )
+                    self$reduced_data$n_missing_pattern <- 1
+                    self$reduced_data$saturated_mean <-
+                      lapply(
+                        X = data$sample_mean,
+                        FUN = function(sample_mean_i) {
+                          sample_mean_i <- as.matrix(sample_mean_i)
+                          return(sample_mean_i)
+                        }
+                      )
                     self$reduced_data$saturated_cov <-
                       lapply(
                         X = data$sample_cov,
@@ -766,15 +887,8 @@ lslxFitting$set("private",
                           return(sample_cov_i)
                         }
                       )
-                    self$reduced_data$saturated_mean <-
-                      lapply(
-                        X = data$sample_mean,
-                        FUN = function(sample_mean_i) {
-                          sample_mean_i <- as.matrix(sample_mean_i)
-                          return(sample_mean_i)
-                        }
-                      )
-                    self$reduced_data$saturated_moment_acov <- data$sample_moment_acov
+                    self$reduced_data$saturated_moment_acov <-
+                      data$sample_moment_acov
                     if (length(self$reduced_data$saturated_moment_acov) > 0) {
                       self$reduced_data$saturated_moment_acov <-
                         lapply(
@@ -790,9 +904,9 @@ lslxFitting$set("private",
                         saturated_moment_acov = self$reduced_data$saturated_moment_acov
                       )
                     }
-                    self$reduced_data$n_missing_pattern <- 1
                   }
-                  if (self$control$auxiliary) {
+                  if (self$control$auxiliary &
+                      self$control$missing_method == "two_stage") {
                     y_name <-
                       c(colnames(data$response[[1]]), colnames(data$auxiliary[[1]]))
                   } else {
@@ -802,15 +916,14 @@ lslxFitting$set("private",
                       y_name <- colnames(data$sample_cov[[1]])
                     }
                   }
-                  y2_name <- outer(
+                  mean_name <- paste0(y_name, "<-1")
+                  cov_name <- outer(
                     y_name,
                     y_name,
                     FUN = function(y_name_i, y_name_j) {
-                      return(paste(y_name_i, y_name_j, sep = "*"))
+                      return(paste(y_name_i, y_name_j, sep = "<->"))
                     }
                   )
-                  y2_name <-
-                    y2_name[lower.tri(y2_name, diag = TRUE)]
                   self$reduced_data$saturated_mean <-
                     lapply(
                       X = self$reduced_data$saturated_mean,
@@ -830,52 +943,122 @@ lslxFitting$set("private",
                         return(saturated_cov_i)
                       }
                     )
-                  self$reduced_data$saturated_moment_acov <-
-                    lapply(
-                      X = self$reduced_data$saturated_moment_acov,
-                      FUN = function(saturated_moment_acov_i) {
-                        rownames(saturated_moment_acov_i) <-
-                          c(y_name, y2_name)
-                        colnames(saturated_moment_acov_i) <-
-                          c(y_name, y2_name)
-                        return(saturated_moment_acov_i)
-                      }
-                    )
-                  if (self$control$auxiliary) {
-                    y_name <- colnames(data$response[[1]])
-                    y2_name <- outer(
-                      y_name,
-                      y_name,
-                      FUN = function(y_name_i, y_name_j) {
-                        return(paste(y_name_i, y_name_j, sep = "*"))
-                      }
-                    )
-                    y2_name <-
-                      y2_name[lower.tri(y2_name, diag = TRUE)]
-                    self$reduced_data$saturated_mean <-
-                      lapply(
-                        X = self$reduced_data$saturated_mean,
-                        FUN = function(saturated_mean_i) {
-                          return(saturated_mean_i[y_name, , drop = FALSE])
-                        }
-                      )
-                    self$reduced_data$saturated_cov <-
-                      lapply(
-                        X = self$reduced_data$saturated_cov,
-                        FUN = function(saturated_cov_i) {
-                          return(saturated_cov_i[y_name, y_name, drop = FALSE])
-                        }
-                      )
+                  if (self$control$continuous) {
+                    cov_name <-
+                      cov_name[lower.tri(cov_name, diag = TRUE)]
+                    moment_name <- c(mean_name, cov_name)
                     self$reduced_data$saturated_moment_acov <-
                       lapply(
                         X = self$reduced_data$saturated_moment_acov,
                         FUN = function(saturated_moment_acov_i) {
-                          return(saturated_moment_acov_i[c(y_name, y2_name),
-                                                         c(y_name, y2_name),
-                                                         drop = FALSE])
+                          rownames(saturated_moment_acov_i) <-
+                            moment_name
+                          colnames(saturated_moment_acov_i) <-
+                            moment_name
+                          return(saturated_moment_acov_i)
                         }
                       )
-                  } else {}
+                    if (self$control$auxiliary &
+                        self$control$missing_method == "two_stage") {
+                      y_name <- colnames(data$response[[1]])
+                      mean_name <- paste0(y_name, "<-1")
+                      cov_name <- outer(
+                        y_name,
+                        y_name,
+                        FUN = function(y_name_i, y_name_j) {
+                          return(paste(y_name_i, y_name_j, sep = "<->"))
+                        }
+                      )
+                      cov_name <-
+                        cov_name[lower.tri(cov_name, diag = TRUE)]
+                      moment_name <- c(mean_name, cov_name)
+                      self$reduced_data$saturated_mean <-
+                        lapply(
+                          X = self$reduced_data$saturated_mean,
+                          FUN = function(saturated_mean_i) {
+                            return(saturated_mean_i[y_name, , drop = FALSE])
+                          }
+                        )
+                      self$reduced_data$saturated_cov <-
+                        lapply(
+                          X = self$reduced_data$saturated_cov,
+                          FUN = function(saturated_cov_i) {
+                            return(saturated_cov_i[y_name, y_name, drop = FALSE])
+                          }
+                        )
+                      self$reduced_data$saturated_moment_acov <-
+                        lapply(
+                          X = self$reduced_data$saturated_moment_acov,
+                          FUN = function(saturated_moment_acov_i) {
+                            return(saturated_moment_acov_i[moment_name,
+                                                           moment_name,
+                                                           drop = FALSE])
+                          }
+                        )
+                    } 
+                  } else {
+                    cov_name <-
+                      cov_name[lower.tri(cov_name, diag = FALSE)]
+                    self$reduced_data$saturated_moment <-
+                      mapply(
+                        FUN = function(saturated_threshold_i,
+                                       saturated_mean_i,
+                                       saturated_cov_i) {
+                          rownames(saturated_mean_i) <- mean_name
+                          if (length(data$numeric_variable) > 0) {
+                            saturated_threshold_i <- 
+                              split(
+                                c(saturated_threshold_i, 
+                                  saturated_mean_i[match(data$numeric_variable,
+                                                         data$name_response), 1]),
+                                unlist(lapply(
+                                  X = strsplit(names(c(saturated_threshold_i, 
+                                                       saturated_mean_i[match(data$numeric_variable,
+                                                                              data$name_response), 1])), "\\||<-"),
+                                  FUN = function(x) {
+                                    "["(x, 1)
+                                  }
+                                ))
+                              )[data$name_response]
+                            names(saturated_threshold_i) <- NULL
+                            saturated_threshold_i <- unlist(saturated_threshold_i)
+                            saturated_var_i <-
+                              diag(saturated_cov_i)[match(data$numeric_variable,
+                                                          data$name_response)]
+                            names(saturated_var_i) <-
+                              paste0(data$numeric_variable,
+                                     "<->",
+                                     data$numeric_variable)
+                          } else {
+                            saturated_var_i <- numeric(0)
+                          }
+                          saturated_cov_i <-
+                            saturated_cov_i[lower.tri(saturated_cov_i, diag = FALSE)]
+                          names(saturated_cov_i) <- cov_name
+                          saturated_moment_i <- 
+                            c(saturated_threshold_i, saturated_var_i, saturated_cov_i)
+                          return(saturated_moment_i)
+                        },
+                        self$reduced_data$saturated_threshold,
+                        self$reduced_data$saturated_mean,
+                        self$reduced_data$saturated_cov,
+                        SIMPLIFY = FALSE
+                      )
+                    moment_name <- 
+                      names(self$reduced_data$saturated_moment[[1]])
+                    self$reduced_data$saturated_moment_acov <-
+                      lapply(
+                        X = self$reduced_data$saturated_moment_acov,
+                        FUN = function(saturated_moment_acov_i) {
+                          rownames(saturated_moment_acov_i) <- 
+                            moment_name
+                          colnames(saturated_moment_acov_i) <- 
+                            moment_name
+                          return(saturated_moment_acov_i)
+                        }
+                      )
+                  }
+                  
                 })
 
 
@@ -890,15 +1073,16 @@ lslxFitting$set("private",
                           FUN = function(saturated_moment_acov_i,
                                          sample_proportion_i) {
                             if (self$control$loss == "uls") {
-                              weight_matrix_i <- 
+                              weight_matrix_i <-
                                 sample_proportion_i * diag(dim(saturated_moment_acov_i)[1])
                             } else if (self$control$loss == "dwls") {
                               weight_matrix_i <-
                                 diag(1 / diag(saturated_moment_acov_i)) / self$reduced_data$n_observation
                             } else if (self$control$loss == "wls") {
-                              weight_matrix_i <- 
+                              weight_matrix_i <-
                                 solve(saturated_moment_acov_i) / self$reduced_data$n_observation
-                            } else {}
+                            } else {
+                            }
                             return(weight_matrix_i)
                           },
                           self$reduced_data$saturated_moment_acov,
@@ -906,7 +1090,8 @@ lslxFitting$set("private",
                           SIMPLIFY = FALSE,
                           USE.NAMES = TRUE
                         )
-                    } else {}
+                    } else {
+                    }
                     self$control$weight_matrix <-
                       lapply(
                         X = self$control$weight_matrix,
@@ -964,7 +1149,7 @@ lslxFitting$set("private",
                           USE.NAMES = TRUE
                         )
                       )
-                    if (self$control$model_class == "efa" ) {
+                    if (self$control$model_class == "efa") {
                       idc_beta <-
                         (self$reduced_model$theta_matrix_idx == 2 &
                            self$reduced_model$theta_is_pen)
@@ -1025,12 +1210,13 @@ lslxFitting$set("private",
                         cor_pool
                       if (self$control$model_class == "efa") {
                         cor_pool_eigen <- eigen(cor_pool)
-                        cov_eta_yf <- 
+                        cov_eta_yf <-
                           cor_pool_eigen$vectors[, 1:self$reduced_model$n_factor, drop = FALSE] %*%
                           diag(sqrt(cor_pool_eigen$values[1:self$reduced_model$n_factor]))
-                        cov_eta_yf <- promax(cov_eta_yf, m = 4)$loadings[]
-                        cov_eta[1:self$reduced_model$n_response, 
-                                   (self$reduced_model$n_response + 1):self$reduced_model$n_eta] <-
+                        cov_eta_yf <-
+                          promax(cov_eta_yf, m = 4)$loadings[]
+                        cov_eta[1:self$reduced_model$n_response,
+                                (self$reduced_model$n_response + 1):self$reduced_model$n_eta] <-
                           cov_eta_yf
                         cov_eta[(self$reduced_model$n_response + 1):self$reduced_model$n_eta,
                                 1:self$reduced_model$n_response] <-
@@ -1202,9 +1388,8 @@ lslxFitting$set("private",
                         self$supplied_result$fitted_start[idc_i0] <-
                           ifelse(
                             is.na(self$reduced_model$theta_start[idc_i0]),
-                            coefficient_matrix_start[[i]][
-                              cbind(self$reduced_model$theta_left_idx[idc_i0],
-                                    self$reduced_model$theta_right_idx[idc_i0])],
+                            coefficient_matrix_start[[i]][cbind(self$reduced_model$theta_left_idx[idc_i0],
+                                                                self$reduced_model$theta_right_idx[idc_i0])],
                             self$reduced_model$theta_start[idc_i0]
                           )
                         for (j in setdiff(unique(self$reduced_model$theta_group_idx), 0)) {
@@ -1226,9 +1411,9 @@ lslxFitting$set("private",
                           self$supplied_result$fitted_start[idc_ij] <-
                             ifelse(
                               is.na(self$reduced_model$theta_start[idc_ij]),
-                              coefficient_matrix_start[[i]][
-                                cbind(self$reduced_model$theta_left_idx[idc_ij],
-                                      self$reduced_model$theta_right_idx[idc_ij]
+                              coefficient_matrix_start[[i]][cbind(
+                                self$reduced_model$theta_left_idx[idc_ij],
+                                self$reduced_model$theta_right_idx[idc_ij]
                               )],
                               self$reduced_model$theta_start[idc_ij]
                             )
@@ -1243,17 +1428,19 @@ lslxFitting$set("private",
                       ifelse(
                         !is.na(self$reduced_model$theta_start),
                         self$reduced_model$theta_start,
-                        ifelse(self$reduced_model$theta_matrix_idx == 2,
-                               ifelse(self$reduced_model$theta_is_free,
-                                      0.5, 0),
-                               ifelse((self$reduced_model$theta_matrix_idx == 3) &
-                                        (
-                                          self$reduced_model$theta_left_idx ==
-                                            self$reduced_model$theta_right_idx
-                                        ),
-                                      .1,
-                                      0
-                               ))
+                        ifelse(
+                          self$reduced_model$theta_matrix_idx == 2,
+                          ifelse(self$reduced_model$theta_is_free,
+                                 0.5, 0),
+                          ifelse((self$reduced_model$theta_matrix_idx == 3) &
+                                   (
+                                     self$reduced_model$theta_left_idx ==
+                                       self$reduced_model$theta_right_idx
+                                   ),
+                                 .1,
+                                 0
+                          )
+                        )
                       )
                     if (any(self$reduced_model$theta_group_idx == 0)) {
                       self$supplied_result$fitted_start <-
@@ -1306,11 +1493,11 @@ lslxFitting$set("private",
                                                 saturated_cov_i,
                                                 weight_matrix_i) {
                                    model_residual_i <-
-                                     as.matrix(c(saturated_mean_i - saturated_mean_i,
-                                                 diag(diag(saturated_cov_i))[
-                                                   lower.tri(saturated_cov_i, diag = TRUE)] - 
-                                                   saturated_cov_i[
-                                                     lower.tri(saturated_cov_i, diag = TRUE)]))
+                                     as.matrix(c(
+                                       saturated_mean_i - saturated_mean_i,
+                                       diag(diag(saturated_cov_i))[lower.tri(saturated_cov_i, diag = TRUE)] -
+                                         saturated_cov_i[lower.tri(saturated_cov_i, diag = TRUE)]
+                                     ))
                                    baseline_loss_value_i <-
                                      t(model_residual_i) %*% weight_matrix_i %*% model_residual_i
                                    return(baseline_loss_value_i)
@@ -1318,9 +1505,9 @@ lslxFitting$set("private",
                                  self$reduced_data$saturated_mean,
                                  self$reduced_data$saturated_cov,
                                  self$control$weight_matrix,
-                                 SIMPLIFY = TRUE)
+                                 SIMPLIFY = TRUE
                                )
-                             ),
+                             )),
                     n_nonzero_coefficient =
                       self$reduced_model$n_group *
                       (2L * self$reduced_model$n_response),
@@ -1363,26 +1550,32 @@ lslxFitting$set("private",
                   if (self$control$regularizer) {
                     if (self$control$lambda_grid[[1]] == "default") {
                       if (self$control$start_method == "mh") {
-                        beta_start_inv <- 
+                        beta_start_inv <-
                           solve(diag(self$reduced_model$n_eta) - self$supplied_result$beta_start)
-                        sigma_eta_start <- 
+                        sigma_eta_start <-
                           beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
-                        lambda_max <-  
-                          sqrt(quantile(diag(sigma_eta_start)[eta_is_exogenous], 0.6)) / 
+                        lambda_max <-
+                          sqrt(quantile(diag(sigma_eta_start)[eta_is_exogenous], 0.6)) /
                           quantile(diag(self$supplied_result$phi_start)[eta_is_endogenous] /
-                                     sqrt(diag(sigma_eta_start)[eta_is_endogenous]), 0.4) *
+                                     sqrt(diag(sigma_eta_start)[eta_is_endogenous]),
+                                   0.4) *
                           self$control$threshold_value
                       } else if (self$control$start_method == "heuristic") {
                         saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
-                        lambda_max <- 
-                          1 / quantile((saturated_var * 0.3) / sqrt(saturated_var), 0.3) * 
+                        lambda_max <-
+                          1 / quantile((saturated_var * 0.3) / sqrt(saturated_var), 0.3) *
                           self$control$threshold_value
-                      } else {}
-                      lambda_min <- (log(self$reduced_data$n_observation)/ self$reduced_data$n_observation)
-                      self$control$lambda_grid <- 
-                        exp(seq(log(lambda_max), log(lambda_min), 
-                                length.out = self$control$lambda_length))
-                    } 
+                      } else {
+                      }
+                      lambda_min <-
+                        (log(self$reduced_data$n_observation) / self$reduced_data$n_observation)
+                      self$control$lambda_grid <-
+                        exp(seq(
+                          log(lambda_max),
+                          log(lambda_min),
+                          length.out = self$control$lambda_length
+                        ))
+                    }
                     if (self$control$delta_grid[[1]] == "default") {
                       if (self$control$penalty_method == "lasso") {
                         self$control$delta_grid <- 1
@@ -1392,29 +1585,32 @@ lslxFitting$set("private",
                         if (self$control$delta_length == 1) {
                           self$control$delta_grid <- 0.5
                         } else {
-                          self$control$delta_grid <- seq(0, 1, length.out = self$control$delta_length)
+                          self$control$delta_grid <-
+                            seq(0, 1, length.out = self$control$delta_length)
                         }
                       } else if (self$control$penalty_method %in% c("mcp")) {
                         if (self$control$start_method == "mh") {
-                          beta_start_inv <- 
+                          beta_start_inv <-
                             solve(diag(self$reduced_model$n_eta) - self$supplied_result$beta_start)
-                          sigma_eta_start <- 
+                          sigma_eta_start <-
                             beta_start_inv %*% self$supplied_result$phi_start %*% t(beta_start_inv)
-                          delta_min <- 
-                            2 * max(diag(sigma_eta_start)[eta_is_endogenous]) / 
+                          delta_min <-
+                            2 * max(diag(sigma_eta_start)[eta_is_endogenous]) /
                             min(diag(sigma_eta_start)[eta_is_exogenous])
                         } else if (self$control$start_method == "heuristic") {
                           saturated_var <- diag(do.call("+", self$reduced_data$saturated_cov))
                           delta_min <- 2 * max(saturated_var, 1) / 1
                         } else {
+                          
                         }
                         if (self$control$delta_length == 1) {
                           self$control$delta_grid <- Inf
                         } else {
-                          self$control$delta_grid <- 
-                            c(delta_min * (1:(self$control$delta_length - 1)), Inf) 
+                          self$control$delta_grid <-
+                            c(delta_min * (1:(self$control$delta_length - 1)), Inf)
                         }
-                      } else {}
+                      } else {
+                      }
                     }
                     if (self$control$lambda_direction == "default") {
                       if (min(self$control$lambda_grid) == 0) {
@@ -1429,7 +1625,8 @@ lslxFitting$set("private",
                     } else if (self$control$lambda_direction == "increase") {
                       self$control$lambda_grid <-
                         sort(self$control$lambda_grid, decreasing = FALSE)
-                    } else {}
+                    } else {
+                    }
                     self$control$delta_grid <-
                       sort(self$control$delta_grid, decreasing = TRUE)
                   } else {
@@ -1438,14 +1635,16 @@ lslxFitting$set("private",
                   }
                   if (self$control$searcher) {
                     if (self$control$step_grid[[1]] == "default") {
-                      self$control$step_grid <- 
+                      self$control$step_grid <-
                         0:self$reduced_model$n_theta_is_pen
                     } else {
-                      self$control$step_grid <- 
-                        0:min(self$reduced_model$n_theta_is_pen, 
+                      self$control$step_grid <-
+                        0:min(self$reduced_model$n_theta_is_pen,
                               max(round(self$control$step_grid)))
                     }
-                  } else {self$control$step_grid = 0}
+                  } else {
+                    self$control$step_grid = 0
+                  }
                 })
 
 
@@ -1455,36 +1654,26 @@ lslxFitting$set("private",
                 function() {
                   self$fitted_result <- list()
                   if (self$control$regularizer) {
-                    length_fitted_result <-  
-                      length(self$control$lambda_grid) * 
+                    length_fitted_result <-
+                      length(self$control$lambda_grid) *
                       length(self$control$delta_grid)
                   } else {
                     length_fitted_result <-
                       length(self$control$step_grid)
                   }
                   self$fitted_result$numerical_condition <-
-                    vector(
-                      mode = "list",
-                      length = length_fitted_result
-                    )
+                    vector(mode = "list",
+                           length = length_fitted_result)
                   self$fitted_result$information_criterion <-
-                    vector(
-                      mode = "list",
-                      length = length_fitted_result
-                    )
+                    vector(mode = "list",
+                           length = length_fitted_result)
                   self$fitted_result$fit_index <-
-                    vector(
-                      mode = "list",
-                      length = length_fitted_result
-                    )
+                    vector(mode = "list",
+                           length = length_fitted_result)
                   self$fitted_result$cv_error <-
-                    vector(
-                      mode = "list",
-                      length = length_fitted_result
-                    )
+                    vector(mode = "list",
+                           length = length_fitted_result)
                   self$fitted_result$coefficient <-
-                    vector(
-                      mode = "list",
-                      length = length_fitted_result
-                    )
+                    vector(mode = "list",
+                           length = length_fitted_result)
                 })

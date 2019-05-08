@@ -557,14 +557,15 @@ lslxModel$set("private",
                            } 
                            return(prefix_i)
                          })
-                
-                
                 if (anyNA(self$reference_group)) {
                   if (any(sapply(X = prefix_split,
                                  FUN = function(prefix_split_i) {
                                    return(length(prefix_split_i) > 1)
                                  }))) {
-                    stop("Vectorized prefix cannot be applied to the case of 'reference_group = NA'.")
+                    stop("When 'reference_group = NA', vectorized prefix cannot be used.")
+                  }
+                  if (lenghth(self$ordered_variable) > 0) {
+                    stop("When 'reference_group = NA', response variable cannot be ordered.")
                   }
                   self$specification <- 
                     do.call(what = rbind,
@@ -643,6 +644,8 @@ lslxModel$set("private",
                                                 c("free", "fix", "pen", "start")) {
                                               prefix_split_j <- 
                                                 paste0(prefix_split_j_verb, "(", 0, ")")
+                                            } else if (prefix_split_j_verb %in% c("lab")) {
+                                              prefix_split_j <- "fix(0)"
                                             } else {
                                               prefix_split_j <- NA
                                             }
@@ -722,6 +725,13 @@ lslxModel$set("private",
                                              "pen"))))
                     return(type)
                   })
+                self$specification$type <-
+                  ifelse(self$specification$relation %in% 
+                           paste0(self$ordered_variable, 
+                                  "<->", 
+                                  self$ordered_variable),
+                         "fixed",
+                         self$specification$type)
                 self$specification$start <-
                   with(self$specification, {
                     prefix_verb <- 
@@ -736,7 +746,13 @@ lslxModel$set("private",
                              NA_real_)
                     return(start)
                   })
-                
+                self$specification$start <-
+                  ifelse(self$specification$relation %in% 
+                           paste0(self$ordered_variable, 
+                                  "<->", 
+                                  self$ordered_variable),
+                         NA_real_,
+                         self$specification$start)
                 self$specification$label <-
                   with(self$specification, {
                     prefix_verb <- 

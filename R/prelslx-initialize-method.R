@@ -198,11 +198,15 @@ prelslx$set("public",
                   sample_mean = sample_mean,
                   sample_size = sample_size,
                   sample_moment_acov = sample_moment_acov,
-                  group_variable = private$model$group_variable,
+                  numeric_variable = private$model$numeric_variable,
+                  ordered_variable = private$model$ordered_variable,
                   weight_variable = private$model$weight_variable,
                   auxiliary_variable = private$model$auxiliary_variable,
-                  name_response = private$model$name_response,
-                  level_group = private$model$level_group
+                  group_variable = private$model$group_variable,
+                  reference_group = private$model$reference_group,
+                  level_group = private$model$level_group,
+                  nlevel_ordered = private$model$nlevel_ordered,
+                  name_response = private$model$name_response
                 )
               private$fitting <- NULL
               if (verbose) {

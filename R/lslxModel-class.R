@@ -11,13 +11,12 @@ lslxModel <-
       group_variable = "character",
       reference_group = "character",
       level_group = "character",
+      nlevel_ordered = "numeric",
       name_response = "character",
       name_factor = "character",
       name_eta = "character",
       name_exogenous = "character",
       name_endogenous = "character",
-      name_covariate = "character",
-      nlevel_ordered = "numeric",
       specification = "data.frame"
     )
   )

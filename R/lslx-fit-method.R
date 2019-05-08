@@ -71,6 +71,8 @@ lslx$set("public",
              lslxFitting$new(model = private$model,
                              data = private$data,
                              control = control)
+           private$fitting$complete()
+           
            if (private$fitting$control$regularizer) {
              compute_regularized_path_cpp(
                private$fitting$reduced_data,
