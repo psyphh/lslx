@@ -81,6 +81,21 @@ Eigen::MatrixXd vech(Eigen::MatrixXd x) {
   return(y);
 }
 
+// vech operator for only non-diagonal elements
+Eigen::MatrixXd vech_small(Eigen::MatrixXd x) {
+  int n_col = x.cols();
+  Eigen::MatrixXd y((n_col * (n_col - 1)) / 2, 1);
+  int idx = 0;
+  int i, j;
+  for (i = 0; i < (n_col - 1); i ++ ) {
+    for (j = (i + 1); j < n_col; j ++ ) {
+      y(idx, 0) = x(j, i);
+      idx += 1;
+    }
+  }
+  return(y);
+}
+
 // method for creating commutation matrix
 Eigen::SparseMatrix<double> create_commutation(int n) {
   int n2 = n * n;

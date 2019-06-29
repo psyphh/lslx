@@ -81,7 +81,7 @@ lslx$set("public",
                private$fitting$supplied_result,
                private$fitting$fitted_result
              )
-           } else {
+           } else if (private$fitting$control$searcher) {
              compute_stepwise_path_cpp(
                private$fitting$reduced_data,
                private$fitting$reduced_model,
@@ -89,8 +89,15 @@ lslx$set("public",
                private$fitting$supplied_result,
                private$fitting$fitted_result
              )
+           } else {
+             compute_none_path_cpp(
+               private$fitting$reduced_data,
+               private$fitting$reduced_model,
+               private$fitting$control,
+               private$fitting$supplied_result,
+               private$fitting$fitted_result
+             )
            }
-           
            private$fitting$fitted_result$is_finite <-
              sapply(
                X = private$fitting$fitted_result$numerical_condition,

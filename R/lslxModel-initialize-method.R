@@ -313,7 +313,6 @@ lslxModel$set("private",
                                                                    c("|=", "|~")),
                                                                c("left", "right")])),
                           y = c(self$name_factor, "1"))
-                
                 if (!all(self$name_response %in% 
                          union(x = self$numeric_variable,
                                y = self$ordered_variable))) {
@@ -337,8 +336,10 @@ lslxModel$set("private",
                 if (length(self$ordered_variable) > 0) {
                   self$nlevel_ordered <- 
                     nlevel_ordered[self$ordered_variable] 
+                  self$name_threshold <- paste0("t", 1:(max(nlevel_ordered) - 1))
                 } else {
                   self$nlevel_ordered <- numeric(0)
+                  self$name_threshold <- character(0)
                 }
                 self$auxiliary_variable <-
                   setdiff(x = self$auxiliary_variable,
@@ -389,7 +390,7 @@ lslxModel$set("private",
                                                  fromLast = TRUE),]
                 if (length(self$ordered_variable) > 0) {
                   relation_gamma <- 
-                    setdiff(x = unlist(mapply(
+                    unlist(mapply(
                       FUN = function(ordered_variable_i, 
                                      nlevel_ordered_i) {
                         paste0(ordered_variable_i,
@@ -398,8 +399,29 @@ lslxModel$set("private",
                       },
                       self$ordered_variable,
                       self$nlevel_ordered),
-                      use.names = FALSE),
-                    y = self$specification$relation)
+                      use.names = FALSE)
+                  self$specification[(self$specification$operator %in%
+                                        c("|=", "|~")),
+                                     "relation"]
+                  relation_gamma <-
+                    unlist(mapply(
+                      FUN = function(ordered_variable_i, 
+                                     nlevel_ordered_i) {
+                        paste0(ordered_variable_i,
+                               "|",
+                               paste0("t", 1:(nlevel_ordered_i - 1)))
+                      },
+                      self$ordered_variable,
+                      self$nlevel_ordered),
+                      use.names = FALSE)
+                  if (!all(self$specification[(self$specification$operator %in%
+                                               c("|=", "|~")),
+                                              "relation"] %in% (relation_gamma))) {
+                    stop("Some specified names for thresholds are not recognized.",
+                         "\n  Names for thresholds must be of the form 't' + '[[:digit:]]'.")
+                  }
+                  relation_gamma <-
+                    setdiff(x = relation_gamma, y = self$specification$relation)
                 } else {
                   relation_gamma <- character(0)
                 }
@@ -564,7 +586,7 @@ lslxModel$set("private",
                                  }))) {
                     stop("When 'reference_group = NA', vectorized prefix cannot be used.")
                   }
-                  if (lenghth(self$ordered_variable) > 0) {
+                  if (length(self$ordered_variable) > 0) {
                     stop("When 'reference_group = NA', response variable cannot be ordered.")
                   }
                   self$specification <- 
@@ -769,21 +791,55 @@ lslxModel$set("private",
                   })
                 self$specification$operator <- NULL
                 self$specification$prefix <- NULL
-                self$specification <-
-                  self$specification[order(
-                    self$specification$reference,
-                    self$specification$group,
-                    self$specification$matrix,
-                    self$specification$block,
-                    match(self$specification$right, self$name_eta),
-                    match(self$specification$left, self$name_eta),
-                    method = "radix"
+                if (length(self$ordered_variable) > 0) {
+                  specification_gamma <- self$specification[self$specification$matrix == "gamma", ]
+                  specification_non_gamma <- self$specification[self$specification$matrix != "gamma", ]
+                  specification_gamma <- 
+                    specification_gamma[order(
+                      specification_gamma$reference,
+                      specification_gamma$group,
+                      specification_gamma$matrix,
+                      specification_gamma$block,
+                      match(specification_gamma$left, self$name_eta),
+                      match(specification_gamma$right, c("1", self$name_threshold, self$name_eta)),
+                      method = "radix"
                   ),]
+                  specification_non_gamma <- 
+                    specification_non_gamma[order(
+                      specification_non_gamma$reference,
+                      specification_non_gamma$group,
+                      specification_non_gamma$matrix,
+                      specification_non_gamma$block,
+                      match(specification_non_gamma$right, c("1", self$name_threshold, self$name_eta)),
+                      match(specification_non_gamma$left, self$name_eta),
+                      method = "radix"
+                    ),]
+                  self$specification <- rbind(specification_gamma, 
+                                              specification_non_gamma)
+                  self$specification <-
+                    self$specification[order(
+                      self$specification$reference,
+                      self$specification$group,
+                      self$specification$matrix,
+                      self$specification$block,
+                      method = "radix"
+                    ),]
+                } else {
+                  self$specification <-
+                    self$specification[order(
+                      self$specification$reference,
+                      self$specification$group,
+                      self$specification$matrix,
+                      self$specification$block,
+                      match(self$specification$right, c("1", self$name_threshold, self$name_eta)),
+                      match(self$specification$left, self$name_eta),
+                      method = "radix"
+                    ),]
+                }
                 self$specification <-
                   self$specification[order(
                     self$specification$reference,
                     decreasing = TRUE,
                     method = "radix"
                   ), ]
-                
               })

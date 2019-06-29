@@ -21,16 +21,17 @@ public:
   double ridge_cov, ridge_hessian;
   bool warm_start, positive_variance, enforce_cd;
   double minimum_variance;
-  bool response, regularizer, searcher;
+  bool response, continuous, regularizer, searcher;
 
   double lambda, delta, step;
   int iter_out;
   
   int n_observation;
-  Rcpp::List  sample_proportion, saturated_cov, saturated_mean;
+  Rcpp::List  sample_proportion, saturated_cov, saturated_mean, saturated_threshold, saturated_moment;
   Rcpp::List  saturated_moment_acov;
   
-  int n_response, n_factor, n_eta, n_moment, n_group, n_theta;
+  int n_response, n_factor, n_eta, n_moment, n_moment_1, n_moment_2, n_group, n_theta, n_threshold;
+  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu;
   
   Rcpp::CharacterVector theta_name;
   Rcpp::LogicalVector theta_is_free, theta_is_pen, theta_is_diag;
@@ -47,8 +48,8 @@ public:
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
   Eigen::SparseMatrix<double> elimination_y, duplication_eta, commutation_y;
   
-  Rcpp::List alpha, beta, beta_pinv, phi;
-  Rcpp::List mu, sigma, sigma_inv;
+  Rcpp::List alpha, beta, beta_pinv, gamma, phi;
+  Rcpp::List mu, sigma, sigma_inv, implied_moment;
   Rcpp::List alpha_derivative, beta_derivative, phi_derivative;
   
   Rcpp::List model_jacobian;
@@ -91,11 +92,13 @@ public:
   void update_coefficient_matrix();
   void update_implied_moment();
   void update_model_jacobian();
+  void update_model_jacobian_nd();
   void update_model_residual();
   void update_residual_weight();
   void update_loss_value();
   void update_loss_gradient();
   void update_loss_gradient_direct();
+  void update_loss_gradient_nd();
   void update_loss_expected_hessian();
   void update_loss_observed_hessian();
   void update_loss_bfgs_hessian();

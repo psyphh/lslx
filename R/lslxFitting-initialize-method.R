@@ -9,16 +9,19 @@ lslxFitting$set("public",
                                              control = control)
                   private$initialize_reduced_model(model = model)
                   private$initialize_reduced_data(data = data)
+                  private$initialize_weight_matrix()
+                  self$supplied_result <- list()
+                  private$compute_baseline_model()
+                  private$compute_saturated_model()
+                  private$initialize_supplied_result()
+                  private$initialize_grid()
+                  private$initialize_fitted_result()
                 })
 
 ## \code{$complete()} complete the initialization. ##
 lslxFitting$set("public",
                 "complete",
                 function() {
-                  private$initialize_weight_matrix()
-                  private$initialize_supplied_result()
-                  private$initialize_grid()
-                  private$initialize_fitted_result()
                 })
 
 
@@ -204,18 +207,6 @@ lslxFitting$set("private",
                         !is.numeric(self$control$weight_matrix[[1]])) {
                       stop("Some element in 'weight_matrix' is not a matrix.")
                     }
-                    n_moment <-
-                      length(model$name_response) * (length(model$name_response) + 3) / 2
-                    if (!all(dim(self$control$weight_matrix[[1]]) == c(n_moment, n_moment))) {
-                      stop(
-                        "The dimension of some element in 'weight_matrix' is not correct.",
-                        "\n  The correct dimension is ",
-                        n_moment,
-                        " by ",
-                        n_moment,
-                        "."
-                      )
-                    }
                   }
                   if (length(model$name_factor) == 0) {
                     if (!(c("y<-y") %in% model$specification$block)) {
@@ -262,7 +253,7 @@ lslxFitting$set("private",
                   } else {
                     self$control$regularizer <- FALSE
                   }
-                  if (self$control$penalty_method %in% c("none", "forward", "backward")) {
+                  if (self$control$penalty_method %in% c("forward", "backward")) {
                     self$control$searcher <- TRUE
                   } else {
                     self$control$searcher <- FALSE
@@ -402,19 +393,37 @@ lslxFitting$set("private",
 ## \code{$initialize_reduced_model()} initializes a reduced model. ##
 lslxFitting$set("private",
                 "initialize_reduced_model",
-                function(model,
-                         control) {
+                function(model) {
                   self$reduced_model <-
                     list(
                       n_response = length(model$name_response),
                       n_factor =  length(model$name_factor),
                       n_eta = length(model$name_eta),
-                      n_moment = length(model$name_response) *
-                        (length(model$name_response) + 3) / 2,
+                      n_moment = ifelse(self$control$continuous,
+                                        length(model$name_response) *
+                                          (length(model$name_response) + 3) / 2,
+                                        length(model$numeric_variable) * (length(model$numeric_variable)  + 1) / 2 +
+                                          length(model$ordered_variable) * (length(model$ordered_variable) - 1) / 2 +
+                                          length(model$numeric_variable) * length(model$ordered_variable)+
+                                          length(model$numeric_variable) + sum(model$nlevel_ordered - 1)),
+                      n_moment_1 = ifelse(self$control$continuous,
+                                        length(model$name_response),
+                                          length(model$numeric_variable) + sum(model$nlevel_ordered - 1)),
+                      n_moment_2 = ifelse(self$control$continuous,
+                                        length(model$name_response) *
+                                          (length(model$name_response) + 1) / 2,
+                                        length(model$numeric_variable) * (length(model$numeric_variable)  + 1) / 2 +
+                                          length(model$ordered_variable) * (length(model$ordered_variable) - 1) / 2 +
+                                          length(model$numeric_variable) * length(model$ordered_variable)),
                       n_group = length(model$level_group),
+                      n_numeric = length(model$numeric_variable),
+                      n_ordered = length(model$ordered_variable),
+                      n_threshold = sum(model$nlevel_ordered - 1),
                       n_theta = nrow(model$specification),
-                      n_theta_is_free = NA_real_,
-                      n_theta_is_pen = NA_real_,
+                      n_theta_is_free = NA_integer_,
+                      n_theta_is_pen = NA_integer_,
+                      idx_numeric = match(model$numeric_variable, model$name_response),
+                      idx_ordered = match(model$ordered_variable, model$name_response),
                       eta_is_exogenous = model$name_eta %in% model$name_exogenous,
                       eta_is_endogenous = model$name_eta %in% model$name_endogenous,
                       theta_name = rownames(model$specification),
@@ -430,10 +439,12 @@ lslxFitting$set("private",
                                    3L)
                           )
                         ),
-                      theta_left_idx = match(model$specification$left, model$name_eta),
+                      theta_left_idx = ifelse(model$specification$matrix == "gamma",
+                                              match(model$specification$left, model$name_response),
+                                              match(model$specification$left, model$name_eta)),
                       theta_right_idx = ifelse(
                         model$specification$matrix == "gamma",
-                        NA_integer_,
+                        match(model$specification$right, model$name_threshold),
                         ifelse(
                           model$specification$matrix == "alpha",
                           1L,
@@ -466,30 +477,107 @@ lslxFitting$set("private",
                           TRUE,
                           FALSE
                         ),
-                      theta_start = model$specification$start
-                    )
+                      theta_start = model$specification$start)
+                  
+                  if (!self$control$continuous) {
+                    self$reduced_model$threshold_flat_idx <- 
+                      matrix(0, length(model$name_response), max(model$nlevel_ordered - 1))
+                    self$reduced_model$idx_gamma <- integer()
+                    self$reduced_model$idx_mu <- integer()
+                    self$reduced_model$idx_sigma <- integer()
+                    count_threshold <- 1L
+                    for (i in 1:length(model$name_response)) {
+                      if (model$name_response[i] %in% model$ordered_variable) {
+                        nlevel_ordered_i <- 
+                          model$nlevel_ordered[which(model$name_response[i] == model$ordered_variable)]
+                        for (j in 1:(nlevel_ordered_i - 1L)) {
+                          self$reduced_model$threshold_flat_idx[i, j] <- 
+                            count_threshold
+                          count_threshold <- count_threshold + 1L
+                        }
+                      } 
+                    }
+                    
+                    count_threshold <- 1L
+                    for (response_i in model$name_response) {
+                      if (response_i %in% model$ordered_variable) {
+                        nlevel_ordered_i <- 
+                          model$nlevel_ordered[which(response_i == model$ordered_variable)]
+                        for (j in 1:(nlevel_ordered_i - 1L)) {
+                          self$reduced_model$idx_gamma <- 
+                            c(self$reduced_model$idx_gamma, count_threshold)
+                          count_threshold <- count_threshold + 1L
+                        }
+                      } else {
+                        self$reduced_model$idx_gamma <- 
+                          c(self$reduced_model$idx_gamma, 0L)
+                      }
+                    }
+                    
+                    for (response_i in model$name_response) {
+                      if (response_i %in% model$ordered_variable) {
+                        nlevel_ordered_i <- 
+                          model$nlevel_ordered[which(response_i == model$ordered_variable)]
+                        for (j in 1:(nlevel_ordered_i - 1L)) {
+                          self$reduced_model$idx_mu <- 
+                            c(self$reduced_model$idx_mu, 
+                              which(response_i == model$name_response))
+                        }
+                      } else {
+                        self$reduced_model$idx_mu <- 
+                          c(self$reduced_model$idx_mu, 
+                            which(response_i == model$name_response))
+                      }
+                    }
+                    
+                    for (i in 1:self$reduced_model$n_response) {
+                      if (i %in% self$reduced_model$idx_numeric) {
+                        self$reduced_model$idx_sigma <- 
+                          c(self$reduced_model$idx_sigma, 
+                            as.integer(self$reduced_model$n_response * (i-1) + 
+                                         i - i * (i - 1L) / 2L))
+                      }
+                    }
+                    if (self$reduced_model$n_response > 1) {
+                      for (i in 1:(self$reduced_model$n_response - 1)) {
+                        for (j in (i+1):self$reduced_model$n_response) {
+                          self$reduced_model$idx_sigma <- 
+                            c(self$reduced_model$idx_sigma, 
+                              as.integer(self$reduced_model$n_response * (i-1) + 
+                                           j - i * (i - 1L) / 2L) )
+                        }
+                      }  
+                    }
+                  }
+                  
                   self$reduced_model$theta_flat_idx <-
-                    ifelse(
-                      self$reduced_model$theta_matrix_idx == 1,
-                      self$reduced_model$theta_left_idx,
-                      ifelse(
-                        self$reduced_model$theta_matrix_idx == 2,
-                        self$reduced_model$n_eta *
-                          (self$reduced_model$theta_right_idx - 1L) +
-                          self$reduced_model$theta_left_idx,
-                        ifelse(
-                          self$reduced_model$theta_matrix_idx == 3,
-                          as.integer(
-                            self$reduced_model$n_eta *
-                              (self$reduced_model$theta_right_idx - 1L) +
-                              self$reduced_model$theta_left_idx -
-                              self$reduced_model$theta_right_idx *
-                              (self$reduced_model$theta_right_idx - 1L) / 2L
-                          ),
-                          NA_integer_
-                        )
-                      )
-                    )
+                    ifelse(self$reduced_model$theta_matrix_idx == 0,
+                           self$reduced_model$threshold_flat_idx[
+                             cbind(ifelse(self$reduced_model$theta_left_idx <= 
+                                            length(model$name_response),
+                                          self$reduced_model$theta_left_idx,
+                                          NA),
+                                   ifelse(self$reduced_model$theta_right_idx <=
+                                            length(model$name_threshold),
+                                          self$reduced_model$theta_right_idx,
+                                          NA))],
+                           ifelse(
+                             self$reduced_model$theta_matrix_idx == 1,
+                             self$reduced_model$theta_left_idx,
+                             ifelse(
+                               self$reduced_model$theta_matrix_idx == 2,
+                               self$reduced_model$n_eta *
+                                 (self$reduced_model$theta_right_idx - 1L) +
+                                 self$reduced_model$theta_left_idx,
+                               as.integer(
+                                 self$reduced_model$n_eta *
+                                   (self$reduced_model$theta_right_idx - 1L) +
+                                   self$reduced_model$theta_left_idx -
+                                   self$reduced_model$theta_right_idx *
+                                   (self$reduced_model$theta_right_idx - 1L) / 2L
+                               )
+                             )
+                           ))
                   self$reduced_model$n_theta_is_free <-
                     sum(self$reduced_model$theta_is_free)
                   self$reduced_model$n_theta_is_pen <-
@@ -499,13 +587,21 @@ lslxFitting$set("private",
 ## \code{$initialize_reduced_data()} initializes a reduced data. ##
 lslxFitting$set("private",
                 "initialize_reduced_data",
-                function(data,
-                         control) {
+                function(data) {
                   self$reduced_data <-
                     list(
                       n_observation = integer(),
                       n_complete_observation = integer(),
                       n_missing_pattern = integer(),
+                      n_response = length(data$numeric_variable) + 
+                        length(data$ordered_variable),
+                      n_numeric = length(data$numeric_variable),
+                      n_ordered = length(data$ordered_variable),
+                      n_group = length(data$level_group),
+                      n_threshold = sum(data$nlevel_ordered - 1),
+                      name_response = data$name_response,
+                      name_numeric = data$name_numeric,
+                      name_ordered = data$name_ordered,
                       sample_proportion = list(),
                       saturated_threshold = list(),
                       saturated_mean = list(),
@@ -809,10 +905,19 @@ lslxFitting$set("private",
                         }
                         self$reduced_data$saturated_threshold <-
                           lapply(
-                            X = saturated_moment,
                             FUN = function(saturated_moment_i) {
-                              return(saturated_moment_i$th[])
-                            }
+                              response_for_threshold_i <- 
+                                sapply(strsplit(x = names(saturated_moment_i$th[]), 
+                                                split = "\\|"),
+                                       FUN = function(x) {"["(x, 1)})
+                              mapply(FUN = function(name_response_i) {
+                                idc_response_for_threshold_i <- 
+                                  response_for_threshold_i %in% name_response_i
+                                return(saturated_moment_i$th[][idc_response_for_threshold_i])
+                              },
+                              self$reduced_data$name_response)
+                            },
+                            saturated_moment
                           )
                         self$reduced_data$saturated_mean <-
                           lapply(
@@ -888,22 +993,18 @@ lslxFitting$set("private",
                         }
                       )
                     self$reduced_data$saturated_moment_acov <-
-                      data$sample_moment_acov
-                    if (length(self$reduced_data$saturated_moment_acov) > 0) {
-                      self$reduced_data$saturated_moment_acov <-
-                        lapply(
-                          X = self$reduced_data$saturated_cov,
-                          FUN = function(saturated_cov_i) {
-                            
-                          }
-                        )
-                      compute_saturated_moment_acov_moment_cpp(
-                        n_observation = self$reduced_data$n_observation,
-                        sample_proportion = self$reduced_data$sample_proportion,
-                        saturated_cov = self$reduced_data$saturated_cov,
-                        saturated_moment_acov = self$reduced_data$saturated_moment_acov
+                      lapply(
+                        X = self$reduced_data$saturated_cov,
+                        FUN = function(saturated_cov_i) {
+                          
+                        }
                       )
-                    }
+                    compute_saturated_moment_acov_moment_cpp(
+                      n_observation = self$reduced_data$n_observation,
+                      sample_proportion = self$reduced_data$sample_proportion,
+                      saturated_cov = self$reduced_data$saturated_cov,
+                      saturated_moment_acov = self$reduced_data$saturated_moment_acov
+                    )
                   }
                   if (self$control$auxiliary &
                       self$control$missing_method == "two_stage") {
@@ -946,6 +1047,23 @@ lslxFitting$set("private",
                   if (self$control$continuous) {
                     cov_name <-
                       cov_name[lower.tri(cov_name, diag = TRUE)]
+                    self$reduced_data$saturated_moment <-
+                      mapply(
+                        FUN = function(saturated_mean_i,
+                                       saturated_cov_i) {
+                          saturated_mean_i <- c(saturated_mean_i)
+                          names(saturated_mean_i) <- mean_name
+                          saturated_cov_i <-
+                            saturated_cov_i[lower.tri(saturated_cov_i, diag = TRUE)]
+                          names(saturated_cov_i) <- cov_name
+                          saturated_moment_i <- 
+                            c(saturated_mean_i, saturated_cov_i)
+                          return(saturated_moment_i)
+                        },
+                        self$reduced_data$saturated_mean,
+                        self$reduced_data$saturated_cov,
+                        SIMPLIFY = FALSE
+                      )
                     moment_name <- c(mean_name, cov_name)
                     self$reduced_data$saturated_moment_acov <-
                       lapply(
@@ -1008,11 +1126,11 @@ lslxFitting$set("private",
                           if (length(data$numeric_variable) > 0) {
                             saturated_threshold_i <- 
                               split(
-                                c(saturated_threshold_i, 
-                                  saturated_mean_i[match(data$numeric_variable,
+                                c(unlist(unname(saturated_threshold_i)), 
+                                  - saturated_mean_i[match(data$numeric_variable,
                                                          data$name_response), 1]),
                                 unlist(lapply(
-                                  X = strsplit(names(c(saturated_threshold_i, 
+                                  X = strsplit(names(c(unlist(unname(saturated_threshold_i)), 
                                                        saturated_mean_i[match(data$numeric_variable,
                                                                               data$name_response), 1])), "\\||<-"),
                                   FUN = function(x) {
@@ -1020,8 +1138,7 @@ lslxFitting$set("private",
                                   }
                                 ))
                               )[data$name_response]
-                            names(saturated_threshold_i) <- NULL
-                            saturated_threshold_i <- unlist(saturated_threshold_i)
+                            saturated_threshold_i <- unlist(unname(saturated_threshold_i))
                             saturated_var_i <-
                               diag(saturated_cov_i)[match(data$numeric_variable,
                                                           data$name_response)]
@@ -1030,6 +1147,7 @@ lslxFitting$set("private",
                                      "<->",
                                      data$numeric_variable)
                           } else {
+                            saturated_threshold_i <- unlist(unname(saturated_threshold_i))
                             saturated_var_i <- numeric(0)
                           }
                           saturated_cov_i <-
@@ -1091,6 +1209,18 @@ lslxFitting$set("private",
                           USE.NAMES = TRUE
                         )
                     } else {
+                      if (!all(dim(self$control$weight_matrix[[1]]) == 
+                               c(self$reduced_model$n_moment, 
+                                 self$reduced_model$n_moment))) {
+                        stop(
+                          "The dimension of some element in 'weight_matrix' is not correct.",
+                          "\n  The correct dimension is ",
+                          n_moment,
+                          " by ",
+                          n_moment,
+                          "."
+                        )
+                      }
                     }
                     self$control$weight_matrix <-
                       lapply(
@@ -1120,6 +1250,82 @@ lslxFitting$set("private",
 lslxFitting$set("private",
                 "compute_fitted_start",
                 function() {
+                  self$supplied_result$fitted_start <- 
+                    self$reduced_model$theta_start
+                  if (!self$control$continuous) {
+                    saturated_threshold_pool <-
+                      mapply(
+                        FUN = function(sample_proportion_i,
+                                       saturated_threshold_i) {
+                          mapply(
+                            FUN = function(saturated_threshold_ij) {
+                              return(sample_proportion_i * saturated_threshold_ij)  
+                            },
+                            saturated_threshold_i,
+                            SIMPLIFY = FALSE,
+                            USE.NAMES = TRUE
+                          )
+                        },
+                        self$reduced_data$sample_proportion,
+                        self$reduced_data$saturated_threshold,
+                        SIMPLIFY = FALSE,
+                        USE.NAMES = TRUE
+                      )
+                    if (self$reduced_data$n_group > 1) {
+                      for (i in 2:self$reduced_data$n_group) {
+                        saturated_threshold_pool[[1]] <-
+                          Map("+", saturated_threshold_pool[[1]], 
+                              saturated_threshold_pool[[i]])
+                      }
+                    } 
+                    saturated_threshold_pool <- saturated_threshold_pool[[1]]
+                    if (0 %in% unique(self$reduced_model$theta_group_idx)) {
+                      idc_0 <-
+                        (self$reduced_model$theta_matrix_idx == 0) &
+                        (self$reduced_model$theta_group_idx == 0)
+                      
+                      self$supplied_result$fitted_start[idc_0] <-
+                        ifelse(!is.na(self$reduced_model$theta_start[idc_0]),
+                               self$reduced_model$theta_start[idc_0],
+                               apply(cbind(
+                                 self$reduced_model$theta_left_idx[idc_0],
+                                 self$reduced_model$theta_right_idx[idc_0]
+                               ),
+                               MARGIN = 1,
+                               function(idx) {
+                                 saturated_threshold_pool[[idx[1]]][idx[2]]
+                               }))
+                      for (i in setdiff(unique(self$reduced_model$theta_group_idx), 0)) {
+                        idc_i <-
+                          (self$reduced_model$theta_matrix_idx == 0) &
+                          (self$reduced_model$theta_group_idx == i)
+                        self$supplied_result$fitted_start[idc_i] <-
+                          ifelse(
+                            is.na(self$reduced_model$theta_start[idc_i]),
+                            0,
+                            self$reduced_model$theta_start[idc_i]
+                          )
+                      }
+                    } else {
+                      for (i in seq_len(self$reduced_model$n_group)) {
+                        idc_i <-
+                          (self$reduced_model$theta_matrix_idx == 0) &
+                          (self$reduced_model$theta_group_idx == i)
+                        self$supplied_result$fitted_start[idc_i] <-
+                          ifelse(!is.na(self$reduced_model$theta_start[idc_i]),
+                                 self$reduced_model$theta_start[idc_i],
+                                 apply(cbind(
+                                   self$reduced_model$theta_left_idx[idc_i],
+                                   self$reduced_model$theta_right_idx[idc_i]
+                                 ),
+                                 MARGIN = 1,
+                                 function(idx) {
+                                   saturated_threshold_pool[[idx[1]]][idx[2]]
+                                 }))
+                      }
+                    }
+                  }
+                  
                   if (self$control$start_method == "mh") {
                     saturated_cov_pool <-
                       Reduce(
@@ -1298,6 +1504,7 @@ lslxFitting$set("private",
                           ) &
                           (self$reduced_model$theta_start != 0)
                       )
+                    idc_phi[is.na(idc_phi)] <- TRUE
                     idx_phi <-
                       strsplit(x = unique(
                         paste0(
@@ -1461,63 +1668,99 @@ lslxFitting$set("private",
 lslxFitting$set("private",
                 "compute_baseline_model",
                 function() {
-                  self$supplied_result$baseline_model <- c(
-                    loss_value =
-                      ifelse(self$control$loss == "ml",
-                             sum(
-                               mapply(
-                                 FUN = function(saturated_mean_i,
-                                                saturated_cov_i,
-                                                sample_proportion_i) {
-                                   baseline_loss_value_i <-
-                                     sample_proportion_i *
-                                     (sum(diag(saturated_cov_i %*%
-                                                 diag(
-                                                   1 / diag(saturated_cov_i)
-                                                 ))) -
-                                        log(det(saturated_cov_i %*% diag(
-                                          1 / diag(saturated_cov_i)
-                                        ))) -
-                                        self$reduced_model$n_response)
-                                   return(baseline_loss_value_i)
-                                 },
-                                 self$reduced_data$saturated_mean,
-                                 self$reduced_data$saturated_cov,
-                                 self$reduced_data$sample_proportion,
-                                 SIMPLIFY = TRUE
-                               )
-                             ),
-                             sum(
-                               mapply(
-                                 FUN = function(saturated_mean_i,
-                                                saturated_cov_i,
-                                                weight_matrix_i) {
-                                   model_residual_i <-
-                                     as.matrix(c(
-                                       saturated_mean_i - saturated_mean_i,
-                                       diag(diag(saturated_cov_i))[lower.tri(saturated_cov_i, diag = TRUE)] -
-                                         saturated_cov_i[lower.tri(saturated_cov_i, diag = TRUE)]
-                                     ))
-                                   baseline_loss_value_i <-
-                                     t(model_residual_i) %*% weight_matrix_i %*% model_residual_i
-                                   return(baseline_loss_value_i)
-                                 },
-                                 self$reduced_data$saturated_mean,
-                                 self$reduced_data$saturated_cov,
-                                 self$control$weight_matrix,
-                                 SIMPLIFY = TRUE
-                               )
-                             )),
-                    n_nonzero_coefficient =
-                      self$reduced_model$n_group *
-                      (2L * self$reduced_model$n_response),
-                    degrees_of_freedom =
-                      self$reduced_model$n_group *
-                      (
-                        self$reduced_model$n_moment -
-                          2L * self$reduced_model$n_response
-                      )
-                  )
+                  if (self$control$continuous) {
+                      loss_value =
+                        ifelse(self$control$loss == "ml",
+                               sum(
+                                 mapply(
+                                   FUN = function(saturated_mean_i,
+                                                  saturated_cov_i,
+                                                  sample_proportion_i) {
+                                     baseline_loss_value_i <-
+                                       sample_proportion_i *
+                                       (sum(diag(saturated_cov_i %*%
+                                                   diag(
+                                                     1 / diag(saturated_cov_i)
+                                                   ))) -
+                                          log(det(saturated_cov_i %*% diag(
+                                            1 / diag(saturated_cov_i)
+                                          ))) -
+                                          self$reduced_model$n_response)
+                                     return(baseline_loss_value_i)
+                                   },
+                                   self$reduced_data$saturated_mean,
+                                   self$reduced_data$saturated_cov,
+                                   self$reduced_data$sample_proportion,
+                                   SIMPLIFY = TRUE
+                                 )
+                               ),
+                               sum(
+                                 mapply(
+                                   FUN = function(saturated_mean_i,
+                                                  saturated_cov_i,
+                                                  weight_matrix_i) {
+                                     model_residual_i <-
+                                       as.matrix(c(
+                                         saturated_mean_i - saturated_mean_i,
+                                         diag(diag(saturated_cov_i))[lower.tri(saturated_cov_i, diag = TRUE)] -
+                                           saturated_cov_i[lower.tri(saturated_cov_i, diag = TRUE)]
+                                       ))
+                                     baseline_loss_value_i <-
+                                       t(model_residual_i) %*% weight_matrix_i %*% model_residual_i
+                                     return(baseline_loss_value_i)
+                                   },
+                                   self$reduced_data$saturated_mean,
+                                   self$reduced_data$saturated_cov,
+                                   self$control$weight_matrix,
+                                   SIMPLIFY = TRUE
+                                 )
+                               ))
+                      n_nonzero_coefficient <-
+                        self$reduced_model$n_group *
+                        (2L * self$reduced_model$n_response)
+                      degrees_of_freedom <-
+                        self$reduced_model$n_group *
+                        (
+                          self$reduced_model$n_moment -
+                            2L * self$reduced_model$n_response
+                        )
+                  } else {
+                      loss_value <-
+                        sum(
+                          mapply(
+                            FUN = function(saturated_moment_i,
+                                           weight_matrix_i) {
+                              model_residual_i <-
+                                as.matrix(saturated_moment_i)
+                              model_residual_i[
+                                ((self$reduced_data$n_threshold + 
+                                    length(self$reduced_data$n_numeric) * 2) + 
+                                   1):nrow(model_residual_i), ] <- 0
+                              baseline_loss_value_i <-
+                                t(model_residual_i) %*% weight_matrix_i %*% model_residual_i
+                              return(baseline_loss_value_i)
+                            },
+                            self$reduced_data$saturated_moment,
+                            self$control$weight_matrix,
+                            SIMPLIFY = TRUE
+                          )
+                        )
+                      n_nonzero_coefficient <-
+                        self$reduced_model$n_group *
+                        (self$reduced_data$n_threshold + 
+                           length(self$reduced_data$n_numeric) * 2L)
+                      degrees_of_freedom <-
+                        self$reduced_model$n_group *
+                        (
+                          self$reduced_model$n_moment -
+                            (self$reduced_data$n_threshold + 
+                               length(self$reduced_data$n_numeric) * 2L)
+                        )
+                  }
+                  self$supplied_result$baseline_model <- 
+                    c(loss_value = loss_value, 
+                      n_nonzero_coefficient = n_nonzero_coefficient,
+                      degrees_of_freedom = degrees_of_freedom)
                 })
 
 ## \code{$compute_saturated_model()} computes saturated model. ##

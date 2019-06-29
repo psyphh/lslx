@@ -21,6 +21,14 @@ compute_stepwise_path_cpp <- function(reduced_data, reduced_model, control, supp
     invisible(.Call('_lslx_compute_stepwise_path_cpp', PACKAGE = 'lslx', reduced_data, reduced_model, control, supplied_result, fitted_result))
 }
 
+compute_none_path_cpp <- function(reduced_data, reduced_model, control, supplied_result, fitted_result) {
+    invisible(.Call('_lslx_compute_none_path_cpp', PACKAGE = 'lslx', reduced_data, reduced_model, control, supplied_result, fitted_result))
+}
+
+compute_prefit_path_cpp <- function(reduced_data, reduced_model, control, supplied_result, fitted_result) {
+    .Call('_lslx_compute_prefit_path_cpp', PACKAGE = 'lslx', reduced_data, reduced_model, control, supplied_result, fitted_result)
+}
+
 compute_coefficient_matrix_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_coefficient_matrix_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }

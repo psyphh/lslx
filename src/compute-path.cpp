@@ -87,3 +87,62 @@ void compute_stepwise_path_cpp(
   }
 }
 
+
+// compute solution path made by unpenalized estimation
+// [[Rcpp::export]]
+void compute_none_path_cpp(
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result,
+    Rcpp::List fitted_result) {
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  Rcpp::NumericVector theta_start_zero = Rcpp::clone(optimizer.theta_start);
+  optimizer.set_regularizer(
+    Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 0.0, INFINITY);
+  Rcpp::List numerical_condition = Rcpp::as<Rcpp::List>(fitted_result["numerical_condition"]);
+  Rcpp::List information_criterion = Rcpp::as<Rcpp::List>(fitted_result["information_criterion"]);
+  Rcpp::List fit_index = Rcpp::as<Rcpp::List>(fitted_result["fit_index"]);
+  Rcpp::List coefficient = Rcpp::as<Rcpp::List>(fitted_result["coefficient"]);
+  
+  optimizer.complete_estimation();
+  coefficient[0] = optimizer.extract_coefficient();
+  numerical_condition[0] = optimizer.extract_numerical_condition();
+  information_criterion[0] = optimizer.extract_information_criterion();
+  fit_index[0] = optimizer.extract_fit_index();
+}
+
+
+// compute solution path made by unpenalized estimation
+// [[Rcpp::export]]
+Rcpp::List compute_prefit_path_cpp(
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result,
+    Rcpp::List fitted_result) {
+  Rcpp::List coefficient_matrix;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  Rcpp::NumericVector theta_start_zero = Rcpp::clone(optimizer.theta_start);
+  optimizer.set_regularizer(
+    Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 0.0, INFINITY);
+  optimizer.update_coefficient_matrix();
+  optimizer.update_implied_moment();
+  optimizer.update_loss_value();
+  optimizer.update_model_jacobian();
+  coefficient_matrix = 
+    Rcpp::List::create(Rcpp::Named("mu") = optimizer.mu,
+                       Rcpp::Named("sigma") = optimizer.sigma,
+                       Rcpp::Named("gamma") = optimizer.gamma,
+                       Rcpp::Named("implied_moment") = optimizer.implied_moment,
+                       Rcpp::Named("saturated_moment") = optimizer.saturated_moment,
+                       Rcpp::Named("model_jacobian") = optimizer.model_jacobian);
+  return Rcpp::wrap(coefficient_matrix);
+}
+

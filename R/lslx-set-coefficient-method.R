@@ -335,16 +335,51 @@ lslx$set("private",
                )
              }
              
-             private$model$specification <-
-               private$model$specification[order(
-                 private$model$specification$reference,
-                 private$model$specification$group,
-                 private$model$specification$matrix,
-                 private$model$specification$block,
-                 match(private$model$specification$right, private$model$name_eta),
-                 match(private$model$specification$left, private$model$name_eta),
-                 method = "radix"
-               ), ]
+             if (length(private$model$ordered_variable) > 0) {
+               specification_gamma <- private$model$specification[private$model$specification$matrix == "gamma", ]
+               specification_non_gamma <- private$model$specification[private$model$specification$matrix != "gamma", ]
+               specification_gamma <- 
+                 specification_gamma[order(
+                   specification_gamma$reference,
+                   specification_gamma$group,
+                   specification_gamma$matrix,
+                   specification_gamma$block,
+                   match(specification_gamma$left, self$name_eta),
+                   match(specification_gamma$right, c("1", self$name_threshold, self$name_eta)),
+                   method = "radix"
+                 ),]
+               specification_non_gamma <- 
+                 specification_non_gamma[order(
+                   specification_non_gamma$reference,
+                   specification_non_gamma$group,
+                   specification_non_gamma$matrix,
+                   specification_non_gamma$block,
+                   match(specification_non_gamma$right, c("1", private$model$name_threshold, private$model$name_eta)),
+                   match(specification_non_gamma$left, private$model$name_eta),
+                   method = "radix"
+                 ),]
+               private$model$specification <- rbind(specification_gamma, 
+                                                    specification_non_gamma)
+               private$model$specification <-
+                 private$model$specification[order(
+                   private$model$specification$reference,
+                   private$model$specification$group,
+                   private$model$specification$matrix,
+                   private$model$specification$block,
+                   method = "radix"
+                 ),]
+             } else {
+               private$model$specification <-
+                 private$model$specification[order(
+                   private$model$specification$reference,
+                   private$model$specification$group,
+                   private$model$specification$matrix,
+                   private$model$specification$block,
+                   match(private$model$specification$right, c("1", private$model$name_threshold, private$model$name_eta)),
+                   match(private$model$specification$left, private$model$name_eta),
+                   method = "radix"
+                 ), ]
+             }
              private$model$specification <-
                private$model$specification[order(
                  private$model$specification$reference,

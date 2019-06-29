@@ -17,6 +17,7 @@ lslxModel <-
       name_eta = "character",
       name_exogenous = "character",
       name_endogenous = "character",
+      name_threshold = "character",
       specification = "data.frame"
     )
   )

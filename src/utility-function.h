@@ -36,6 +36,9 @@ Eigen::MatrixXd expand_both(Eigen::MatrixXd x,
 // vech operator
 Eigen::MatrixXd vech(Eigen::MatrixXd x);
 
+// vech operator for only non-diagonal elements
+Eigen::MatrixXd vech_small(Eigen::MatrixXd x);
+
 // method for creating commutation matrix
 Eigen::SparseMatrix<double> create_commutation(int n);
 
