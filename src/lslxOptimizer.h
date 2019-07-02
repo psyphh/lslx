@@ -31,6 +31,7 @@ public:
   Rcpp::List  saturated_moment_acov;
   
   int n_response, n_factor, n_eta, n_moment, n_moment_1, n_moment_2, n_group, n_theta, n_threshold;
+  int idx_reference;
   Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu;
   
   Rcpp::CharacterVector theta_name;
@@ -48,7 +49,7 @@ public:
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
   Eigen::SparseMatrix<double> elimination_y, duplication_eta, commutation_y;
   
-  Rcpp::List alpha, beta, beta_pinv, gamma, phi;
+  Rcpp::List alpha, beta, beta_pinv, gamma, phi, communality, psi;
   Rcpp::List mu, sigma, sigma_inv, implied_moment;
   Rcpp::List alpha_derivative, beta_derivative, phi_derivative;
   
@@ -107,6 +108,7 @@ public:
   void update_objective_value();
   void update_objective_gradient();
   void update_theta_direction();
+  void update_nuisance();
   void update_theta_value();
   void update_theta_start();
   

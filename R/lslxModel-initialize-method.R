@@ -389,20 +389,6 @@ lslxModel$set("private",
                   self$specification[!duplicated(self$specification$relation,
                                                  fromLast = TRUE),]
                 if (length(self$ordered_variable) > 0) {
-                  relation_gamma <- 
-                    unlist(mapply(
-                      FUN = function(ordered_variable_i, 
-                                     nlevel_ordered_i) {
-                        paste0(ordered_variable_i,
-                               "|",
-                               paste0("t", 1:(nlevel_ordered_i - 1)))
-                      },
-                      self$ordered_variable,
-                      self$nlevel_ordered),
-                      use.names = FALSE)
-                  self$specification[(self$specification$operator %in%
-                                        c("|=", "|~")),
-                                     "relation"]
                   relation_gamma <-
                     unlist(mapply(
                       FUN = function(ordered_variable_i, 
@@ -445,6 +431,30 @@ lslxModel$set("private",
                     )
                 } else {
                   specification_gamma = data.frame()
+                }
+                if (length(self$ordered_variable) > 0) {
+                  relation_psi <- paste0(self$ordered_variable, 
+                                         "**", 
+                                         self$ordered_variable)
+                  specification_psi <-
+                    data.frame(
+                      relation = relation_psi,
+                      left = substr(
+                        relation_psi,
+                        start = 1,
+                        stop = regexpr("\\*\\*", relation_psi) - 1
+                      ),
+                      right = substr(
+                        relation_psi,
+                        start = regexpr("\\*\\*", relation_psi) + 2,
+                        stop = nchar(relation_psi)
+                      ),
+                      operator = "*=*",
+                      prefix = NA_character_,
+                      stringsAsFactors = FALSE
+                    )
+                } else {
+                  specification_psi = data.frame()
                 }
                 if (any(self$specification$right == "1")) {
                   if (length(intersect(x = self$numeric_variable,
@@ -544,6 +554,7 @@ lslxModel$set("private",
                     specification_gamma,
                     specification_alpha,
                     specification_phi,
+                    specification_psi,
                     make.row.names = FALSE,
                     stringsAsFactors = FALSE
                   )
@@ -693,15 +704,16 @@ lslxModel$set("private",
                     x = ifelse(
                       self$specification$operator %in% c("|=", "|~"),
                       "gamma",
-                      ifelse(
-                        self$specification$operator %in% c("<=>", "<~>"),
-                        "phi",
-                        ifelse(self$specification$right == "1",
-                               "alpha",
-                               "beta")
-                      )
-                    ),
-                    levels = c("gamma", "alpha", "beta", "phi")
+                      ifelse(self$specification$operator %in% c("*=*", "*~*"),
+                             "psi",
+                             ifelse(
+                               self$specification$operator %in% c("<=>", "<~>"),
+                               "phi",
+                               ifelse(self$specification$right == "1",
+                                      "alpha",
+                                      "beta")
+                             ))),
+                    levels = c("gamma", "alpha", "beta", "phi", "psi")
                   )
                 self$specification$block <-
                   with(self$specification, {
@@ -724,9 +736,11 @@ lslxModel$set("private",
                     block_middle <-
                       ifelse(matrix %in% "gamma",
                              "|",
-                             ifelse(matrix %in% c("alpha", "beta"),
-                                    "<-",
-                                    "<->"))
+                             ifelse(matrix %in% "psi",
+                                    "**",
+                                    ifelse(matrix %in% c("alpha", "beta"),
+                                           "<-",
+                                           "<->")))
                     paste0(block_left, block_middle, block_right)
                   })
                 
@@ -749,9 +763,12 @@ lslxModel$set("private",
                   })
                 self$specification$type <-
                   ifelse(self$specification$relation %in% 
-                           paste0(self$ordered_variable, 
-                                  "<->", 
-                                  self$ordered_variable),
+                           c(paste0(self$ordered_variable, 
+                                    "<->", 
+                                    self$ordered_variable),
+                             paste0(self$ordered_variable, 
+                                    "**", 
+                                    self$ordered_variable)),
                          "fixed",
                          self$specification$type)
                 self$specification$start <-
@@ -775,6 +792,25 @@ lslxModel$set("private",
                                   self$ordered_variable),
                          NA_real_,
                          self$specification$start)
+                if (is.null(self$reference_group)) {
+                  self$specification$start <-
+                    ifelse(self$specification$relation %in% 
+                             paste0(self$ordered_variable, 
+                                    "**", 
+                                    self$ordered_variable),
+                           1,
+                           self$specification$start)
+                } else {
+                  self$specification$start <-
+                    ifelse(self$specification$relation %in% 
+                             paste0(self$ordered_variable, 
+                                    "**", 
+                                    self$ordered_variable),
+                           ifelse(self$specification$group %in% self$reference_group,
+                                  1,
+                                  0),
+                           self$specification$start)
+                }
                 self$specification$label <-
                   with(self$specification, {
                     prefix_verb <- 

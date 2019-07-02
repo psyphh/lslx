@@ -79,6 +79,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
     theta_is_est_idx = which(theta_is_est);
   }
   
+  idx_reference = Rcpp::as<int>(reduced_model["idx_reference"]) - 1;
   if (!continuous) {
     idx_ordered = Rcpp::as<IntegerVector>(reduced_model["idx_ordered"]) - 1;
     idx_numeric = Rcpp::as<IntegerVector>(reduced_model["idx_numeric"]) - 1;
@@ -143,6 +144,8 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
       gamma.push_back(gamma_i);
     }
     phi.push_back(Eigen::MatrixXd::Zero(n_eta, n_eta));
+    communality.push_back(Eigen::MatrixXd::Zero(n_response, 1));
+    psi.push_back(Eigen::MatrixXd::Zero(n_response, 1));
     alpha_derivative.push_back(Eigen::MatrixXd::Zero(n_eta, 1));
     beta_derivative.push_back(Eigen::MatrixXd::Zero(n_eta, n_eta));
     phi_derivative.push_back(Eigen::MatrixXd::Zero(n_eta, n_eta));
@@ -213,7 +216,7 @@ void lslxOptimizer::update_coefficient_matrix() {
   double theta_value_ijk;
   
   int i, j, k;
-  for (i = 0; i <= 3; i ++) {
+  for (i = 0; i <= 4; i ++) {
     if (Rcpp::is_true(Rcpp::any(0 == theta_group_idx_unique))) {
       theta_left_idx_i0 =
         theta_left_idx[(theta_matrix_idx == i) &
@@ -285,6 +288,18 @@ void lslxOptimizer::update_coefficient_matrix() {
           }
           break;
         }
+        case 4: {
+          if (!continuous) {
+          Eigen::Map<MatrixXd> psi_j(Rcpp::as< Eigen::Map <MatrixXd> >(psi[j - 1]));
+          int k;
+          for (k = 0; k < theta_value_ij.size(); k ++) {
+            theta_left_idx_ijk = theta_left_idx_ij[k];
+            theta_value_ijk = theta_value_ij[k];
+            psi_j(theta_left_idx_ijk, 0) = theta_value_ijk;
+          } 
+        }
+          break;
+        }
         }
       }
       
@@ -354,6 +369,22 @@ void lslxOptimizer::update_coefficient_matrix() {
               phi_j(theta_right_idx_i0k, theta_left_idx_i0k) = theta_value_i0k;
             }
           }
+          break;
+        }
+        case 4: {
+          if (!continuous) {
+          Eigen::Map<MatrixXd> psi_j(Rcpp::as< Eigen::Map <MatrixXd> >(psi[j - 1]));
+          for (k = 0; k < theta_value_i0.size(); k ++) {
+            theta_left_idx_i0k = theta_left_idx_i0[k];
+            theta_value_i0k = theta_value_i0[k];
+            if (Rcpp::is_true(Rcpp::any(j == theta_group_idx_unique))) {
+              psi_j(theta_left_idx_i0k, 0) =
+                psi_j(theta_left_idx_i0k, 0) + theta_value_i0k;
+            } else {
+              psi_j(theta_left_idx_i0k, 0) = theta_value_i0k;
+            }
+          }
+        }
           break;
         }
         }
@@ -503,7 +534,7 @@ void lslxOptimizer::update_model_jacobian() {
         theta_flat_idx_j = theta_flat_idx[(theta_group_idx == theta_group_idx_unique[j])];
         theta_matrix_idx_j = theta_matrix_idx[(theta_group_idx == theta_group_idx_unique[j])];
         
-        for (k = 0; k <= 3; k++) {
+        for (k = 0; k <= 4; k++) {
           theta_flat_idx_jk = theta_flat_idx_j[theta_matrix_idx_j == k];
           n_theta_jk = theta_flat_idx_jk.size();
           
@@ -565,6 +596,10 @@ void lslxOptimizer::update_model_jacobian() {
                           beta_pinv_i.topRows(n_response)) * duplication_eta),
                           idx_sigma,
                           theta_flat_idx_jk);
+                break;
+              }
+              case 4: {
+                
                 break;
               }
               }
@@ -1050,6 +1085,8 @@ void lslxOptimizer::update_theta_direction() {
   }
 }
 
+
+
 // method for updating thata value
 void lslxOptimizer::update_theta_value() {
   Rcpp::IntegerVector theta_group_idx_unique = Rcpp::sort_unique(theta_group_idx);
@@ -1086,6 +1123,53 @@ void lslxOptimizer::update_theta_value() {
       break;
     }
   }
+}
+
+// method for updating nuisance parameters
+void lslxOptimizer::update_nuisance() {
+  int i, j;
+  for (i = 0; i < n_group; i++) {
+    Eigen::Map<Eigen::MatrixXd> beta_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(beta[i]));
+    Eigen::Map<Eigen::MatrixXd> phi_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(phi[i]));
+    Eigen::Map<Eigen::MatrixXd> communality_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(communality[i]));
+    Eigen::Map<Eigen::MatrixXd> psi_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(psi[i]));
+    for (j = 0; j < n_response; j++) {
+      communality_i(j, 0) = (beta_i.block(j, n_response, 1, n_factor)).squaredNorm();
+      if (!continuous) {
+        if (Rcpp::is_true(Rcpp::any(j == idx_ordered))) {
+          phi_i(j, j) = psi_i(j, 0) - communality_i(j, 0); 
+        }
+      }
+    }
+  }
+  if (!continuous) {
+    if (idx_reference > -1) {
+      Eigen::Map<Eigen::MatrixXd> phi_0(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(phi[idx_reference]));
+      for (i = 0; i < n_group; i++) {
+        Eigen::Map<Eigen::MatrixXd> phi_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(phi[i]));
+        for (j = 0; j < n_theta; j++) {
+          if ((theta_is_diag[j]) & (Rcpp::is_true(Rcpp::any(theta_left_idx[j] == idx_ordered)))) {
+            if (theta_group_idx[j] == 0) {
+              theta_value[j] = phi_0(theta_left_idx[j], theta_left_idx[j]);
+            } else if ((theta_group_idx[j] - 1) == i) {
+              theta_value[j] = phi_i(theta_left_idx[j], theta_left_idx[j]) - phi_0(theta_left_idx[j], theta_left_idx[j]);
+            } else {}
+          }
+        }
+      }      
+    } else {
+      for (i = 0; i < n_group; i++) {
+        Eigen::Map<Eigen::MatrixXd> phi_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(phi[i]));
+        for (j = 0; j < n_theta; j++) {
+          if ((theta_is_diag[j]) & (Rcpp::is_true(Rcpp::any(theta_left_idx[j] == idx_ordered)))) {
+            if ((theta_group_idx[j] - 1) == i) {
+              theta_value[j] = phi_i(theta_left_idx[j], theta_left_idx[j]);
+            }
+          }
+        }
+      }
+    }
+  }  
 }
 
 // method for updating starting value for theta
@@ -1149,6 +1233,7 @@ void lslxOptimizer::update_coefficient() {
       } else {}
       update_regularizer_gradient();
       update_objective_gradient();
+      update_nuisance();
       update_theta_start();
       for (i = 0; i < n_theta; i++) {
         if ((theta_is_free[i] | theta_is_pen[i]) & theta_is_est[i]) {

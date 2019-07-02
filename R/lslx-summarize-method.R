@@ -76,6 +76,25 @@ lslx$set("public",
            if (private$fitting$control$cv_fold == 1L) {
              output$cv_error <- FALSE
            }
+           if (!(
+             standard_error %in% c(
+               "default",
+               "sandwich",
+               "observed_information",
+               "expected_information"
+             )
+           )) {
+             stop(
+               "Argument 'standard_error' can be only either 'default', 'sandwich', 'observed_information', or 'expected_information'."
+             )
+           }
+           if (standard_error == "default") {
+             if (private$fitting$control$response) {
+               standard_error <- "sandwich"
+             } else {
+               standard_error <- "observed_information"
+             }
+           }
            ##generating output informations
            if (output$general_information) {
              general_information <-
@@ -433,7 +452,9 @@ lslx$set("public",
                  "Regression",
                  "Covariance",
                  "Variance",
-                 "Intercept")
+                 "Intercept",
+                 "Threshold",
+                 "Scale")
              coefficient_test[] <-
                lapply(
                  X = coefficient_test,
@@ -458,6 +479,8 @@ lslx$set("public",
                format(private$model$specification$type,
                       width = 6,
                       justify = "right")
+             coefficient_test$block_label[grepl("y\\|t", coefficient_test$block)] <-
+               "Threshold"
              coefficient_test$block_label[grepl("(y|f)<-1", coefficient_test$block)] <-
                "Intercept"
              coefficient_test$block_label[grepl("(y|f)<-(y|f)", coefficient_test$block)] <-
@@ -466,8 +489,12 @@ lslx$set("public",
                "Factor Loading"
              coefficient_test$block_label[grepl("(y|f)<->(y|f)", coefficient_test$block)] <-
                "Covariance"
-             coefficient_test$block_label[coefficient_test$left == coefficient_test$right] <-
+             coefficient_test$block_label[(grepl("y<->y", coefficient_test$block) | 
+                                             grepl("f<->f", coefficient_test$block)) & 
+                                            (coefficient_test$left == coefficient_test$right)] <-
                "Variance"
+             coefficient_test$block_label[grepl("y\\*\\*y", coefficient_test$block) ] <-
+               "Scale"
              coefficient_test <-
                data.frame(coefficient_test[c(
                  "type",

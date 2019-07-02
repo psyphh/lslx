@@ -424,6 +424,11 @@ lslxFitting$set("private",
                       n_theta_is_pen = NA_integer_,
                       idx_numeric = match(model$numeric_variable, model$name_response),
                       idx_ordered = match(model$ordered_variable, model$name_response),
+                      idx_reference = ifelse(is.null(model$reference_group), 
+                                             0, 
+                                             ifelse(is.na(model$reference_group), 
+                                                    0, 
+                                                    match(model$reference_group, model$level_group))),
                       eta_is_exogenous = model$name_eta %in% model$name_exogenous,
                       eta_is_endogenous = model$name_eta %in% model$name_endogenous,
                       theta_name = rownames(model$specification),
@@ -436,12 +441,12 @@ lslxFitting$set("private",
                             1L,
                             ifelse(model$specification$matrix == "beta",
                                    2L,
-                                   3L)
+                                   ifelse(model$specification$matrix == "phi",
+                                          3L,
+                                          4L))
                           )
                         ),
-                      theta_left_idx = ifelse(model$specification$matrix == "gamma",
-                                              match(model$specification$left, model$name_response),
-                                              match(model$specification$left, model$name_eta)),
+                      theta_left_idx = match(model$specification$left, model$name_eta),
                       theta_right_idx = ifelse(
                         model$specification$matrix == "gamma",
                         match(model$specification$right, model$name_threshold),
@@ -569,13 +574,15 @@ lslxFitting$set("private",
                                self$reduced_model$n_eta *
                                  (self$reduced_model$theta_right_idx - 1L) +
                                  self$reduced_model$theta_left_idx,
-                               as.integer(
-                                 self$reduced_model$n_eta *
-                                   (self$reduced_model$theta_right_idx - 1L) +
-                                   self$reduced_model$theta_left_idx -
-                                   self$reduced_model$theta_right_idx *
-                                   (self$reduced_model$theta_right_idx - 1L) / 2L
-                               )
+                               ifelse(self$reduced_model$theta_matrix_idx == 3,
+                                      as.integer(
+                                        self$reduced_model$n_eta *
+                                          (self$reduced_model$theta_right_idx - 1L) +
+                                          self$reduced_model$theta_left_idx -
+                                          self$reduced_model$theta_right_idx *
+                                          (self$reduced_model$theta_right_idx - 1L) / 2L
+                                      ),
+                                      self$reduced_model$theta_left_idx)
                              )
                            ))
                   self$reduced_model$n_theta_is_free <-
