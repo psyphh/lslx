@@ -32,7 +32,7 @@ public:
   
   int n_response, n_factor, n_eta, n_moment, n_moment_1, n_moment_2, n_group, n_theta, n_threshold;
   int idx_reference;
-  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu;
+  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu, idx_diag, idx_nondiag;
   
   Rcpp::CharacterVector theta_name;
   Rcpp::LogicalVector theta_is_free, theta_is_pen, theta_is_diag;
@@ -49,7 +49,9 @@ public:
   Eigen::SparseMatrix<double> identity_y2, duplication_y;
   Eigen::SparseMatrix<double> elimination_y, duplication_eta, commutation_y;
   
-  Rcpp::List alpha, beta, beta_pinv, gamma, phi, communality, psi;
+  Eigen::MatrixXd some_matrix;
+  
+  Rcpp::List alpha, beta, beta_pinv, gamma, phi, psi;
   Rcpp::List mu, sigma, sigma_inv, implied_moment;
   Rcpp::List alpha_derivative, beta_derivative, phi_derivative;
   

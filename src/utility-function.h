@@ -33,6 +33,9 @@ Eigen::MatrixXd expand_both(Eigen::MatrixXd x,
                             int n_row,
                             int n_col);
 
+// vec operator
+Eigen::MatrixXd vec(Eigen::MatrixXd x);
+
 // vech operator
 Eigen::MatrixXd vech(Eigen::MatrixXd x);
 

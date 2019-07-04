@@ -553,6 +553,13 @@ lslxFitting$set("private",
                         }
                       }  
                     }
+                    self$reduced_model$idx_diag <- 
+                      diag(matrix(1:(length(model$name_eta) * length(model$name_eta)), 
+                                  length(model$name_eta), length(model$name_eta)))[1:length(model$name_response)]
+                    self$reduced_model$idx_nondiag <- 
+                      setdiff(matrix(1:(length(model$name_eta) * length(model$name_eta)), 
+                                     length(model$name_eta), length(model$name_eta)),
+                              self$reduced_model$idx_diag)
                   }
                   
                   self$reduced_model$theta_flat_idx <-
@@ -582,7 +589,13 @@ lslxFitting$set("private",
                                           self$reduced_model$theta_right_idx *
                                           (self$reduced_model$theta_right_idx - 1L) / 2L
                                       ),
-                                      self$reduced_model$theta_left_idx)
+                                      as.integer(
+                                        self$reduced_model$n_response *
+                                          (self$reduced_model$theta_right_idx - 1L) +
+                                          self$reduced_model$theta_left_idx -
+                                          self$reduced_model$theta_right_idx *
+                                          (self$reduced_model$theta_right_idx - 1L) / 2L
+                                      ))
                              )
                            ))
                   self$reduced_model$n_theta_is_free <-

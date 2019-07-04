@@ -66,6 +66,21 @@ Eigen::MatrixXd expand_both(Eigen::MatrixXd x,
   return(y);
 }
 
+// vec operator
+Eigen::MatrixXd vec(Eigen::MatrixXd x) {
+  int n_col = x.cols();
+  Eigen::MatrixXd y(n_col * n_col, 1);
+  int idx = 0;
+  int i, j;
+  for (i = 0; i < n_col; i ++ ) {
+    for (j = 0; j < n_col; j ++ ) {
+      y(idx, 0) = x(j, i);
+      idx += 1;
+    }
+  }
+  return(y);
+}
+
 // vech operator
 Eigen::MatrixXd vech(Eigen::MatrixXd x) {
   int n_col = x.cols();
