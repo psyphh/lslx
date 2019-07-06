@@ -4,6 +4,7 @@ lslx$set("private",
          function(block,
                   group,
                   action,
+                  hold_fixed,
                   verbose = TRUE) {
            if (!all(block %in% unique(private$model$specification$block))) {
              stop("Argument 'block' contains invalid relation. Please check.")
@@ -33,11 +34,17 @@ lslx$set("private",
                )
              }
            }
-           relation <-
-             private$model$specification[(private$model$specification$block %in% block) &
-                                           (private$model$specification$type !=
-                                              "fixed") &
-                                           private$model$specification$reference, "relation"]
+           if (hold_fixed) {
+             relation <-
+               private$model$specification[(private$model$specification$block %in% block) &
+                                             (private$model$specification$type !=
+                                                "fixed") &
+                                             private$model$specification$reference, "relation"]
+           } else {
+             relation <-
+               private$model$specification[(private$model$specification$block %in% block) &
+                                             private$model$specification$reference, "relation"]
+           }
            if (length(relation) == 0) {
              stop(
                "No valid relation ",
@@ -59,11 +66,13 @@ lslx$set("public",
          "free_heterogeneity",
          function(block,
                   group,
+                  hold_fixed = TRUE,
                   verbose = TRUE) {
            private$set_heterogeneity(
              block = block,
              group = group,
              action = "free",
+             hold_fixed = hold_fixed, 
              verbose = verbose
            )
          })
@@ -72,11 +81,13 @@ lslx$set("public",
          "fix_heterogeneity",
          function(block,
                   group,
+                  hold_fixed = TRUE,
                   verbose = TRUE) {
            private$set_heterogeneity(
              block = block,
              group = group,
              action = "fix",
+             hold_fixed = hold_fixed, 
              verbose = verbose
            )
          })
@@ -85,11 +96,13 @@ lslx$set("public",
          "penalize_heterogeneity",
          function(block,
                   group,
+                  hold_fixed = TRUE,
                   verbose = TRUE) {
            private$set_heterogeneity(
              block = block,
              group = group,
              action = "penalize",
+             hold_fixed = hold_fixed, 
              verbose = verbose
            )
          })

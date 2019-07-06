@@ -1680,6 +1680,8 @@ lslxFitting$set("private",
                   } else {
                     self$supplied_result$fitted_start <- self$reduced_model$theta_start
                   }
+                  self$supplied_result$fitted_start[
+                    is.na(self$supplied_result$fitted_start)] <- 0
                   names(self$supplied_result$fitted_start) <-
                     self$reduced_model$theta_name
                 })

@@ -80,8 +80,8 @@ lslx$set("private",
              sapply(
                X = name,
                FUN = function(name_i) {
-                 if (!grepl(pattern = "<-[^>]|<->", x = name_i)) {
-                   stop("Some coefficient name doesn't contain valid operator ('<-' and '<->').")
+                 if (!grepl(pattern = "<-[^>]|<->|\\||\\*\\*", x = name_i)) {
+                   stop("Some coefficient name contains invalid operator.")
                  }
                  if (!grepl(pattern = "/", x = name_i)) {
                    if (length(private$model$level_group) == 1) {
@@ -91,7 +91,7 @@ lslx$set("private",
                    }
                  }
                  name_i_split <-
-                   strsplit(x = name_i, split = c("<-|/|<->"))[[1]]
+                   strsplit(x = name_i, split = c("<-|/|<->|\\||\\*\\*"))[[1]]
                  if (length(name_i_split) != 3) {
                    stop("The format of some coefficient name is incorrect.")
                  }
@@ -100,7 +100,7 @@ lslx$set("private",
                  group_i <- name_i_split[3]
                  
                  if (left_i == 1) {
-                   stop("Intercept term '1' cannot be presented at the left-hand side of '<-'.")
+                   stop("Intercept term '1' cannot be presented at the left-hand side.")
                  }
                  
                  if (!(left_i %in% private$model$name_eta)) {
@@ -115,7 +115,7 @@ lslx$set("private",
                    )
                  }
                  
-                 if (!(right_i %in% c(private$model$name_eta, 1))) {
+                 if (!(right_i %in% c(private$model$name_eta, private$model$name_threshold, 1))) {
                    stop(
                      "Some specified right response or factor name is unrecognized.",
                      "\n  Response or factor name(s) currently recognized by 'lslx' is ",
@@ -191,7 +191,11 @@ lslx$set("private",
            } else {
              if (missing(start)) {
                if (action == "free") {
-                 start <- rep(NA_real_, length(name))
+                 if (any(private$model$level_group %in% private$model$reference_group)) {
+                   start <- rep(0, length(name))
+                 } else {
+                   start <- rep(NA_real_, length(name))
+                 }
                } else {
                  start <- rep(0, length(name))
                }
@@ -232,22 +236,28 @@ lslx$set("private",
                           start = 1,
                           stop = regexpr("/", name[i]) - 1)
                  name_i_split <-
-                   strsplit(x = name[i], split = c("<-|/|<->"))[[1]]
+                   strsplit(x = name[i], split = c("<-|/|<->|\\||\\*\\*"))[[1]]
                  left_i <- name_i_split[1]
                  right_i <- name_i_split[2]
                  group_i <- name_i_split[3]
                  
                  matrix_i <-
-                   ifelse(grepl(pattern = "<->",
+                   ifelse(grepl(pattern = "\\*\\*",
                                 x = name[i]),
-                          "phi",
-                          ifelse(
-                            grepl(pattern = "<-[^>]",
-                                  x = name[i]),
-                            ifelse(right_i == "1",
-                                   "alpha",
-                                   "beta")
-                          ))
+                          "psi",
+                          ifelse(grepl(pattern = "\\|",
+                                       x = name[i]),
+                                 "gamma",
+                                 ifelse(grepl(pattern = "<->",
+                                              x = name[i]),
+                                        "phi",
+                                        ifelse(
+                                          grepl(pattern = "<-[^>]",
+                                                x = name[i]),
+                                          ifelse(right_i == "1",
+                                                 "alpha",
+                                                 "beta")
+                                        ))))
                  block_i_left <-
                    ifelse(left_i %in% private$model$name_response,
                           "y",
@@ -261,16 +271,18 @@ lslx$set("private",
                        "f",
                        ifelse(right_i == "1",
                               "1",
-                              "@")
+                              "t")
                      )
                    )
                  block_i_middle <-
                    ifelse(
-                     matrix_i %in% c("alpha", "beta", "tau"),
+                     matrix_i %in% c("alpha", "beta"),
                      "<-",
                      ifelse(matrix_i == "phi",
                             "<->",
-                            "")
+                            ifelse("gamma",
+                                   "|",
+                                   "**"))
                    )
                  block_i <-
                    paste0(block_i_left, block_i_middle, block_i_right)

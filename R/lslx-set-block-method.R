@@ -6,6 +6,9 @@ lslx$set("private",
                   action,
                   type,
                   verbose = TRUE) {
+           if (any(block %in% c("y|t", "y**y"))) {
+             stop("Argument 'block' cannot be 'y|t' or 'y**y' in the current version.")
+           }
            if (!all(
              block %in% c(
                "y<-1",
@@ -69,13 +72,15 @@ lslx$set("private",
                  variable_type[1],
                  "y" = private$model$name_response,
                  "f" = private$model$name_factor,
-                 "1" = 1
+                 "1" = 1,
+                 "t" = private$model$name_threshold
                )
                left_variable <- switch(
                  variable_type[2],
                  "y" = private$model$name_response,
                  "f" = private$model$name_factor,
-                 "1" = 1
+                 "1" = 1,
+                 "t" = private$model$name_threshold
                )
                relation <-
                  paste0(
@@ -89,7 +94,6 @@ lslx$set("private",
                paste0(expand.grid(unlist(relation_all), group)[, 1],
                       "/",
                       expand.grid(unlist(relation_all), group)[, 2])
-             
              to_be_fixed <-
                private$model$specification[(private$model$specification$block %in% block) &
                                              (private$model$specification$group %in% group) &
@@ -105,7 +109,6 @@ lslx$set("private",
            }
            
            name <- c(name_relation, name_fixed)
-           
            if (length(name) == 0) {
              stop(
                "No valid relation or type",

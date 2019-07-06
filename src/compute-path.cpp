@@ -135,7 +135,7 @@ Rcpp::List compute_prefit_path_cpp(
   optimizer.update_coefficient_matrix();
   optimizer.update_implied_moment();
   optimizer.update_loss_value();
-  optimizer.update_model_jacobian();
+  optimizer.update_model_jacobian_nd();
   coefficient_matrix = 
     Rcpp::List::create(Rcpp::Named("mu") = optimizer.mu,
                        Rcpp::Named("sigma") = optimizer.sigma,

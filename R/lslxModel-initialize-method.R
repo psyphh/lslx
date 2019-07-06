@@ -59,6 +59,10 @@ lslxModel$set("private",
                        replacement = "<=>",
                        x = model)
                 model <-
+                  gsub(pattern = "~\\*~",
+                       replacement = "\\*=\\*",
+                       x = model)
+                model <-
                   ifelse(
                     !grepl(pattern = "\\|=|=\\||\\|~|~\\|",
                            x = model),
@@ -92,6 +96,8 @@ lslxModel$set("private",
                               "=|",
                               "|~",
                               "~|",
+                              "*=*",
+                              "*~*",
                               "<=:",
                               "<~:",
                               ":=>",
@@ -113,6 +119,8 @@ lslxModel$set("private",
                                   "=\\|",
                                   "\\|~",
                                   "~\\|",
+                                  "\\*=\\*",
+                                  "\\*~\\*",
                                   "<=:",
                                   "<~:",
                                   ":=>",
@@ -208,6 +216,24 @@ lslxModel$set("private",
                                                        c("<=>", "<~>"))] == "1")) {
                                   stop("Intercept term '1' cannot present at the arrow side of expression.")
                                 }
+                                if (any(model_i$right[model_i$operator %in%
+                                                      c("|=", "|~")] == "1") |
+                                    any(model_i$left[model_i$operator %in%
+                                                     c("|=", "|~")] == "1")) {
+                                  stop(
+                                    "Intercept term '1' cannot present at any side of expression for threshold specification."
+                                  )
+                                }
+                                if (any(model_i$right[model_i$operator %in%
+                                                      c("*=*", "*~*")] == "1") |
+                                    any(model_i$left[model_i$operator %in%
+                                                     c("*=*", "*~*")] == "1")) {
+                                  stop(
+                                    "Intercept term '1' cannot present at any side of expression for scale specification."
+                                  )
+                                }
+
+                                
                                 model_i$left_prefix <-
                                   sapply(
                                     left_i_split,
@@ -245,8 +271,10 @@ lslxModel$set("private",
                                            ifelse(model_i$operator %in%
                                                     c("<=>", "<~>"),
                                                   "<->",
-                                                  "|")
-                                         ),
+                                                  ifelse(model_i$operator %in% 
+                                                           c("|=", "|~"),
+                                                         "|",
+                                                         "**"))),
                                          model_i$right)
                                 model_i$operator <-
                                   ifelse(
@@ -403,8 +431,7 @@ lslxModel$set("private",
                   if (!all(self$specification[(self$specification$operator %in%
                                                c("|=", "|~")),
                                               "relation"] %in% (relation_gamma))) {
-                    stop("Some specified names for thresholds are not recognized.",
-                         "\n  Names for thresholds must be of the form 't' + '[[:digit:]]'.")
+                    stop("Some specification for thresholds are not recognized.")
                   }
                   relation_gamma <-
                     setdiff(x = relation_gamma, y = self$specification$relation)
@@ -436,6 +463,18 @@ lslxModel$set("private",
                   relation_psi <- paste0(self$ordered_variable, 
                                          "**", 
                                          self$ordered_variable)
+                  
+                  if (!all(self$specification[(self$specification$operator %in%
+                                               c("*=*", "*~*")),
+                                              "relation"] %in% (relation_psi))) {
+                    stop("Some specification for scale are not recognized.")
+                  }
+                  relation_psi <-
+                    setdiff(x = relation_psi, y = self$specification$relation)
+                } else {
+                  relation_psi <- character(0)
+                }
+                if (length(relation_psi) > 0) {
                   specification_psi <-
                     data.frame(
                       relation = relation_psi,
@@ -450,12 +489,13 @@ lslxModel$set("private",
                         stop = nchar(relation_psi)
                       ),
                       operator = "*=*",
-                      prefix = NA_character_,
+                      prefix = 1,
                       stringsAsFactors = FALSE
                     )
                 } else {
                   specification_psi = data.frame()
                 }
+                
                 if (any(self$specification$right == "1")) {
                   if (length(intersect(x = self$numeric_variable,
                                        y = self$name_exogenous)) > 0) {
@@ -756,7 +796,7 @@ lslxModel$set("private",
                                     ifelse(prefix_verb %in% "pen",
                                            "pen",
                                            ifelse(
-                                             operator %in% c("|=", "<=:", "<=", "<=>"),
+                                             operator %in% c("|=", "*=*", "<=:", "<=", "<=>"),
                                              "free",
                                              "pen"))))
                     return(type)
@@ -765,9 +805,6 @@ lslxModel$set("private",
                   ifelse(self$specification$relation %in% 
                            c(paste0(self$ordered_variable, 
                                     "<->", 
-                                    self$ordered_variable),
-                             paste0(self$ordered_variable, 
-                                    "**", 
                                     self$ordered_variable)),
                          "fixed",
                          self$specification$type)
@@ -792,25 +829,6 @@ lslxModel$set("private",
                                   self$ordered_variable),
                          NA_real_,
                          self$specification$start)
-                if (is.null(self$reference_group)) {
-                  self$specification$start <-
-                    ifelse(self$specification$relation %in% 
-                             paste0(self$ordered_variable, 
-                                    "**", 
-                                    self$ordered_variable),
-                           1,
-                           self$specification$start)
-                } else {
-                  self$specification$start <-
-                    ifelse(self$specification$relation %in% 
-                             paste0(self$ordered_variable, 
-                                    "**", 
-                                    self$ordered_variable),
-                           ifelse(self$specification$group %in% self$reference_group,
-                                  1,
-                                  0),
-                           self$specification$start)
-                }
                 self$specification$label <-
                   with(self$specification, {
                     prefix_verb <- 

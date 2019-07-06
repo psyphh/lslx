@@ -24,10 +24,13 @@ prelslx$set("public",
                   if (!is.data.frame(data)) {
                     stop("Argument 'data' is not a 'data.frame'.")
                   }
-                  if (missing(numeric_variable)) {
-                    numeric_variable <- 
-                      colnames(data)[sapply(X = data, FUN = is.numeric)]
-                  } else {
+                  if (!missing(numeric_variable) &
+                      !missing(ordered_variable)) {
+                    if (length(intersect(numeric_variable, ordered_variable)) == 0) {
+                      stop("Arguments 'numeric_variable' and 'ordered_variable' share the same variables.")
+                    }
+                  }
+                  if (!missing(numeric_variable)) {
                     if (!is.character(numeric_variable)) {
                       stop("Argument 'numeric_variable' is not a 'character'.")
                     }
@@ -41,10 +44,7 @@ prelslx$set("public",
                                })
                     }
                   }
-                  if (missing(ordered_variable)) {
-                    ordered_variable <- 
-                      colnames(data)[sapply(X = data, FUN = is.ordered)]
-                  } else {
+                  if (!missing(ordered_variable)) {
                     if (!is.character(ordered_variable)) {
                       stop("Argument 'ordered_variable' is not a 'character'.")
                     }
@@ -58,6 +58,10 @@ prelslx$set("public",
                                })
                     }
                   }
+                  numeric_variable <- 
+                    colnames(data)[sapply(X = data, FUN = is.numeric)]
+                  ordered_variable <- 
+                    colnames(data)[sapply(X = data, FUN = is.ordered)]
                   if (length(ordered_variable) > 0) {
                     nlevel_ordered <- sapply(X = data[, ordered_variable],
                                              FUN = nlevels)
