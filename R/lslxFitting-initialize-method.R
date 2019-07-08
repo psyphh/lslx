@@ -18,13 +18,6 @@ lslxFitting$set("public",
                   private$initialize_fitted_result()
                 })
 
-## \code{$complete()} complete the initialization. ##
-lslxFitting$set("public",
-                "complete",
-                function() {
-                })
-
-
 
 ## \code{$initialize_control()} initializes control options. ##
 lslxFitting$set("private",
@@ -330,7 +323,14 @@ lslxFitting$set("private",
                     } else {
                       self$control$loss <- "dwls"
                     }
+                  } else {
+                    if (!self$control$continuous) {
+                      if (self$control$loss == "ml") {
+                        stop("When ordered variable is included in the model, 'loss' cannot be 'ml'.")
+                      } 
+                    } 
                   }
+                  
                   if (!is.null(self$control$weight_matrix)) {
                     if (self$control$loss != "wls") {
                       stop("When 'weight_matrix' is specified, 'loss' must be set as 'wls'.")

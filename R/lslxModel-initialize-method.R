@@ -624,9 +624,11 @@ lslxModel$set("private",
                                ifelse(gsub(pattern = "\\(.*$", replacement = "", x = prefix_i) %in% 
                                         c("free", "fix", "pen", "start", "lab"),
                                       prefix_i,
-                                      ifelse(suppressWarnings(!is.na(as.numeric(prefix_i))),
-                                             paste0("fix", "(",  prefix_i, ")"),
-                                             paste0("lab", "(",  prefix_i, ")")))
+                                      ifelse(prefix_i %in% "NA",
+                                             paste0("free", "(",  prefix_i, ")"),
+                                             ifelse(suppressWarnings(!is.na(as.numeric(prefix_i))),
+                                                    paste0("fix", "(",  prefix_i, ")"),
+                                                    paste0("lab", "(",  prefix_i, ")"))))
                            } 
                            return(prefix_i)
                          })

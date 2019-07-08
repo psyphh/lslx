@@ -71,12 +71,4 @@ prelslx$set("public",
                 lslxFitting$new(model = private$model,
                                 data = private$data,
                                 control = control)
-              
-              compute_prefit_path_cpp(
-                private$fitting$reduced_data,
-                private$fitting$reduced_model,
-                private$fitting$control,
-                private$fitting$supplied_result,
-                private$fitting$fitted_result
-              )
             })

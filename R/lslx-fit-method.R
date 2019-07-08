@@ -19,7 +19,7 @@ lslx$set("public",
                   iter_in_max = 50L,
                   iter_other_max = 500L,
                   iter_armijo_max = 100L,
-                  tol_out = 1e-3,
+                  tol_out = 1e-5,
                   tol_in = 1e-3,
                   tol_other = 1e-7,
                   step_size = 0.5,
@@ -71,7 +71,6 @@ lslx$set("public",
              lslxFitting$new(model = private$model,
                              data = private$data,
                              control = control)
-           private$fitting$complete()
            
            if (private$fitting$control$regularizer) {
              compute_regularized_path_cpp(
