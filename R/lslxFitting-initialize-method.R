@@ -935,7 +935,8 @@ lslxFitting$set("private",
                                   response_for_threshold_i %in% name_response_i
                                 return(saturated_moment_i$th[][idc_response_for_threshold_i])
                               },
-                              self$reduced_data$name_response)
+                              self$reduced_data$name_response,
+                              SIMPLIFY = FALSE)
                             },
                             saturated_moment
                           )

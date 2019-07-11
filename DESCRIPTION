@@ -1,9 +1,9 @@
 Package: lslx
 Type: Package
-Title: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood
-Version: 0.6.6.9001
+Title: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood or Least Squares
+Version: 0.6.7
 Authors@R: c(person("Po-Hsien", "Huang", email = "psyphh@gmail.com", role = c("cre", "aut")), person("Wen-Hsin", "Hu", email = "loveakai@gmail.com", role = "aut"))
-Description: Fits semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) with elastic net (EN) or minimax concave penalty (MCP).
+Description: Fits semi-confirmatory structural equation modeling (SEM) via penalized likelihood (PL) or penalized least squares (PLS).
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -13,10 +13,10 @@ Depends:
 Imports: stats, 
     Rcpp,
     R6,
-    ggplot2
-Suggests: knitr,
-    rmarkdown,
+    ggplot2,
     lavaan
+Suggests: knitr,
+    rmarkdown
 VignetteBuilder: knitr
 LinkingTo: Rcpp,
     RcppEigen

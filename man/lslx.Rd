@@ -35,7 +35,7 @@ Summarize the fitting results with specified selector.
 
 To cite \pkg{lslx} in publications use:
 
-Po-Hsien Huang (in press). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software
+Po-Hsien Huang (in press). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software.
 }
 
 \section{Overview}{
@@ -45,7 +45,8 @@ In this semi-confirmatory method, an SEM model is distinguished into two parts: 
 The confirmatory part includes all of the freely estimated parameters and fixed parameters that are allowed for theory testing.
 The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory.
 By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently identified by the sparsity pattern of these penalized parameters.
-The technical details of \pkg{lslx} can be found in its JSS paper (Huang, in press).
+After Version 0.6.7, \pkg{lslx} also supports penalized least squares for SEM with ordianl data under delta parameterization. 
+The technical details of \pkg{lslx} can be found in its JSS paper (Huang, 2019a) or Vignette for Package lslx (https://cran.r-project.org/web/packages/lslx/vignettes/vignette-lslx.pdf).
 
 The main function \code{lslx} generates an object of \code{lslx} R6 class.
 R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object-oriented programming in \pkg{R} system.
@@ -63,7 +64,7 @@ These set-related methods may hugely change the initialized model by just one si
 This two-step approach allows users specifying their own models flexibly and efficiently.
 Details of the model specification can be found in the sections of \emph{Model Syntax} and \emph{Set-Related Methods}.
 
-Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized maximum likelihood (ML) loss function.
+Given a penalty level, \pkg{lslx} finds a PL estimate by minimizing a penalized maximum likelihood (ML) loss or a least squares loss functions (including OLS, DWLS, and WLS).
 The penalty function can be set as lasso (Tibshirani, 1996), ridge (Hoerl & Kennard, 1970), elastic net (Zou & Hastie, 2005), or mcp (minimax concave penalty; Zhang, 2010).
 \pkg{lslx} solves the optimization problem based on an improved \pkg{glmnet} method (Friedman, Hastie, & Tibshirani, 2010) made by Yuan, Ho, and Lin (2012).
 The underlying optimizer is written by using \pkg{Rcpp} (Eddelbuettel & Francois, 2011) and \pkg{RcppEigen} (Bates & Eddelbuettel, 2013).
@@ -84,7 +85,7 @@ Details of choosing an optimal penalty level can be found in the section of \emp
 Given a penalty level, it is important to evaluate the goodness-of-fit of selected model and coefficients.
 In \pkg{lslx}, it is possible to make statistical inferences for goodness-of-fit and coefficients.
 However, the inference methods assume that no model selection is conducted, which is not true in the case of using PL.
-After version 0.6.4, several post-selection mehtods are available (Huang, 2019).
+After version 0.6.4, several post-selection mehtods are available (Huang, 2019b).
 Details of statistical inference can be found in the sections of \emph{Model Fit Evaluation} and \emph{Coefficient Evaluation}.
 Implementations of these methods can be found in the sections of \emph{Summarize Method} and \emph{Test-Related Methods}.
 
@@ -346,7 +347,7 @@ For example, if three groups \code{c}, \code{a}, and \code{b} are considered, th
 
 In the current version of \pkg{lslx}, coefficient constraints cannot be imposed.
 It seems that testing coefficient invariance across groups is impossible in \pkg{lslx}.
-However, the present package parameterizes group coefficients in different way compared to other SEM software (Huang, in press).
+However, the present package parameterizes group coefficients in different way compared to other SEM software (Huang, 2018).
 Under \pkg{lslx}, each group coefficient is decomposed into a sum of a reference component and an increment component.
 If the reference component is assumed to be zero, the increment component represents the group coefficient, which is equivalent to the usual parameterization in other software solutions.
 On the other hand, if some group is set as reference (argument \code{reference_group} in \code{new} method, please see the section of \emph{Initialize Method}),
@@ -527,14 +528,15 @@ In the current version, standard errors based on the expected/observed Fisher in
 Because the sandwich formula is generally valid compared to the approaches based on Fisher information, \pkg{lslx} uses the sandwich formula as default whenever raw data is available.
 Note that sandwich covariance matrix in \pkg{lslx} is calculated based on Equation (14) in Yuan and Hayashi (2006) but not Equation (2.12a) in Browne (1984) to accommodate the potential model misspecification.
 Again, the significance tests may not be valid after penalty level selection.
-Further development is required to obtain valid test results or intervals after selecting a penalty level.
+After version 0.6.4, several post-selection mehtods are available (Huang, 2019b), inlcuding PoSI method with Scheffe constant (Berk, Brown, Buja, Zhang, & Zhao, 2013) and Polyhedral method (Lee, Sun, Sun, & Taylor, 2016).
 }
 
 \section{Initialize Method}{
 
 
-\preformatted{$new(model, data, sample_cov, sample_mean, sample_size, group_variable,
-  reference_group, weight_variable, auxiliary_variable, verbose = TRUE)}
+\preformatted{$new(model, data, numeric_variable, ordered_variable, 
+  group_variable, reference_group, weight_variable, auxiliary_variable, 
+  sample_cov, sample_mean, sample_size, sample_moment_acov, verbose = TRUE)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -542,11 +544,13 @@ Further development is required to obtain valid test results or intervals after 
 \item{\code{model}}{A \code{character} with length one to represent the model specification.}
 \item{\code{data}}{A \code{data.frame} of raw data.
 It must contains variables specified in \code{model} (and possibly the variables specified by \code{group_variable} and \code{weight_variable}).}
-\item{\code{group_variable}}{A \code{character} with length one to specify what variable is used for labeling group.}
-\item{\code{reference_group}}{A \code{character} with length one to specify which group is set as reference. }
+\item{\code{numeric_variable}}{A \code{character} to specify which response variables should be transfromed into \code{numeric}.}
+\item{\code{ordered_variable}}{A \code{character} to specify which response variables should be transfromed into \code{ordered}.}
 \item{\code{weight_variable}}{A \code{character} with length one to specify what variable is used for sampling weight.}
 \item{\code{auxiliary_variable}}{A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments when missing data presents and two-step method is implemented.
 Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.}
+\item{\code{group_variable}}{A \code{character} with length one to specify what variable is used for labeling group.}
+\item{\code{reference_group}}{A \code{character} with length one to specify which group is set as reference. }
 \item{\code{sample_cov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrixs. It must have row and column names that match the variable names specified in \code{model}.}
 \item{\code{sample_mean}}{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
 \item{\code{sample_size}}{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
@@ -557,14 +561,16 @@ Auxiliary variable(s) must be numeric. If any categorical auxiliary is considere
 \code{$new()} initializes a new object of \code{lslx} R6 class for fitting semi-confirmatory structural equation modeling (SEM).
 In most cases, a new \code{lslx} object is initialized by supplying \code{model} and \code{data}.
 For details of syntax for model specification, see the section of \emph{Model Syntax}.
-If raw data is not available, \code{lslx} also supports initialization via sample moments.
-In that case, \code{sample_cov} and \code{sample_size} are required.
-If \code{sample_mean} is missing under moment initialization, it is assumed to be zero.
+By default, types of response variables (\code{numeric} versus \code{ordered}) will be infered according to the imported \code{data.frame}.
+If users hope to transform variables types in \code{lslx}, \code{numeric_variable} and \code{ordered_variable} can be used. 
 When multi-group analysis is desired, argument \code{group_variable} should be given to specify what variable is used for labeling group.
 Argument \code{reference_group} can be used to set reference group.
 Note that if some group is set as reference, the coefficients in other groups will represent increments from the reference.
 When the missingness of data depends on some other variables, \code{auxiliary_variable} can be used to specify auxiliary variables for estimate saturated moments.
 For details of missing data, see the section of \emph{Missing Data}.
+If raw data is not available, \code{lslx} also supports initialization via sample moments.
+In that case, \code{sample_cov} and \code{sample_size} are required.
+If \code{sample_mean} is missing under moment initialization, it is assumed to be zero.
 }
 
 \section{Set-Related Methods}{
@@ -603,8 +609,8 @@ If \code{start} is missing, the starting value will be set as
 \item{\code{group}}{A \code{character} to indicate group names that the specified relations belong to.}
 \item{\code{block}}{A \code{character} with length one to indicate a block such that the corresponding target coefficient will be reset.
 Its value must be \code{"f<-1"}, \code{"y<-1"}, \code{"f<-f"}, \code{"f<-y"}, \code{"y<-f"}, \code{"y<-y"}, \code{"f<->f"}, \code{"f<->y"}, \code{"y<->f"}, or \code{"y<->y"}.}
-\item{\code{type}}{A \code{character} to indicate which type og parameter should be changed in the given block.
-Its value must be \code{free}, \code{fixed}, or \code{pen}.}
+\item{\code{type}}{A \code{character} to indicate which type of parameter should be changed in the given block.
+Its value must be \code{"free"}, \code{"fixed"}, or \code{"pen"}. If \code{type} is not specified, the types of all parameters in the given \code{block} will be modified.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 }
 \bold{Details}
@@ -652,32 +658,43 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
 
 
 \preformatted{$fit(penalty_method = "mcp", lambda_grid = "default", delta_grid = "default",
-  algorithm = "default", missing_method = "default", start_method = "default", 
+  step_grid = "default", loss = "default", algorithm = "default", 
+  missing_method = "default", start_method = "default", 
   lambda_direction = "default", lambda_length = 50L, delta_length = 3L,
   threshold_value = 0.3, iter_out_max = 100L, iter_in_max = 50L, 
-  iter_other_max = 500L, iter_armijo_max = 100L, tol_out = 1e-3, tol_in = 1e-3, 
-  tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, ridge_cov = 0, 
-  ridge_hessian = 1e-4, warm_start = TRUE, positive_variance = TRUE, 
-  minimum_variance = 1e-4, enforce_cd = FALSE, verbose = TRUE)
+  iter_other_max = 500L, iter_armijo_max = 100L, tol_out = 1e-3, 
+  tol_in = 1e-3, tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, 
+  ridge_cov = 0, ridge_hessian = 1e-4, warm_start = TRUE, 
+  positive_variance = TRUE, minimum_variance = 1e-4, enforce_cd = FALSE, 
+  weight_matrix = NULL, verbose = TRUE)
 $fit_none(...)
 $fit_lasso(lambda_grid = "default", ...)
 $fit_ridge(lambda_grid = "default", ...)
 $fit_elastic_net(lambda_grid = "default", delta_grid = "default", ...)
-$fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
+$fit_mcp(lambda_grid = "default", delta_grid = "default", ...)
+$fit_forward(step_grid = "default", ...)
+$fit_backward(step_grid = "default", ...)}
+
 \describe{
 \item{\bold{Arguments}}{
 
 }
 \item{\code{penalty_method}}{A \code{character} to specify the penalty method.
-  The current version supports \code{"none"}, \code{"lasso"}, \code{"ridge"}, \code{"elastic_net"}, and \code{"mcp"}.}
+There are two class penalty methods can be specified.
+For penalized estimation with a regularizer, \code{"lasso"}, \code{"ridge"}, \code{"elastic_net"}, and \code{"mcp"} can be used.
+For penalized estimation with stepwise search, \code{"forward"} and \code{"backward"} can be implemented. 
+If no penalty is considered, we can set \code{penalty_method} as \code{"none"}.}
 \item{\code{lambda_grid}}{A non-negative \code{numeric} to specify penalty levels for the regularizer.
   If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
 \item{\code{delta_grid}}{A non-negative \code{numeric} to specify the combination weight for \code{"elastic_net"} or the convexity level for \code{"mcp"}.
   If it is set as \code{"default"}, its value will be generated automatically.}
+\item{\code{step_grid}}{A non-negative \code{numeric} to specify a grid for stepwise search with \code{"forward"} and \code{"backward"}.}
 \item{\code{loss}}{A \code{character} to determine the loss function.
   The current version supports \code{"ml"} (maximum likelihood), \code{"uls"} (unweighted least squares), 
-  \code{"dwls"} (diagonal weighted least squres), and \code{"wls"} (weighted least squares). 
-  If the argument is set as \code{"default"}, then \code{"ml"} will be implemented.}
+  \code{"dwls"} (diagonal weighted least squres), and \code{"wls"} (weighted least squares).
+  The maximum likelihood is only available for all continuous response variables.
+  If the argument is set as \code{"default"}, then (1) \code{"ml"} will be implemented for all continuous response variables; 
+  (2) \code{"dwls"} will be implemented for ordinal or mixed types response variables.}
 \item{\code{algorithm}}{A \code{character} to determine the method of optimization.
   The current version supports \code{"gd"} (gradient descent), \code{"bfgs"} (Broyden-Fletcher-Goldfarb-Shanno), and \code{"fisher"} (Fisher scoring).
   If the argument is set as \code{"default"}, then \code{"fisher"} will be implemented.}
@@ -712,6 +729,7 @@ $fit_mcp(lambda_grid = "default", delta_grid = "default", ...)}
 \item{\code{positive_variance}}{A \code{logical} to specify whether the variance estimate should be constrained to be larger than \code{minimum_variance}.}
 \item{\code{minimum_variance}}{A \code{numeric} to specify the minimum value of variance if \code{positive_variance = TRUE}.}
 \item{\code{enforce_cd}}{A \code{logic} to specify whether coordinate descent should be used when no penalty function is used. Its default value is TRUE.}
+\item{\code{weight_matrix}}{A \code{list} with length equaling to the number of groups to specify a user-defined weight matrix for least squares loss.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 \item{\code{...}}{Other passing arguments for calling \code{$fit()}.}
 }
@@ -738,12 +756,19 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "el
 
 \code{$fit_mcp()} method fits the specified model to data by minimizing a loss function with mcp (Zhang, 2010).
 It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mcp"}.
+
+\code{$fit_forward()} method fits the specified model to data by minimizing a loss function with forward searching.
+It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "forward"}.
+
+\code{$fit_backward()} method fits the specified model to data by minimizing a loss function with backward searching.
+It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "backward"}.
 }
 
 \section{Summarize Method}{
 
-\preformatted{$summarize(selector, lambda, delta, standard_error = "default", debias = "default",
-  inference = "default", alpha_level = .05, include_faulty = FALSE, 
+\preformatted{$summarize(selector, lambda, delta, step, 
+  standard_error = "default", debias = "default", inference = "default", 
+  alpha_level = .05, include_faulty = FALSE, 
   style = "default", mode = "default", digit = 3, interval = TRUE, output)}
 \describe{
 \item{\bold{Arguments}}{
@@ -756,6 +781,8 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "mc
   If the specified \code{lambda} is not in \code{lambda_grid}, a nearest legitimate value will be used. }
 \item{\code{delta}}{A \code{numeric} to specific a chosen optimal convexity level.
   If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate value will be used.}
+\item{\code{step}}{A \code{numeric} to specific a chosen step for stepwise searching.
+  If the specified \code{step} is not in \code{step_grid}, a nearest legitimate value will be used.}
 \item{\code{standard_error}}{A \code{character} to specify the standard error to be used for hypothesis testing.
   The argument can be either \code{"sandwich"}, \code{"expected_information"}, and \code{"observed_information"}.
   If it is specified as \code{"default"}, it will be set as
@@ -791,11 +818,12 @@ For details of evaluation and inference methods, see the sections of \emph{Model
 \section{Test-Related Methods}{
 
 
-\preformatted{$test_lr(selector, lambda, delta, include_faulty = FALSE)
-$test_rmsea(selector, lambda, delta, alpha_level = .05, include_faulty = FALSE)
-$test_coefficient(selector, lambda, delta, standard_error = "default", 
-  debias = "default", inference = "default", alpha_level = .05, 
-  include_faulty = FALSE)}
+\preformatted{$test_lr(selector, lambda, delta, step, include_faulty = FALSE)
+$test_rmsea(selector, lambda, delta, step, 
+  alpha_level = .05, include_faulty = FALSE)
+$test_coefficient(selector, lambda, delta, step, 
+  standard_error = "default", debias = "default", inference = "default", 
+  alpha_level = .05, include_faulty = FALSE)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -1197,6 +1225,8 @@ Bentler, P. M. (1995). EQS structural equations program manual. Encino, CA: Mult
 
 Bentler, P. (1990). Comparative fit indices in structural models. Psychological Bulletin, 107(2), 238–246.
 
+Berk, R., Brown, L., Buja, A., Zhang, K., & Zhao, L. (2013). Valid postselection inference. The Annals of Statistics, 41(2), 802–837. 
+
 Bozdogan, H. (1987). Model selection and Akaike’s Information Criterion (AIC): The general theory and its analytical extensions. Psychometrika, 52(3), 345–370.
 
 Browne, M. W. (1984). Asymptotic distribution-free methods for the analysis of covariance structures. British Journal of Mathematical and Statistical Psychology, 37(1), 62–83.
@@ -1213,11 +1243,15 @@ Hoerl, A. E., & Kennard, R. W. (1970). Ridge Regression: Biased Estimation for N
 
 Huang, P. H. (2018). A Penalized Likelihood Method for Multi-Group Structural Equation Modeling. British Journal of Mathematical and Statistical Psychology, 71(3),  499-522.
 
-Huang, P. H. (2019). Post-selection inference in structural equation modeling. Under Revision.
+Huang, P. H. (2019a). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software.
+
+Huang, P. H. (2019b). Post-selection inference in Structural Equation Modeling. Multivariate Behavioral Research.
 
 Huang, P. H., Chen, H., & Weng, L. J. (2017). A Penalized Likelihood Method for Structural Equation Modeling. Psychometrika, 82(2), 329–354.
 
 Brosseau-Liard, P. E., Savalei, V., & Li, L. (2012). An Investigation of the Sample Performance of Two Nonnormality Corrections for RMSEA. Multivariate Behavioral Research, 47(6), 904-930.
+
+Lee, J. D., Sun, D. L., Sun, Y., & Taylor, J. E. (2016). Exact postselection inference, with application to the lasso. The Annals of Statistics, 44(3), 907–927.
 
 Li, L., & Bentler, P. M. (2006). Robust statistical tests for evaluating the hypothesis of close fit of misspecified mean and covariance structural models.
 UCLA Statistics Preprint #506. Los Angeles: University of California.

@@ -19,7 +19,7 @@ lslx$set("public",
                   iter_in_max = 50L,
                   iter_other_max = 500L,
                   iter_armijo_max = 100L,
-                  tol_out = 1e-5,
+                  tol_out = 1e-3,
                   tol_in = 1e-3,
                   tol_other = 1e-7,
                   step_size = 0.5,
@@ -322,6 +322,30 @@ lslx$set("public",
              penalty_method = "mcp",
              lambda_grid = lambda_grid,
              delta_grid = delta_grid,
+             ...
+           )
+         })
+
+## \code{$fit_forward()} method fits the specified model to data by minimizing a loss function with forward searching. ##
+lslx$set("public",
+         "fit_forward",
+         function(step_grid = "default",
+                  ...) {
+           self$fit(
+             penalty_method = "forward",
+             step_grid = step_grid,
+             ...
+           )
+         })
+
+## \code{$fit_backward()} method fits the specified model to data by minimizing a loss function with backward searching. ##
+lslx$set("public",
+         "fit_backward",
+         function(step_grid = "default",
+                  ...) {
+           self$fit(
+             penalty_method = "backward",
+             step_grid = step_grid,
              ...
            )
          })

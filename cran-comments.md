@@ -1,4 +1,4 @@
-## lslx ver.0.6.6
+## lslx ver.0.6.7
 
 ## Test environments
 * x86_64-apple-darwin15.6.0 (64-bit), R 3.6.0
@@ -7,5 +7,5 @@
 ## R CMD check results
 no ERRORs, WARNINGs or NOTEs
 
-## devtools::check_win_devel() results
+## devtools::check_win_devel(args = c('--compact-vignettes=both')) results
 no ERRORs, WARNINGs or NOTEs
