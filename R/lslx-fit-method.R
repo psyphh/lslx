@@ -31,6 +31,7 @@ lslx$set("public",
                   positive_variance = TRUE,
                   minimum_variance = 1e-4,
                   enforce_cd = TRUE,
+                  random_update = TRUE,
                   weight_matrix = NULL,
                   verbose = TRUE) {
            control <-
@@ -64,6 +65,7 @@ lslx$set("public",
                positive_variance = positive_variance,
                minimum_variance = minimum_variance,
                enforce_cd = enforce_cd,
+               random_update = random_update,
                weight_matrix = weight_matrix
              )
            

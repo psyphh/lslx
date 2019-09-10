@@ -33,12 +33,12 @@ void compute_regularized_path_cpp(
   int i, j, k, l, idx;
   idx = 0;
   for (i = 0; i < lambda_2nd_grid.size(); i++) {
-    if (!optimizer.warm_start) {
-      optimizer.set_theta_value(theta_start_zero);
-    }
     for (j = 0; j < delta_2nd_grid.size(); j++) {
       for (k = 0; k < lambda_1st_grid.size(); k++) {
         for (l = 0; l < delta_1st_grid.size(); l++) {
+          if (!optimizer.warm_start) {
+            optimizer.set_theta_value(theta_start_zero);
+          }
           optimizer.set_regularizer(
             Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 
             lambda_1st_grid[k], lambda_2nd_grid[i], delta_1st_grid[l], delta_2nd_grid[j]);

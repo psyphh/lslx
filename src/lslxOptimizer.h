@@ -19,7 +19,7 @@ public:
   double tol_in, tol_out, tol_other;
   double step_size, armijo;
   double ridge_cov, ridge_hessian;
-  bool warm_start, positive_variance, enforce_cd;
+  bool warm_start, positive_variance, enforce_cd, random_update;
   double minimum_variance;
   bool response, continuous, regularizer, searcher;
 

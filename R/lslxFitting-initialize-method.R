@@ -171,8 +171,12 @@ lslxFitting$set("private",
                     stop("Argument 'minimum_variance' must be a numeric vector with length one.")
                   }
                   if (!(is.logical(self$control$enforce_cd) &
-                        (length(self$control$minimum_variance) == 1))) {
+                        (length(self$control$enforce_cd) == 1))) {
                     stop("Argument 'enforce_cd' must be a logical vector with length one.")
+                  }
+                  if (!(is.logical(self$control$random_update) &
+                        (length(self$control$random_update) == 1))) {
+                    stop("Argument 'random_update' must be a logical vector with length one.")
                   }
                   if (!is.null(self$control$weight_matrix)) {
                     if (!is.list(self$control$weight_matrix) &
@@ -1459,6 +1463,7 @@ lslxFitting$set("private",
                           diag(sqrt(cor_pool_eigen$values[1:self$reduced_model$n_factor]))
                         cov_eta_yf <-
                           promax(cov_eta_yf, m = 4)$loadings[]
+                        cov_eta_yf[abs(cov_eta_yf) < 0.2] <- 0
                         cov_eta[1:self$reduced_model$n_response,
                                 (self$reduced_model$n_response + 1):self$reduced_model$n_eta] <-
                           cov_eta_yf
@@ -1888,12 +1893,8 @@ lslxFitting$set("private",
                       } else if (self$control$penalty_method == "ridge") {
                         self$control$delta_grid <- list(0, 0)
                       } else if (self$control$penalty_method == "elastic_net") {
-                        if (self$control$delta_length == 1) {
-                          self$control$delta_grid <- 0.5
-                        } else {
-                          self$control$delta_grid <-
-                            seq(0, 1, length.out = self$control$delta_length)
-                        }
+                        self$control$delta_grid <-
+                          seq(0, 1, length.out = (self$control$delta_length + 2))[2:(self$control$delta_length + 1)]
                         if (self$control$double_regularizer) {
                           self$control$delta_grid <-
                             list(self$control$delta_grid,
@@ -1964,11 +1965,19 @@ lslxFitting$set("private",
                                  sort(x, decreasing = FALSE)
                                })
                     } else {}
-                    self$control$delta_grid <-
-                      lapply(X = self$control$delta_grid,
-                             FUN = function(x) {
-                               sort(x, decreasing = TRUE)
-                             })
+                    if (self$control$penalty_method == "elastic_net") {
+                      self$control$delta_grid <-
+                        lapply(X = self$control$delta_grid,
+                               FUN = function(x) {
+                                 sort(x, decreasing = FALSE)
+                               })
+                    } else {
+                      self$control$delta_grid <-
+                        lapply(X = self$control$delta_grid,
+                               FUN = function(x) {
+                                 sort(x, decreasing = TRUE)
+                               })
+                    }
                   } else {
                     self$control$lambda_grid <- list(0, 0)
                     self$control$delta_grid <- list(ifelse(self$control$penalty_method == "mcp", Inf, 0), 
