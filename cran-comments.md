@@ -1,4 +1,6 @@
-## lslx ver.0.6.7
+## lslx ver.0.6.8
+lslx ver.0.6.7 has a serious bug.
+That is why we submit ver.0.6.8 so soon.
 
 ## Test environments
 * x86_64-apple-darwin15.6.0 (64-bit), R 3.6.0

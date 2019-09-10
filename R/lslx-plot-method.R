@@ -28,6 +28,11 @@ lslx$set("public",
                "When 'penalty_method' is 'none', 'plot_numerical_condition()' method is not available."
              )
            }
+           if (private$fitting$control$double_regularizer) {
+             stop(
+               "When two regularizers are implemented, 'plot_numerical_condition()' method is not available."
+             )
+           }
            if (missing(condition)) {
              condition <-
                c("n_iter_out",
@@ -38,7 +43,7 @@ lslx$set("public",
                condition <-
                  setdiff(
                    names(private$fitting$fitted_result$numerical_condition[[1]]),
-                   c("lambda", "delta", "step")
+                   c("lambda_1st", "lambda_2nd", "delta_1st", "delta_2nd", "step")
                  )
              }
              if (any(!(
@@ -97,21 +102,21 @@ lslx$set("public",
              )
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
-                      split = "=|/")
+                      split = "=|\\,|\\(|\\)")
            if (private$fitting$control$regularizer) {
              df_for_plot$penalty_level <- NULL
              df_for_plot$lambda <-
                as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[2]
+                   x[3]
                  }
                ))
              df_for_plot$delta <-
                round(as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[4]
+                   x[8]
                  }
                )), 3)
            } else {
@@ -210,6 +215,11 @@ lslx$set("public",
                "When 'penalty_method' is 'none', 'plot_information_criterion()' method is not available."
              )
            }
+           if (private$fitting$control$double_regularizer) {
+             stop(
+               "When two regularizers are implemented, 'plot_information_criterion()' method is not available."
+             )
+           }
            if (missing(criterion)) {
              criterion <- c("aic", "aic3", "caic", "bic", "abic", "hbic")
            } else {
@@ -255,21 +265,21 @@ lslx$set("public",
            
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
-                      split = "=|/")
+                      split = "=|\\,|\\(|\\)")
            if (private$fitting$control$regularizer) {
              df_for_plot$penalty_level <- NULL
              df_for_plot$lambda <-
                as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[2]
+                   x[3]
                  }
                ))
              df_for_plot$delta <-
                round(as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[4]
+                   x[8]
                  }
                )), 3)
            } else {
@@ -358,6 +368,11 @@ lslx$set("public",
            if (private$fitting$control$penalty_method == "none") {
              stop("When 'penalty_method' is 'none', 'plot_fit_index()' method is not available.")
            }
+           if (private$fitting$control$double_regularizer) {
+             stop(
+               "When two regularizers are implemented, 'plot_fit_index()' method is not available."
+             )
+           }
            if (missing(index)) {
              index <-
                names(private$fitting$fitted_result$fit_index[[1]])
@@ -403,21 +418,21 @@ lslx$set("public",
              )
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
-                      split = "=|/")
+                      split = "=|\\,|\\(|\\)")
            if (private$fitting$control$regularizer) {
              df_for_plot$penalty_level <- NULL
              df_for_plot$lambda <-
                as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[2]
+                   x[3]
                  }
                ))
              df_for_plot$delta <-
                round(as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[4]
+                   x[8]
                  }
                )), 3)
            } else {
@@ -512,6 +527,11 @@ lslx$set("public",
            if (private$fitting$control$penalty_method == "none") {
              stop("When 'penalty_method' is 'none', 'plot_coefficient()' method is not available.")
            }
+           if (private$fitting$control$double_regularizer) {
+             stop(
+               "When two regularizers are implemented, 'plot_coefficient()' method is not available."
+             )
+           }
            if (x_scale == "default") {
              x_scale <- "identity"
            }
@@ -584,21 +604,21 @@ lslx$set("public",
              )
            penalty_level_split <-
              strsplit(x = df_for_plot$penalty_level,
-                      split = "=|/")
+                      split = "=|\\,|\\(|\\)")
            if (private$fitting$control$regularizer) {
              df_for_plot$penalty_level <- NULL
              df_for_plot$lambda <-
                as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[2]
+                   x[3]
                  }
                ))
              df_for_plot$delta <-
                round(as.numeric(sapply(
                  X = penalty_level_split,
                  FUN = function(x) {
-                   x[4]
+                   x[8]
                  }
                )), 3)
            } else {

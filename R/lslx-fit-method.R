@@ -208,21 +208,39 @@ lslx$set("public",
            if (private$fitting$control$regularizer) {
              name_grid <-
                paste0(
-                 "ld=",
+                 "lambda=",
+                 "c(",
                  sapply(
                    X = private$fitting$fitted_result$numerical_condition,
                    FUN = function(x) {
-                     getElement(x, "lambda")
+                     getElement(x, "lambda_1st")
                    }
                  ),
-                 "/",
-                 "gm=",
+                 ",",
                  sapply(
                    X = private$fitting$fitted_result$numerical_condition,
                    FUN = function(x) {
-                     getElement(x, "delta")
+                     getElement(x, "lambda_2nd")
                    }
-                 )
+                 ),
+                 ")",
+                 ",",
+                 "delta=",
+                 "c(",
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(x, "delta_1st")
+                   }
+                 ),
+                 ",",
+                 sapply(
+                   X = private$fitting$fitted_result$numerical_condition,
+                   FUN = function(x) {
+                     getElement(x, "delta_2nd")
+                   }
+                 ),
+                 ")"
                )
            } else {
              name_grid <-

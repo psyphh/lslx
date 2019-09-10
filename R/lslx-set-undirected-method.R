@@ -3,6 +3,8 @@ lslx$set("private",
          "set_undirected",
          function(both,
                   group,
+                  penalty,
+                  set,
                   action,
                   verbose = TRUE) {
            if (length(both) == 1) {
@@ -28,6 +30,8 @@ lslx$set("private",
              expand.grid(combn(both, 2, function(x)
                paste0(x[1], "<->", x[2])), group)[, 2])
            private$set_coefficient(name = name,
+                                   penalty = penalty,
+                                   set = set,
                                    action = action,
                                    verbose = verbose)
          })
@@ -62,10 +66,14 @@ lslx$set("public",
          "penalize_undirected",
          function(both,
                   group,
+                  penalty,
+                  set,
                   verbose = TRUE) {
            private$set_undirected(
              both = both,
              group = group,
+             penalty = penalty,
+             set = set,
              action = "penalize",
              verbose = verbose
            )

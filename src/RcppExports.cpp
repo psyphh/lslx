@@ -244,36 +244,40 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_regularizer_gradient_cpp
-Rcpp::NumericMatrix compute_regularizer_gradient_cpp(Rcpp::NumericVector theta_value, double lambda, double delta, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
-RcppExport SEXP _lslx_compute_regularizer_gradient_cpp(SEXP theta_valueSEXP, SEXP lambdaSEXP, SEXP deltaSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+Rcpp::NumericMatrix compute_regularizer_gradient_cpp(Rcpp::NumericVector theta_value, double lambda_1st, double lambda_2nd, double delta_1st, double delta_2nd, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_regularizer_gradient_cpp(SEXP theta_valueSEXP, SEXP lambda_1stSEXP, SEXP lambda_2ndSEXP, SEXP delta_1stSEXP, SEXP delta_2ndSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_1st(lambda_1stSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_2nd(lambda_2ndSEXP);
+    Rcpp::traits::input_parameter< double >::type delta_1st(delta_1stSEXP);
+    Rcpp::traits::input_parameter< double >::type delta_2nd(delta_2ndSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_regularizer_gradient_cpp(theta_value, lambda, delta, reduced_data, reduced_model, control, supplied_result));
+    rcpp_result_gen = Rcpp::wrap(compute_regularizer_gradient_cpp(theta_value, lambda_1st, lambda_2nd, delta_1st, delta_2nd, reduced_data, reduced_model, control, supplied_result));
     return rcpp_result_gen;
 END_RCPP
 }
 // compute_objective_gradient_cpp
-Rcpp::NumericMatrix compute_objective_gradient_cpp(Rcpp::NumericVector theta_value, double lambda, double delta, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
-RcppExport SEXP _lslx_compute_objective_gradient_cpp(SEXP theta_valueSEXP, SEXP lambdaSEXP, SEXP deltaSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
+Rcpp::NumericMatrix compute_objective_gradient_cpp(Rcpp::NumericVector theta_value, double lambda_1st, double lambda_2nd, double delta_1st, double delta_2nd, Rcpp::List reduced_data, Rcpp::List reduced_model, Rcpp::List control, Rcpp::List supplied_result);
+RcppExport SEXP _lslx_compute_objective_gradient_cpp(SEXP theta_valueSEXP, SEXP lambda_1stSEXP, SEXP lambda_2ndSEXP, SEXP delta_1stSEXP, SEXP delta_2ndSEXP, SEXP reduced_dataSEXP, SEXP reduced_modelSEXP, SEXP controlSEXP, SEXP supplied_resultSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_value(theta_valueSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_1st(lambda_1stSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_2nd(lambda_2ndSEXP);
+    Rcpp::traits::input_parameter< double >::type delta_1st(delta_1stSEXP);
+    Rcpp::traits::input_parameter< double >::type delta_2nd(delta_2ndSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_data(reduced_dataSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type reduced_model(reduced_modelSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type control(controlSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type supplied_result(supplied_resultSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_objective_gradient_cpp(theta_value, lambda, delta, reduced_data, reduced_model, control, supplied_result));
+    rcpp_result_gen = Rcpp::wrap(compute_objective_gradient_cpp(theta_value, lambda_1st, lambda_2nd, delta_1st, delta_2nd, reduced_data, reduced_model, control, supplied_result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -295,8 +299,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_lslx_compute_score_acov_cpp", (DL_FUNC) &_lslx_compute_score_acov_cpp, 5},
     {"_lslx_compute_loss_value_cpp", (DL_FUNC) &_lslx_compute_loss_value_cpp, 5},
     {"_lslx_compute_loss_gradient_cpp", (DL_FUNC) &_lslx_compute_loss_gradient_cpp, 5},
-    {"_lslx_compute_regularizer_gradient_cpp", (DL_FUNC) &_lslx_compute_regularizer_gradient_cpp, 7},
-    {"_lslx_compute_objective_gradient_cpp", (DL_FUNC) &_lslx_compute_objective_gradient_cpp, 7},
+    {"_lslx_compute_regularizer_gradient_cpp", (DL_FUNC) &_lslx_compute_regularizer_gradient_cpp, 9},
+    {"_lslx_compute_objective_gradient_cpp", (DL_FUNC) &_lslx_compute_objective_gradient_cpp, 9},
     {NULL, NULL, 0}
 };
 

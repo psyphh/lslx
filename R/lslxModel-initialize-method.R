@@ -618,19 +618,61 @@ lslxModel$set("private",
                                          stop = nchar(prefix_i)) == ")")) {
                                prefix_i <- 
                                  substr(prefix_i, start = 3, stop = (nchar(prefix_i) - 1))
-                               prefix_i <- strsplit(x = prefix_i, split = ",")[[1]]
+                               prefix_i_split <- character(0)
+                               while (nchar(prefix_i) > 0) {
+                                 idx_left_bracket <- regexpr("\\(", prefix_i)[1]
+                                 idx_right_bracket <- regexpr("\\)", prefix_i)[1]
+                                 idx_comma <- regexpr(",", prefix_i)[1]
+                                 if (idx_comma == -1) {
+                                   prefix_i_split <- c(prefix_i_split, prefix_i)
+                                 } else {
+                                   if ((idx_left_bracket == -1) &
+                                       (idx_right_bracket == -1)) {
+                                     prefix_i_split <- c(prefix_i_split, prefix_i)
+                                   } else {
+                                     if ((idx_left_bracket < idx_comma) & 
+                                         (idx_right_bracket > idx_comma)) {
+                                       prefix_i_split <- c(prefix_i_split, 
+                                                           substr(prefix_i, 
+                                                                  start = 1, 
+                                                                  stop = idx_right_bracket))
+                                       if (idx_right_bracket < nchar(prefix_i)) {
+                                         prefix_i <-
+                                           substr(prefix_i, 
+                                                  start = (idx_right_bracket + 2), 
+                                                  stop = nchar(prefix_i))
+                                       } else {
+                                         prefix_i <- ""
+                                       }
+                                     } else {
+                                       prefix_i_split <- c(prefix_i_split, 
+                                                           substr(prefix_i, 
+                                                                  start = 1, 
+                                                                  stop = (idx_comma - 1)))
+                                       prefix_i <-
+                                         substr(prefix_i, 
+                                                start = (idx_comma + 1), 
+                                                stop = nchar(prefix_i))
+                                     }
+                                   }
+                                 }
+                               }
+                             } else {
+                               prefix_i_split <- prefix_i
                              }
-                             prefix_i <- 
-                               ifelse(gsub(pattern = "\\(.*$", replacement = "", x = prefix_i) %in% 
-                                        c("free", "fix", "pen", "start", "lab"),
-                                      prefix_i,
-                                      ifelse(prefix_i %in% "NA",
-                                             paste0("free", "(",  prefix_i, ")"),
-                                             ifelse(suppressWarnings(!is.na(as.numeric(prefix_i))),
-                                                    paste0("fix", "(",  prefix_i, ")"),
-                                                    paste0("lab", "(",  prefix_i, ")"))))
-                           } 
-                           return(prefix_i)
+                           } else {
+                             prefix_i_split <- prefix_i
+                           }
+                           prefix_i_split <- 
+                             ifelse(gsub(pattern = "\\(.*$", replacement = "", x = prefix_i_split) %in% 
+                                      c("free", "fix", "pen", "start", "lab"),
+                                    prefix_i_split,
+                                    ifelse(is.na(prefix_i_split),
+                                           prefix_i_split,
+                                           ifelse(suppressWarnings(!is.na(as.numeric(prefix_i_split))),
+                                                  paste0("fix", "(",  prefix_i_split, ")"),
+                                                  paste0("lab", "(",  prefix_i_split, ")"))))
+                           return(prefix_i_split)
                          })
                 if (anyNA(self$reference_group)) {
                   if (any(sapply(X = prefix_split,
@@ -661,11 +703,16 @@ lslxModel$set("private",
                                   sapply(
                                     X = prefix_split,
                                     FUN = function(prefix_split_j) {
+                                      prefix_split_j_verb <- 
+                                        gsub(pattern = "\\(.*$", 
+                                             replacement = "", 
+                                             x = prefix_split_j)
+                                      if (prefix_split_j_verb %in% "pen") {
+                                        prefix_split_j <- 
+                                          eval(parse(text = prefix_split_j))
+                                      } 
                                       if (level_group_i != "<NA>") {
-                                        if (gsub(
-                                          pattern = "\\(.*$", 
-                                          replacement = "", 
-                                          x = prefix_split_j) %in% "fix") {
+                                        if (prefix_split_j_verb %in% "fix") {
                                           prefix_split_j <- "fix(0)"
                                         } else {
                                           prefix_split_j <- NA
@@ -709,16 +756,29 @@ lslxModel$set("private",
                                     X = prefix_split,
                                     FUN = function(prefix_split_j) {
                                       if (length(prefix_split_j) == 1) {
+                                        prefix_split_j_verb <- 
+                                          gsub(pattern = "\\(.*$", 
+                                               replacement = "", 
+                                               x = prefix_split_j)
+                                        if (prefix_split_j_verb %in% "pen") {
+                                          prefix_split_j <- 
+                                            eval(parse(text = prefix_split_j))
+                                        } 
                                         if (!is.null(self$reference_group)) {
                                           if (level_group_i != self$reference_group) {
-                                            prefix_split_j_verb <- 
-                                              gsub(pattern = "\\(.*$", 
-                                                   replacement = "", 
-                                                   x = prefix_split_j)
                                             if (prefix_split_j_verb %in% 
-                                                c("free", "fix", "pen", "start")) {
+                                                c("free", "fix", "start")) {
                                               prefix_split_j <- 
                                                 paste0(prefix_split_j_verb, "(", 0, ")")
+                                            } else if (prefix_split_j_verb %in% "pen") {
+                                              prefix_split_j <- 
+                                                paste0(substr(prefix_split_j, 
+                                                              start = 1, 
+                                                              stop = regexpr("=", prefix_split_j)[1]),
+                                                       0,
+                                                       substr(prefix_split_j, 
+                                                              start = regexpr(",", prefix_split_j)[1], 
+                                                              stop = nchar(prefix_split_j)))
                                             } else if (prefix_split_j_verb %in% c("lab")) {
                                               prefix_split_j <- "fix(0)"
                                             } else {
@@ -729,6 +789,14 @@ lslxModel$set("private",
                                       } else {
                                         prefix_split_j <-
                                           prefix_split_j[level_group_i == self$level_group]
+                                        prefix_split_j_verb <- 
+                                          gsub(pattern = "\\(.*$", 
+                                               replacement = "", 
+                                               x = prefix_split_j)
+                                        if (prefix_split_j_verb %in% "pen") {
+                                          prefix_split_j <- 
+                                            eval(parse(text = prefix_split_j))
+                                        } 
                                       }
                                       return(prefix_split_j)
                                     }
@@ -815,9 +883,16 @@ lslxModel$set("private",
                     prefix_verb <- 
                       gsub(pattern = "\\(.*$", replacement = "", x = prefix)
                     prefix_value <- 
-                      substr(x = prefix, 
-                             start = (regexpr("\\(", prefix) + 1), 
-                             stop = (nchar(prefix) - 1))
+                      ifelse(prefix_verb %in% c("free", "fix", "start"),
+                             substr(x = prefix, 
+                                    start = (regexpr("\\(", prefix) + 1), 
+                                    stop = (nchar(prefix) - 1)),
+                             ifelse(prefix_verb %in% "pen",
+                                    sapply(X = strsplit(prefix, split = "=|,|\\(|\\)"), 
+                                           FUN = function(x) {
+                                             x[3]},
+                                           simplify = TRUE, USE.NAMES = FALSE),
+                                    NA_real_))
                     start <- 
                       ifelse(prefix_verb %in% c("free", "fix", "pen", "start"),
                              suppressWarnings(as.numeric(prefix_value)),
@@ -835,15 +910,54 @@ lslxModel$set("private",
                   with(self$specification, {
                     prefix_verb <- 
                       gsub(pattern = "\\(.*$", replacement = "", x = prefix)
-                    prefix_value <- 
-                      substr(x = prefix, 
-                             start = (regexpr("\\(", prefix) + 1), 
-                             stop = (nchar(prefix) - 1))
                     label <- 
                       ifelse(prefix_verb %in% "lab",
-                             prefix_value,
+                             substr(x = prefix, 
+                                    start = (regexpr("\\(", prefix) + 1), 
+                                    stop = (nchar(prefix) - 1)),
                              NA_character_)
                     return(label)
+                  })
+                self$specification$penalty <-
+                  with(self$specification, {
+                    prefix_verb <- 
+                      gsub(pattern = "\\(.*$", replacement = "", x = prefix)
+                    penalty <- 
+                      ifelse(prefix_verb %in% "pen",
+                             sapply(X = strsplit(prefix, split = "=|,|\\(|\\)"), 
+                                    FUN = function(x) {
+                                      x[5]},
+                                    simplify = TRUE, USE.NAMES = FALSE),
+                             ifelse(type == "pen",
+                                    "default",
+                                    "none"))
+                    return(penalty)
+                  })
+                self$specification$set <-
+                  with(self$specification, {
+                    prefix_verb <- 
+                      gsub(pattern = "\\(.*$", replacement = "", x = prefix)
+                    set <- 
+                      ifelse(prefix_verb %in% "pen",
+                             sapply(X = strsplit(prefix, split = "=|,|\\(|\\)"), 
+                                    FUN = function(x) {
+                                      as.numeric(x[7])},
+                                    simplify = TRUE, USE.NAMES = FALSE),
+                             ifelse(type == "pen", 1, 0))
+                    return(set)
+                  })
+                self$specification$weight <-
+                  with(self$specification, {
+                    prefix_verb <- 
+                      gsub(pattern = "\\(.*$", replacement = "", x = prefix)
+                    weight <- 
+                      ifelse(prefix_verb %in% "pen",
+                             sapply(X = strsplit(prefix, split = "=|,|\\(|\\)"), 
+                                    FUN = function(x) {
+                                      x[9]},
+                                    simplify = TRUE, USE.NAMES = FALSE),
+                             ifelse(type == "pen", 1, 0))
+                    return(as.numeric(weight))
                   })
                 self$specification$operator <- NULL
                 self$specification$prefix <- NULL

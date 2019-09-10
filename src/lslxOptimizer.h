@@ -23,7 +23,7 @@ public:
   double minimum_variance;
   bool response, continuous, regularizer, searcher;
 
-  double lambda, delta, step;
+  double lambda, lambda_1st, lambda_2nd, delta, delta_1st, delta_2nd, step;
   int iter_out;
   
   int n_observation;
@@ -40,7 +40,9 @@ public:
   Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx;
   Rcpp::NumericVector theta_start, theta_value, theta_direction;
   Rcpp::LogicalVector theta_is_est, theta_is_search; 
-  Rcpp::IntegerVector theta_is_est_idx, theta_is_search_idx;
+  Rcpp::IntegerVector theta_is_est_idx, theta_is_search_idx, theta_set;
+  Rcpp::CharacterVector theta_penalty;
+  Rcpp::NumericVector theta_weight;
   
   double baseline_loss_value;
   int baseline_degrees_of_freedom;
@@ -88,7 +90,9 @@ public:
                 Rcpp::List control,
                 Rcpp::List supplied_result);
   
-  void set_regularizer(Rcpp::CharacterVector regularizer_type_, double lambda_, double delta_);
+  void set_regularizer(Rcpp::CharacterVector regularizer_type_, 
+                       double lambda_1st_, double lambda_2nd_, 
+                       double delta_1st_, double delta_2nd_);
   void set_searcher(Rcpp::CharacterVector searcher_type_, Rcpp::LogicalVector theta_is_search_);
   void set_theta_value(Rcpp::NumericVector theta_value_);
   

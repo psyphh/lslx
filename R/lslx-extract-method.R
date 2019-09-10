@@ -110,7 +110,6 @@ lslx$set("public",
              penalty_level <-
                names(private$fitting$fitted_result$numerical_condition[idx_used])
            } else {
-             
              if (private$fitting$control$regularizer) {
                if (missing(selector) & missing(lambda) & missing(delta)) {
                  if (length(private$fitting$fitted_result$numerical_condition) > 1) {
@@ -120,7 +119,6 @@ lslx$set("public",
                  }
                }
              } else {}
-             
              if (private$fitting$control$searcher) {
                if (missing(selector) & missing(step)) {
                  if (length(private$fitting$fitted_result$numerical_condition) > 1) {
@@ -186,6 +184,21 @@ lslx$set("public",
                if (private$fitting$control$regularizer) {
                  if (missing(lambda)) {
                    stop("When 'selector' is not specified, 'lambda' cannot be empty.")
+                 } else {
+                   if (!private$fitting$control$double_regularizer) {
+                     if (length(lambda) != 1) {
+                       stop("When only one regularizer is implemented, length of 'lambda' must be 1.")
+                     } else {
+                       lambda <- list(lambda[[1]], 0)
+                     }
+                   } else {
+                     if ((!is.list(lambda))|(length(lambda) != 2)) {
+                       stop("When two regularizers are implemented, 'lambda' must be a list with length 2.")
+                     }
+                     if (!is.numeric(lambda[[1]])|!is.numeric(lambda[[2]])) {
+                       stop("Element in 'lambda' must be a numeric with length 1.")
+                     }
+                   }
                  }
                  if (missing(delta)) {
                    if (private$fitting$control$penalty_method %in% c("elastic_net", "mcp")) {
@@ -193,51 +206,102 @@ lslx$set("public",
                        "When 'selector' is not specified, 'delta' cannot be empty."
                      )
                    } else if (private$fitting$control$penalty_method == "lasso") {
-                     delta <- 1
+                     delta <- c(1, 1)
                    } else if (private$fitting$control$penalty_method == "ridge") {
-                     delta <- 0
+                     delta <- c(0, 0)
                    } else{}
+                 } else {
+                   if (!private$fitting$control$double_regularizer) {
+                     if (length(delta) != 1) {
+                       stop("When only one regularizer is implemented, length of 'delta' must be 1.")
+                     } else {
+                       if (private$fitting$control$penalty_method == "ridge") {
+                         delta <- list(delta[[1]], 0)
+                       } else if (private$fitting$control$penalty_method == "lasso") {
+                         delta <- list(delta[[1]], 1)
+                       } else if (private$fitting$control$penalty_method == "elastic_net") {
+                         delta <- list(delta[[1]], .5)
+                       } else if (private$fitting$control$penalty_method == "mcp") {
+                         delta <- list(delta[[1]], Inf)
+                       } else {}
+                     }
+                   } else {
+                     if ((!is.list(delta))|(length(delta) != 2)) {
+                       stop("When two regularizers are implemented, 'delta' must be a list with length 2.")
+                     }
+                     if (!is.numeric(delta[[1]])|!is.numeric(delta[[2]])) {
+                       stop("Element in 'delta' must be a numeric with length 1.")
+                     }
+                   }
                  }
                  penalty_used_split <-
                    strsplit(
-                     x = names(private$fitting$fitted_result$numerical_condition[idx_used]),
-                     split = "=|/"
+                     x = names(private$fitting$fitted_result$numerical_condition),
+                     split = "=|\\,|\\(|\\)"
                    )
                  penalty_used <-
                    sapply(
                      X = penalty_used_split,
                      FUN = function(penalty_used_split_i) {
                        penalty_used_i <-
-                         as.numeric(c(penalty_used_split_i[2],
-                                      penalty_used_split_i[4]))
+                         as.numeric(c(penalty_used_split_i[3],
+                                      penalty_used_split_i[4],
+                                      penalty_used_split_i[8],
+                                      penalty_used_split_i[9]))
                        return(penalty_used_i)
                      }
                    )
-                 delta_used <- penalty_used[2, ]
-                 if (delta %in% delta_used) {
-                   delta_nearest <- delta
+                 lambda_1st_used <- penalty_used[1, ]
+                 if (lambda[[1]] %in% lambda_1st_used) {
+                   lambda_1st_nearest <- lambda[[1]]
                  } else {
-                   if (delta == Inf) {
-                     delta_nearest <- max(delta_used)
+                   if (lambda[[1]] == Inf) {
+                     lambda_1st_nearest <- max(lambda_1st_used)
                    } else {
-                     delta_nearest <-
-                       max(abs(unique(delta_used)[which.min(abs(unique(delta_used) - delta))]))
+                     lambda_1st_nearest <-
+                       max(abs(unique(lambda_1st_used)[which.min(abs(unique(lambda_1st_used) - lambda[[1]]))]))
                    }
                  }
-                 lambda_used <-
-                   penalty_used[1, penalty_used[2, ] == delta_nearest]
-                 if (lambda %in% lambda_used) {
-                   lambda_nearest <- lambda
+                 lambda_2nd_used <- penalty_used[2, ]
+                 if (lambda[[2]] %in% lambda_2nd_used) {
+                   lambda_2nd_nearest <- lambda[[2]]
                  } else {
-                   if (lambda == Inf) {
-                     lambda_nearest <- max(lambda_used)
+                   if (lambda[[2]] == Inf) {
+                     lambda_2nd_nearest <- max(lambda_2nd_used)
                    } else {
-                     lambda_nearest <-
-                       max(abs(unique(lambda_used)[which.min(abs(unique(lambda_used) - lambda))]))
+                     lambda_2nd_nearest <-
+                       max(abs(unique(lambda_2nd_used)[which.min(abs(unique(lambda_2nd_used) - lambda[[2]]))]))
+                   }
+                 }
+                 delta_1st_used <- penalty_used[3, ]
+                 if (delta[[1]] %in% delta_1st_used) {
+                   delta_1st_nearest <- delta[[1]]
+                 } else {
+                   if (delta[[1]] == Inf) {
+                     delta_1st_nearest <- max(delta_1st_used)
+                   } else {
+                     delta_1st_nearest <-
+                       max(abs(unique(delta_1st_used)[which.min(abs(unique(delta_1st_used) - delta[[1]]))]))
+                   }
+                 }
+                 delta_2nd_used <- penalty_used[4, ]
+                 if (delta[[2]] %in% delta_2nd_used) {
+                   delta_2nd_nearest <- delta[[2]]
+                 } else {
+                   if (delta[[2]] == Inf) {
+                     delta_2nd_nearest <- max(delta_2nd_used)
+                   } else {
+                     delta_2nd_nearest <-
+                       max(abs(unique(delta_2nd_used)[which.min(abs(unique(delta_2nd_used) - delta[[2]]))]))
                    }
                  }
                  penalty_level <-
-                   paste0("ld=", lambda_nearest, "/", "gm=", delta_nearest)
+                   paste0("lambda", "=c(", 
+                          lambda_1st_nearest, ",",
+                          lambda_2nd_nearest, ")", ",", 
+                          "delta", "=c(", 
+                          delta_1st_nearest, ",",
+                          delta_2nd_nearest, ")")
                } else {}
                if (private$fitting$control$searcher) {
                  if (missing(step)) {
@@ -490,15 +554,21 @@ lslx$set("public",
                    step = step,
                    include_faulty = include_faulty
                  )
-               lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                              split = "=|/")[[1]][2])
-               delta_ <- as.numeric(strsplit(x = penalty_level,
-                                             split = "=|/")[[1]][4])
+               lambda_1st <- as.numeric(strsplit(x = penalty_level,
+                                                 split = "=|\\,|\\(|\\)")[[1]][3])
+               lambda_2nd <- as.numeric(strsplit(x = penalty_level,
+                                                 split = "=|\\,|\\(|\\)")[[1]][4])
+               delta_1st <- as.numeric(strsplit(x = penalty_level,
+                                                split = "=|\\,|\\(|\\)")[[1]][8])
+               delta_2nd <- as.numeric(strsplit(x = penalty_level,
+                                                split = "=|\\,|\\(|\\)")[[1]][9])
                regularizer_gradient <-
                  compute_regularizer_gradient_cpp(
                    theta_value = coefficient,
-                   lambda = lambda_,
-                   delta = delta_,
+                   lambda_1st = lambda_1st,
+                   lambda_2nd = lambda_2nd,
+                   delta_1st = delta_1st,
+                   delta_2nd = delta_2nd,
                    reduced_data = private$fitting$reduced_data,
                    reduced_model = private$fitting$reduced_model,
                    control = private$fitting$control,
@@ -1191,15 +1261,21 @@ lslx$set("public",
                )
              coefficient <-
                private$fitting$fitted_result$coefficient[[penalty_level]]
-             lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                            split = "=|/")[[1]][2])
-             delta_ <- as.numeric(strsplit(x = penalty_level,
-                                           split = "=|/")[[1]][4])
+             lambda_1st <- as.numeric(strsplit(x = penalty_level,
+                                               split = "=|\\,|\\(|\\)")[[1]][3])
+             lambda_2nd <- as.numeric(strsplit(x = penalty_level,
+                                               split = "=|\\,|\\(|\\)")[[1]][4])
+             delta_1st <- as.numeric(strsplit(x = penalty_level,
+                                              split = "=|\\,|\\(|\\)")[[1]][8])
+             delta_2nd <- as.numeric(strsplit(x = penalty_level,
+                                              split = "=|\\,|\\(|\\)")[[1]][9])
              regularizer_gradient <-
                compute_regularizer_gradient_cpp(
                  theta_value = coefficient,
-                 lambda = lambda_,
-                 delta = delta_,
+                 lambda_1st = lambda_1st,
+                 lambda_2nd = lambda_2nd,
+                 delta_1st = delta_1st,
+                 delta_2nd = delta_2nd,
                  reduced_data = private$fitting$reduced_data,
                  reduced_model = private$fitting$reduced_model,
                  control = private$fitting$control,
@@ -1248,15 +1324,21 @@ lslx$set("public",
            coefficient <-
              private$fitting$fitted_result$coefficient[[penalty_level]]
            if (private$fitting$control$regularizer) {
-             lambda_ <- as.numeric(strsplit(x = penalty_level,
-                                            split = "=|/")[[1]][2])
-             delta_ <- as.numeric(strsplit(x = penalty_level,
-                                           split = "=|/")[[1]][4])
+             lambda_1st <- as.numeric(strsplit(x = penalty_level,
+                                               split = "=|\\,|\\(|\\)")[[1]][3])
+             lambda_2nd <- as.numeric(strsplit(x = penalty_level,
+                                             split = "=|\\,|\\(|\\)")[[1]][4])
+             delta_1st <- as.numeric(strsplit(x = penalty_level,
+                                            split = "=|\\,|\\(|\\)")[[1]][8])
+             delta_2nd <- as.numeric(strsplit(x = penalty_level,
+                                            split = "=|\\,|\\(|\\)")[[1]][9])
              objective_gradient <-
                compute_objective_gradient_cpp(
                  theta_value = coefficient,
-                 lambda = lambda_,
-                 delta = delta_,
+                 lambda_1st = lambda_1st,
+                 lambda_2nd = lambda_2nd,
+                 delta_1st = delta_1st,
+                 delta_2nd = delta_2nd,
                  reduced_data = private$fitting$reduced_data,
                  reduced_model = private$fitting$reduced_model,
                  control = private$fitting$control,

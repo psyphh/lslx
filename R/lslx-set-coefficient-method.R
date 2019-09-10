@@ -29,10 +29,16 @@ lslx$set("public",
          "penalize_coefficient",
          function(name,
                   start,
+                  penalty,
+                  set,
+                  weight,
                   verbose = TRUE) {
            private$set_coefficient(
              name = name,
              start = start,
+             penalty = penalty,
+             set = set,
+             weight = weight,
              action = "penalize",
              verbose = verbose
            )
@@ -66,6 +72,9 @@ lslx$set("private",
          "set_coefficient",
          function(name,
                   start,
+                  penalty,
+                  set,
+                  weight,
                   type,
                   action,
                   verbose = TRUE) {
@@ -176,7 +185,7 @@ lslx$set("private",
                stop("Argument 'type' must be given if 'action' == 'type'.")
              }
              if (!is.character(type)) {
-               stop("The argument 'type' must be a character vector.")
+               stop("Argument 'type' must be a character vector.")
              }
              if (length(type) == 1) {
                type <- rep(type, length(name))
@@ -213,6 +222,79 @@ lslx$set("private",
                  )
                }
              }
+             if (missing(penalty)) {
+               if (action == "penalize") {
+                 penalty <- rep("default", length(name))
+               } else {
+                 penalty <- rep("none", length(name))
+               }
+             } else {
+               if (!is.character(penalty)) {
+                 stop("Argument 'penalty' must be a character vector.")
+               } else {
+                 if (!(penalty %in% c("lasso", "ridge", "mcp", "elastic_net"))) {
+                   stop("Elements in argument 'penalty' must be 'lasso', 'ridge', 'mcp', or 'elastic_net'.")      
+                 }
+               }
+               if (length(penalty) == 1) {
+                 penalty <- rep(penalty, length(name))
+               } else {
+                 if (length(penalty) != length(name)) {
+                   stop(
+                     "Argument 'penalty' has ambiguous length.",
+                     "\n  The length of 'penalty' must be the same with the length of 'name' or just one."
+                   )
+                 }
+               }
+             }
+             
+             if (missing(set)) {
+               if (action == "penalize") {
+                 set <- rep(1, length(name))
+               } else {
+                 set <- rep(0, length(name))
+               }
+             } else {
+               if (!is.numeric(set)) {
+                 stop("Argument 'set' must be a numeric vector.")
+               } else {
+                 if (any(!(set %in% c(1, 2)))) {
+                   stop("Elements in argument 'set' must be 1 or 2.")      
+                 }
+                 if (length(set) == 1) {
+                   set <- rep(set, length(name))
+                 } else {
+                   if (length(set) != length(name)) {
+                     stop(
+                       "Argument 'set' has ambiguous length.",
+                       "\n  The length of 'set' must be the same with the length of 'name' or just one."
+                     )
+                   }
+                 }
+               }
+               set <- rep(set, length(name))
+             }
+             if (missing(weight)) {
+               if (action == "penalize") {
+                 weight <- rep(1, length(name))
+               } else {
+                 weight <- rep(0, length(name))
+               }
+             } else {
+               if (!is.numeric(weight)) {
+                 stop("Argument 'weight' must be a numeric vector.")
+               } 
+               if (length(weight) == 1) {
+                 weight <- rep(weight, length(name))
+               } else {
+                 if (length(weight) != length(name)) {
+                   stop(
+                     "Argument 'weight' has ambiguous length.",
+                     "\n  The length of 'weight' must be the same with the length of 'name' or just one."
+                   )
+                 }
+               }
+             }
              
              if (action == "free") {
                type <- "free"
@@ -228,6 +310,12 @@ lslx$set("private",
                  private$model$specification[name[i], "type"] <- type
                  private$model$specification[name[i], "start"] <-
                    start[i]
+                 private$model$specification[name[i], "penalty"] <-
+                   penalty[i]
+                 private$model$specification[name[i], "set"] <-
+                   set[i]
+                 private$model$specification[name[i], "weight"] <-
+                   weight[i]
                  specification_i <-
                    private$model$specification[name[i], , drop = FALSE]
                } else {
@@ -306,6 +394,9 @@ lslx$set("private",
                      type = type,
                      start = start[i],
                      label = NA_character_,
+                     penalty = penalty[i],
+                     set = set[i],
+                     weight = weight[i],
                      stringsAsFactors = FALSE
                    )
                  rownames(specification_i) <- name[i]

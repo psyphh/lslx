@@ -3,6 +3,8 @@ lslx$set("private",
          "set_block",
          function(block,
                   group,
+                  penalty,
+                  set,
                   action,
                   type,
                   verbose = TRUE) {
@@ -118,6 +120,8 @@ lslx$set("private",
              )
            } else {
              private$set_coefficient(name = name,
+                                     penalty = penalty,
+                                     set = set,
                                      action = action,
                                      verbose = verbose)
            }
@@ -158,11 +162,15 @@ lslx$set("public",
          "penalize_block",
          function(block,
                   group,
+                  penalty,
+                  set,
                   type,
                   verbose = TRUE) {
            private$set_block(
              block = block,
              group = group,
+             penalty = penalty,
+             set = set,
              type = type,
              action = "penalize",
              verbose = verbose

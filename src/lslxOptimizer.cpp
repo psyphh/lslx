@@ -36,7 +36,11 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   regularizer = Rcpp::as<bool>(control["regularizer"]);
   searcher = Rcpp::as<bool>(control["searcher"]);
   lambda = 0;
-  delta = 1;
+  lambda_1st = 0;
+  lambda_2nd = 0;
+  delta = INFINITY;
+  delta_1st = INFINITY;
+  delta_2nd = INFINITY;
   step = 0;
   iter_out = -1;
   
@@ -56,6 +60,9 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_is_diag = Rcpp::as<LogicalVector>(reduced_model["theta_is_diag"]);
   theta_matrix_idx = Rcpp::as<IntegerVector>(reduced_model["theta_matrix_idx"]);
   theta_group_idx = Rcpp::as<IntegerVector>(reduced_model["theta_group_idx"]);
+  theta_set = Rcpp::as<IntegerVector>(reduced_model["theta_set"]);
+  theta_penalty = Rcpp::as<CharacterVector>(reduced_model["theta_penalty"]);
+  theta_weight = Rcpp::as<NumericVector>(reduced_model["theta_weight"]);
   
   theta_left_idx = Rcpp::as<IntegerVector>(reduced_model["theta_left_idx"]) - 1;
   theta_right_idx = Rcpp::as<IntegerVector>(reduced_model["theta_right_idx"]) - 1;
@@ -176,11 +183,15 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
 
 // method for setting the regularizer
 void lslxOptimizer::set_regularizer(Rcpp::CharacterVector regularizer_type_,
-                                    double lambda_, 
-                                    double delta_) {
+                                    double lambda_1st_,
+                                    double lambda_2nd_,
+                                    double delta_1st_,
+                                    double delta_2nd_) {
   regularizer_type = Rcpp::as<std::string>(regularizer_type_[0]);
-  lambda = lambda_;
-  delta = delta_;
+  lambda_1st = lambda_1st_;
+  lambda_2nd = lambda_2nd_;
+  delta_1st = delta_1st_;
+  delta_2nd = delta_2nd_;
 }
 
 // method for setting theta value
@@ -942,60 +953,80 @@ void lslxOptimizer::update_regularizer_value() {
   regularizer_value = 0.0;
   int i;
   double regularizer_value_i;
-  if (regularizer) {
-    if (lambda > DBL_EPSILON) {
-      for (i = 0; i < n_theta; i++) {
-        if (theta_is_pen[i]) {
-          if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
-            regularizer_value_i = 
-              lambda * (delta * std::abs(theta_value[i]) + (1 - delta) * std::pow(theta_value[i], 2));
-          } else if (regularizer_type == "mcp") {
-            if (std::abs(theta_value[i]) < (lambda * delta)) {
-              regularizer_value_i = 
-                lambda * (std::abs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * delta));
-            } else {
-              regularizer_value_i = (std::pow(lambda, 2) * delta) / 2.0;
-            }
-          } else {}
-        } else {
-          regularizer_value_i = 0;
-        }
-        regularizer_value += regularizer_value_i;
+  if ((lambda_1st > DBL_EPSILON)|(lambda_2nd > DBL_EPSILON)) {
+    for (i = 0; i < n_theta; i++) {
+      if (theta_set[i] == 1) {
+        lambda = lambda_1st; delta = delta_1st;
+      } else if (theta_set[i] == 2) {
+        lambda = lambda_2nd; delta = delta_2nd;
+      } else {
+        lambda = 0; delta = INFINITY;
       }
-    } else {} 
-  } else {}
+      if ((theta_penalty[i] == "ridge")) {
+        regularizer_value_i = 
+          theta_weight[i] * lambda * std::pow(theta_value[i], 2);
+      } else if ((theta_penalty[i] == "lasso")) {
+        regularizer_value_i = 
+          theta_weight[i] * lambda * std::abs(theta_value[i]);
+      } else if ((theta_penalty[i] == "elastic_net")) {
+        regularizer_value_i = 
+          theta_weight[i] * lambda * (delta * std::abs(theta_value[i]) + (1 - delta) * std::pow(theta_value[i], 2));
+      } else if (theta_penalty[i] == "mcp") {
+        if (std::abs(theta_value[i]) < (lambda * delta)) {
+          regularizer_value_i = 
+            theta_weight[i] * lambda * (std::abs(theta_value[i]) - std::pow(theta_value[i], 2) / (2.0 * lambda * delta));
+        } else {
+          regularizer_value_i = theta_weight[i] * (std::pow(lambda, 2) * delta) / 2.0;
+        }
+      } else {regularizer_value_i = 0;}
+      regularizer_value += regularizer_value_i;
+    }
+  } else {} 
 }
 
 // method for updating the gradient of regularizer 
 void lslxOptimizer::update_regularizer_gradient() {
   regularizer_gradient = Eigen::MatrixXd::Zero(n_theta, 1);
   int i;
-  if (regularizer) {
-    if (lambda > DBL_EPSILON) {
-      for (i = 0; i < n_theta; i++) {
-        if (theta_is_pen[i]) {
-          if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
-            if (theta_value[i] > DBL_EPSILON) {
-              regularizer_gradient(i, 0) = lambda * delta + 2 * lambda * (1 - delta) * theta_value[i];
-            } else if (theta_value[i] < - DBL_EPSILON) {
-              regularizer_gradient(i, 0) = - lambda * delta + 2 * lambda * (1 - delta) * theta_value[i];
-            } else {
-              regularizer_gradient(i, 0) = sign(theta_value[i]) * lambda * delta;
-            }
-          } else if (regularizer_type == "mcp") {
-            if ((theta_value[i] <= (lambda * delta)) & (theta_value[i] > DBL_EPSILON)) {
-              regularizer_gradient(i, 0) = lambda - (theta_value[i] / delta);
-            } else if ((- theta_value[i] <= (lambda * delta)) & (theta_value[i] < - DBL_EPSILON)) {
-              regularizer_gradient(i, 0) = - lambda - (theta_value[i] / delta);
-            } else if ((theta_value[i] > (lambda * delta)) | ((- theta_value[i]) > (lambda * delta))) {
-              regularizer_gradient(i, 0) = 0;
-            } else {
-              regularizer_gradient(i, 0) = sign(theta_value[i]) * lambda;
-            }
-          } else {}
-        } else {}
-      }      
-    } else {}
+  if ((lambda_1st > DBL_EPSILON)|(lambda_2nd > DBL_EPSILON))  {
+    for (i = 0; i < n_theta; i++) {
+      if (theta_set[i] == 1) {
+        lambda = lambda_1st; delta = delta_1st;
+      } else if (theta_set[i] == 2) {
+        lambda = lambda_2nd; delta = delta_2nd;
+      } else {
+        lambda = 0; delta = INFINITY;
+      }
+      if (theta_penalty[i] == "ridge") {
+        regularizer_gradient(i, 0) = (2 * theta_weight[i] * lambda) * theta_value[i];
+      } else if (theta_penalty[i] == "lasso") {
+        if (theta_value[i] > DBL_EPSILON) {
+          regularizer_gradient(i, 0) = (theta_weight[i] * lambda);
+        } else if (theta_value[i] < - DBL_EPSILON) {
+          regularizer_gradient(i, 0) = - (theta_weight[i] * lambda);
+        } else {
+          regularizer_gradient(i, 0) = sign(theta_value[i]) * (theta_weight[i] * lambda);
+        }
+      } else if (theta_penalty[i] == "elastic_net") {
+        if (theta_value[i] > DBL_EPSILON) {
+          regularizer_gradient(i, 0) = (theta_weight[i] * lambda * delta) + (2 * theta_weight[i] * lambda * (1 - delta)) * theta_value[i];
+        } else if (theta_value[i] < - DBL_EPSILON) {
+          regularizer_gradient(i, 0) = - (theta_weight[i] * lambda * delta) + (2 * theta_weight[i] * lambda * (1 - delta)) * theta_value[i];
+        } else {
+          regularizer_gradient(i, 0) = sign(theta_value[i]) * (theta_weight[i] * lambda * delta);
+        }
+      } else if (theta_penalty[i] == "mcp") {
+        if ((theta_value[i] <= (lambda * delta)) & (theta_value[i] > DBL_EPSILON)) {
+          regularizer_gradient(i, 0) = theta_weight[i] * lambda - theta_weight[i] * (theta_value[i] / delta);
+        } else if ((- theta_value[i] <= (lambda * delta)) & (theta_value[i] < - DBL_EPSILON)) {
+          regularizer_gradient(i, 0) = - theta_weight[i] * lambda - theta_weight[i] * (theta_value[i] / delta);
+        } else if ((theta_value[i] > (lambda * delta)) | ((- theta_value[i]) > (lambda * delta))) {
+          regularizer_gradient(i, 0) = 0;
+        } else {
+          regularizer_gradient(i, 0) = sign(theta_value[i]) * theta_weight[i] * lambda;
+        }
+      } else {}
+    }      
   } else {}
 }
 
@@ -1007,23 +1038,31 @@ void lslxOptimizer::update_objective_value() {
 // method for updating gradient of objective function
 void lslxOptimizer::update_objective_gradient() {
   int i;
-  if (regularizer) {
-    for (i = 0; i < n_theta; i++) {
-      if (std::abs(theta_value[i]) > DBL_EPSILON) {
-        objective_gradient(i, 0) = loss_gradient(i, 0) + regularizer_gradient(i, 0);
+  for (i = 0; i < n_theta; i++) {
+    if (std::abs(theta_value[i]) > DBL_EPSILON) {
+      objective_gradient(i, 0) = loss_gradient(i, 0) + regularizer_gradient(i, 0);
+    } else {
+      if (theta_set[i] == 1) {
+        lambda = lambda_1st; delta = delta_1st;
+      } else if (theta_set[i] == 2) {
+        lambda = lambda_2nd; delta = delta_2nd;
       } else {
-        if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
-          objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
-            std::max((std::abs(loss_gradient(i, 0)) - lambda * delta), 0.0);
-        } else if (regularizer_type == "mcp") {
-          objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
-            std::max((std::abs(loss_gradient(i, 0)) - lambda), 0.0);
-        } else {}
+        lambda = 0; delta = INFINITY;
       }
-    }
-  } else {
-    for (i = 0; i < n_theta; i++) {
-      objective_gradient(i, 0) = loss_gradient(i, 0);
+      if (theta_penalty[i] == "ridge") {
+        objective_gradient(i, 0) = loss_gradient(i, 0) + regularizer_gradient(i, 0);
+      } else if (theta_penalty[i] == "lasso") {
+        objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
+          std::max((std::abs(loss_gradient(i, 0)) - theta_weight[i] * lambda), 0.0);
+      } else if (theta_penalty[i] == "elastic_net") {
+        objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
+          std::max((std::abs(loss_gradient(i, 0)) - theta_weight[i] * lambda * delta), 0.0);
+      } else if (theta_penalty[i] == "mcp") {
+        objective_gradient(i, 0) = sign(loss_gradient(i, 0)) * 
+          std::max((std::abs(loss_gradient(i, 0)) - theta_weight[i] * lambda), 0.0);
+      } else {
+        objective_gradient(i, 0) = loss_gradient(i, 0);
+      }
     }
   }
 }
@@ -1057,49 +1096,60 @@ void lslxOptimizer::update_theta_direction() {
           g_ij = g(j, 0) + (h * d)(j, 0);
         }
         h_ij = h(j, j);
-        if (regularizer) {
-          if (lambda > DBL_EPSILON) {
-            if (theta_is_free[j] & theta_is_est[j]) {
-              z[j] = (-g_ij / h_ij);
-            } else if (theta_is_pen[j] & theta_is_est[j]) {
-              if ((regularizer_type == "lasso") | (regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
-                z_r = (- g_ij - 2 * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) - lambda * delta) / (h_ij + 2 * lambda * (1.0 - delta));
-                z_l = (- g_ij - 2 * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) + lambda * delta) / (h_ij + 2 * lambda * (1.0 - delta));           
-                if (z_r >= - (theta_value[j] + theta_direction[j])) {
-                  z[j] = z_r;
-                } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
-                  z[j] = z_l;
-                } else {
-                  z[j] = - (theta_value[j] + theta_direction[j]);
-                }
-              } else if (regularizer_type == "mcp") {
-                z_r = ((theta_value[j] + theta_direction[j]) / delta - g_ij - lambda) / (h_ij - (1.0 / delta));
-                z_l = ((theta_value[j] + theta_direction[j]) / delta - g_ij + lambda) / (h_ij - (1.0 / delta));
-                if (z_r >= - (theta_value[j] + theta_direction[j])) {
-                  if (z_r >= (lambda * delta - (theta_value[j] + theta_direction[j]))) {
-                    z[j] = (-g_ij / h_ij);
-                  } else {
-                    z[j] = z_r;
-                  }
-                } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
-                  if (z_l <= (-lambda * delta - (theta_value[j] + theta_direction[j]))) {
-                    z[j] = (-g_ij / h_ij);
-                  } else {
-                    z[j] = z_l;
-                  }
-                } else {
-                  z[j] = - (theta_value[j] + theta_direction[j]);
-                }
-              } else {}
-            } else {
-              z[j] = 0;
-            }
+        if ((lambda_1st > DBL_EPSILON)|(lambda_2nd > DBL_EPSILON)) {
+          if (theta_set[j] == 1) {
+            lambda = lambda_1st; delta = delta_1st;
+          } else if (theta_set[j] == 2) {
+            lambda = lambda_2nd; delta = delta_2nd;
           } else {
-            if ((theta_is_free[j] | theta_is_pen[j]) & theta_is_est[j]) {
-              z[j] = (-g_ij / h_ij);
-            } else {
-              z[j] = 0;
-            }
+            lambda = 0; delta = INFINITY;
+          }
+          if (theta_is_free[j] & theta_is_est[j]) {
+            z[j] = (-g_ij / h_ij);
+          } else if (theta_is_pen[j] & theta_is_est[j]) {
+            if (theta_penalty[j] == "ridge") {
+              z[j] = (- g_ij - 2 * theta_weight[j] * lambda * (theta_value[j] + theta_direction[j])) / (h_ij + 2 * theta_weight[j] * lambda);
+            } else if (theta_penalty[j] == "lasso") {
+              z_r = (- g_ij - theta_weight[j] * lambda) / (h_ij);
+              z_l = (- g_ij + theta_weight[j] * lambda) / (h_ij);           
+              if (z_r >= - (theta_value[j] + theta_direction[j])) {
+                z[j] = z_r;
+              } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
+                z[j] = z_l;
+              } else {
+                z[j] = - (theta_value[j] + theta_direction[j]);
+              }
+            } else if (theta_penalty[j] == "elastic_net") {
+              z_r = (- g_ij - 2 * theta_weight[j] * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) - theta_weight[j] * lambda * delta) / (h_ij + 2 * theta_weight[j] * lambda * (1.0 - delta));
+              z_l = (- g_ij - 2 * theta_weight[j] * lambda * (1 - delta) * (theta_value[j] + theta_direction[j]) + theta_weight[j] * lambda * delta) / (h_ij + 2 * theta_weight[j] * lambda * (1.0 - delta));           
+              if (z_r >= - (theta_value[j] + theta_direction[j])) {
+                z[j] = z_r;
+              } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
+                z[j] = z_l;
+              } else {
+                z[j] = - (theta_value[j] + theta_direction[j]);
+              }
+            } else if (theta_penalty[j] == "mcp") {
+              z_r = ((theta_value[j] + theta_direction[j]) / (delta / theta_weight[j]) - g_ij - theta_weight[j] * lambda) / (h_ij - (1.0 / (delta / theta_weight[j])));
+              z_l = ((theta_value[j] + theta_direction[j]) / (delta / theta_weight[j]) - g_ij + theta_weight[j] * lambda) / (h_ij - (1.0 / (delta / theta_weight[j])));
+              if (z_r >= - (theta_value[j] + theta_direction[j])) {
+                if (z_r >= (lambda * delta - (theta_value[j] + theta_direction[j]))) {
+                  z[j] = (-g_ij / h_ij);
+                } else {
+                  z[j] = z_r;
+                }
+              } else if (z_l <= -(theta_value[j] + theta_direction[j])) {
+                if (z_l <= (-lambda * delta - (theta_value[j] + theta_direction[j]))) {
+                  z[j] = (-g_ij / h_ij);
+                } else {
+                  z[j] = z_l;
+                }
+              } else {
+                z[j] = - (theta_value[j] + theta_direction[j]);
+              }
+            } else {}
+          } else {
+            z[j] = 0;
           }
         } else {
           if ((theta_is_free[j] | theta_is_pen[j]) & theta_is_est[j]) {
@@ -1327,14 +1377,25 @@ void lslxOptimizer::update_numerical_condition() {
   } else{}
   int i;
   for (i = 0; i < n_theta; i++) {
+    if (theta_set[i] == 1) {
+      lambda = lambda_1st; delta = delta_1st;
+    } else if (theta_set[i] == 2) {
+      lambda = lambda_2nd; delta = delta_2nd;
+    } else {
+      lambda = 0; delta = 1;
+    }
     if (theta_is_free[i] & theta_is_est[i]) {
       objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
       idx_is_effective.push_back(i);
     } else if (theta_is_pen[i] & theta_is_est[i]) {
-      if ((regularizer_type == "lasso")|(regularizer_type == "ridge")|(regularizer_type == "elastic_net")) {
-        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian + 2 * lambda * (1 - delta);
-      } else if (regularizer_type == "mcp") {
-        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian - (1 / delta);
+      if (theta_penalty[i] == "ridge") {
+        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian + 2 * theta_weight[i] * lambda;
+      } else if (theta_penalty[i] == "lasso") {
+        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
+      } else if (theta_penalty[i] == "elastic_net") {
+        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian + 2 * theta_weight[i] * lambda * (1 - delta);
+      } else if (theta_penalty[i] == "mcp") {
+        objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian - theta_weight[i] * (1 / delta);
       } else {
         objective_hessian_diagonal[i] = loss_hessian(i, i) + ridge_hessian;
       }
@@ -1370,13 +1431,22 @@ void lslxOptimizer::update_numerical_condition() {
           n_moment, n_theta) = model_jacobian_i;
       }
       loss_hessian = model_jacobian_matrix.transpose() * residual_weight_matrix * model_jacobian_matrix;
-      if ((regularizer_type == "ridge") | (regularizer_type == "elastic_net")) {
-        for (i = 0; i < n_theta; i++) {
-          if (theta_is_pen[i] & theta_is_pen[i]) {
-            loss_hessian(i, i) = loss_hessian(i, i) + 2 * lambda * (1 - delta);            
+      for (i = 0; i < n_theta; i++) {
+        if (theta_set[i] == 1) {
+          lambda = lambda_1st; delta = delta_1st;
+        } else if (theta_set[i] == 2) {
+          lambda = lambda_2nd; delta = delta_2nd;
+        } else {
+          lambda = 0; delta = 1;
+        }
+        if (theta_is_pen[i] & theta_is_est[i]) {
+          if ((theta_penalty[i] == "ridge")) {
+            loss_hessian(i, i) = loss_hessian(i, i) + 2 * theta_weight[i] * lambda;
+            } else if ((theta_penalty[i] == "elastic_net")) {
+              loss_hessian(i, i) = loss_hessian(i, i) + 2 * theta_weight[i] * lambda * (1 - delta);
+            } else {}
           }
         }
-      }
       loss_hessian = slice_both(loss_hessian, idx_is_effective, idx_is_effective);
       model_jacobian_matrix = slice_col(model_jacobian_matrix, idx_is_effective);
       robust_degrees_of_freedom = double(n_observation) * (saturated_moment_acov_matrix * 
@@ -1421,7 +1491,6 @@ void lslxOptimizer::update_information_criterion() {
   rbic = loss_value - (std::log(double(n_observation)) / double(n_observation)) * double(robust_degrees_of_freedom);
   rabic = loss_value - (std::log((double(n_observation) + 2.0) / 24.0) / double(n_observation)) * double(robust_degrees_of_freedom);
   rhbic = loss_value - (std::log(double(n_observation) / (2.0 * 3.1415926)) / double(n_observation)) * double(robust_degrees_of_freedom);
-  
 }
 
 // method for updating final fit index
@@ -1541,8 +1610,10 @@ void lslxOptimizer::complete_searching() {
 Rcpp::NumericVector lslxOptimizer::extract_numerical_condition() {
   Rcpp::NumericVector numerical_condition = 
     Rcpp::NumericVector::create(
-      _["lambda"] = lambda,
-      _["delta"] = delta,
+      _["lambda_1st"] = lambda_1st,
+      _["lambda_2nd"] = lambda_2nd,
+      _["delta_1st"] = delta_1st,
+      _["delta_2nd"] = delta_2nd,
       _["step"] = step,
       _["objective_value"] = objective_value,
       _["objective_gradient_abs_max"] = objective_gradient_abs_max,

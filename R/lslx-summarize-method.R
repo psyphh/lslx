@@ -139,11 +139,11 @@ lslx$set("public",
                      private$fitting$control$penalty_method %in% c("none", "forward", "backward"),
                      "none",
                      ifelse(
-                       length(private$fitting$control$lambda_grid) == 1,
-                       private$fitting$control$lambda_grid,
+                       length(private$fitting$control$lambda_grid[[1]]) == 1,
+                       private$fitting$control$lambda_grid[[1]],
                        paste(
-                         min(private$fitting$control$lambda_grid),
-                         max(private$fitting$control$lambda_grid),
+                         min(private$fitting$control$lambda_grid[[1]]),
+                         max(private$fitting$control$lambda_grid[[1]]),
                          sep = " - "
                        )
                      )
@@ -152,11 +152,11 @@ lslx$set("public",
                      (private$fitting$control$penalty_method %in% c("none", "forward", "backward", "lasso", "ridge")),
                      "none",
                      ifelse(
-                       length(private$fitting$control$delta_grid) == 1,
-                       private$fitting$control$delta_grid,
+                       length(private$fitting$control$delta_grid[[1]]) == 1,
+                       private$fitting$control$delta_grid[[1]],
                        paste(
-                         min(private$fitting$control$delta_grid),
-                         max(private$fitting$control$delta_grid),
+                         min(private$fitting$control$delta_grid[[1]]),
+                         max(private$fitting$control$delta_grid[[1]]),
                          sep = " - "
                        )
                      )
@@ -244,18 +244,25 @@ lslx$set("public",
                  digits = digit,
                  format = "f"
                )
-             numerical_condition[["lambda"]] <-
+             numerical_condition[["lambda_1st"]] <-
                ifelse(private$fitting$control$penalty_method %in% c("none", "forward", "backward"),
                       "none",
-                      numerical_condition[["lambda"]])
-             numerical_condition[["delta"]] <-
+                      ifelse(private$fitting$control$double_regularizer,
+                             paste0("c(", numerical_condition[["lambda_1st"]], ",",
+                                    numerical_condition[["lambda_2nd"]], ")"),
+                             numerical_condition[["lambda_1st"]]))
+             numerical_condition[["delta_1st"]] <-
                ifelse(private$fitting$control$penalty_method %in% c("none", "forward", "backward", "lasso", "ridge"),
                       "none",
-                      numerical_condition[["delta"]])
+                      ifelse(private$fitting$control$double_regularizer,
+                             paste0("c(", numerical_condition[["delta_1st"]], ",",
+                                    numerical_condition[["delta_2nd"]], ")"),
+                             numerical_condition[["delta_1st"]]))
              numerical_condition[["step"]] <-
                ifelse(private$fitting$control$penalty_method %in% c("none", "lasso", "ridge", "elastic_net", "mcp"),
                       "none",
                       numerical_condition[["step"]])
+             numerical_condition <- numerical_condition[-c(2, 4)] 
              names(numerical_condition) <-
                c(
                  "selected lambda",

@@ -4,6 +4,8 @@ lslx$set("private",
          function(left,
                   right,
                   group,
+                  penalty,
+                  set,
                   action,
                   verbose = TRUE) {
            if (missing(left)) {
@@ -36,6 +38,8 @@ lslx$set("private",
            )
            private$set_coefficient(name = name,
                                    action = action,
+                                   penalty = penalty,
+                                   set = set,
                                    verbose = verbose)
          })
 
@@ -74,11 +78,15 @@ lslx$set("public",
          function(left,
                   right,
                   group,
+                  penalty,
+                  set,
                   verbose = TRUE) {
            private$set_directed(
              left = left,
              right = right,
              group = group,
+             penalty = penalty,
+             set = set,
              action = "penalize",
              verbose = verbose
            )
