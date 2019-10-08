@@ -48,8 +48,8 @@ public:
   int baseline_degrees_of_freedom;
   
   Eigen::MatrixXd identity_y, identity_eta, identity_theta;  
-  Eigen::SparseMatrix<double> identity_y2, duplication_y;
-  Eigen::SparseMatrix<double> elimination_y, duplication_eta, commutation_y;
+  Eigen::MatrixXd identity_y2, duplication_y;
+  Eigen::MatrixXd elimination_y, duplication_eta, commutation_y;
   
   Eigen::MatrixXd some_matrix;
   

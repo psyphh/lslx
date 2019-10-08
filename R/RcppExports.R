@@ -25,6 +25,10 @@ compute_none_path_cpp <- function(reduced_data, reduced_model, control, supplied
     invisible(.Call('_lslx_compute_none_path_cpp', PACKAGE = 'lslx', reduced_data, reduced_model, control, supplied_result, fitted_result))
 }
 
+test_optimization_cpp <- function(reduced_data, reduced_model, control, supplied_result, fitted_result) {
+    .Call('_lslx_test_optimization_cpp', PACKAGE = 'lslx', reduced_data, reduced_model, control, supplied_result, fitted_result)
+}
+
 compute_coefficient_matrix_cpp <- function(theta_value, reduced_data, reduced_model, control, supplied_result) {
     .Call('_lslx_compute_coefficient_matrix_cpp', PACKAGE = 'lslx', theta_value, reduced_data, reduced_model, control, supplied_result)
 }

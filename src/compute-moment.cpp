@@ -82,7 +82,7 @@ void compute_saturated_moment_acov_response_cpp(
   Rcpp::List m_idx_i;
   Rcpp::List m2_idx_i;
   Eigen::MatrixXd saturated_mean_i, saturated_cov_i;
-  Eigen::SparseMatrix<double> duplication_i;
+  Eigen::MatrixXd duplication_i;
   Eigen::MatrixXd score2_sum_i;
   Eigen::MatrixXd hessian_sum_i, hessian_sum_i_inv;
   Eigen::MatrixXd saturated_mean_ij, saturated_cov_ij, saturated_cov_ij_vech, saturated_cov_ij_inv;
@@ -94,7 +94,7 @@ void compute_saturated_moment_acov_response_cpp(
   Eigen::MatrixXd saturated_moment_acov_i;
   Rcpp::IntegerVector m_idx_ij, m2_idx_ij;
   int n_response_ij, n_moment_ij, sample_size_ij;
-  Eigen::SparseMatrix<double> duplication_ij;
+  Eigen::MatrixXd duplication_ij;
   
   int i, j, k;
   int n_group = y_obs.size();
@@ -221,7 +221,7 @@ void compute_saturated_moment_acov_moment_cpp(
     Rcpp::List saturated_cov,
     Rcpp::List saturated_moment_acov) {
   Eigen::MatrixXd saturated_cov_i_inv, saturated_moment_acov_i;
-  Eigen::SparseMatrix<double> duplication_i;
+  Eigen::MatrixXd duplication_i;
   double sample_proportion_i;
   int n_response_i, n_moment_i;
   int i;

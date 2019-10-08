@@ -43,10 +43,10 @@ Eigen::MatrixXd vech(Eigen::MatrixXd x);
 Eigen::MatrixXd vech_small(Eigen::MatrixXd x);
 
 // method for creating commutation matrix
-Eigen::SparseMatrix<double> create_commutation(int n);
+Eigen::MatrixXd create_commutation(int n);
 
 // create duplication matrix
-Eigen::SparseMatrix<double> create_duplication(int n);
+Eigen::MatrixXd create_duplication(int n);
 
 // method for which function
 Rcpp::IntegerVector which(Rcpp::LogicalVector x);

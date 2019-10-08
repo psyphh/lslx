@@ -103,24 +103,14 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
   theta_direction = Rcpp::rep(0.0, n_theta);
   theta_value.attr("names") = theta_name;
   
-  identity_y.resize(n_response, n_response);
-  identity_y.setIdentity();
-  identity_eta.resize(n_eta, n_eta);
-  identity_eta.setIdentity();
-  identity_theta.resize(n_theta, n_theta);
-  identity_theta.setIdentity();
-  identity_y2.resize(n_response * n_response, n_response * n_response);
-  identity_y2.setIdentity();
+  identity_y = Eigen::MatrixXd::Identity(n_response, n_response);
+  identity_eta = Eigen::MatrixXd::Identity(n_eta, n_eta);
+  identity_theta = Eigen::MatrixXd::Identity(n_theta, n_theta);
+  identity_y2 = Eigen::MatrixXd::Identity(n_response * n_response, n_response * n_response);
   
   duplication_y  = create_duplication(n_response);
-  elimination_y  = duplication_y.transpose() * duplication_y;
-  Eigen::SparseLU<SparseMatrix<double> > solver;
-  Eigen::SparseMatrix<double> identity_n_cov(n_response * (n_response + 1) / 2, 
-                                             n_response * (n_response + 1) / 2);
-  identity_n_cov.setIdentity();
-  solver.compute(elimination_y);
-  elimination_y = solver.solve(identity_n_cov) * duplication_y.transpose();  
   duplication_eta  = create_duplication(n_eta);
+  elimination_y  = (duplication_y.transpose() * duplication_y).inverse() * duplication_y.transpose();
   commutation_y  = create_commutation(n_response);
   
   n_observation = Rcpp::as<int>(reduced_data["n_observation"]);
@@ -537,7 +527,6 @@ void lslxOptimizer::update_model_jacobian() {
       }
     }
   } else {
-    MatrixXd elimination_y_dense = MatrixXd(elimination_y);
     for (i = 0; i < n_group; i++) {
       n_theta_sum = 0;
       Eigen::Map<Eigen::MatrixXd> alpha_i(Rcpp::as< Eigen::Map <Eigen::MatrixXd> >(alpha[i]));
@@ -650,7 +639,7 @@ void lslxOptimizer::update_model_jacobian() {
                   0, n_theta_sum + n_theta_j,
                   n_moment_1, n_theta_jk) = 
                     slice_col(psi_derivative_i, theta_left_idx_jk);
-                psi_derivative_i = (elimination_y_dense * 
+                psi_derivative_i = (elimination_y * 
                   (kroneckerProduct(
                       ((sigma_i).array().colwise() * 
                         psi_vec_i.array()).matrix(),

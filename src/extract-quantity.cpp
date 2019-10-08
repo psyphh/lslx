@@ -2,6 +2,10 @@
 // written by Po-Hsien Huang psyphh@gmail.com
 
 #include "lslxOptimizer.h"
+#include "utility-function.h"
+
+using namespace Rcpp;
+using namespace Eigen;
 
 // [[Rcpp::depends(RcppEigen)]]
 // compute coefficient matrix

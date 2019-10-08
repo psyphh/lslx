@@ -112,23 +112,25 @@ Eigen::MatrixXd vech_small(Eigen::MatrixXd x) {
 }
 
 // method for creating commutation matrix
-Eigen::SparseMatrix<double> create_commutation(int n) {
+Eigen::MatrixXd create_commutation(int n) {
   int n2 = n * n;
-  Eigen::SparseMatrix<double> commutation(n2, n2);
+  Eigen::MatrixXd commutation;
+  commutation = Eigen::MatrixXd::Zero(n2, n2);
   int i, j, row_idx, col_idx;
   for (i = 0; i < n2; i++) {
     row_idx = i % n;
     col_idx = i / n;
     j = n * row_idx + col_idx;
-    commutation.insert(i, j) = 1;
+    commutation(i, j) = 1.0;
   }
   return commutation;
 }
 
 
 // create duplication matrix
-Eigen::SparseMatrix<double> create_duplication(int n) {
-  SparseMatrix<double> duplication(n * n, (n * (n + 1)) / 2);
+Eigen::MatrixXd create_duplication(int n) {
+  Eigen::MatrixXd duplication;
+  duplication = Eigen::MatrixXd::Zero(n * n, (n * (n + 1)) / 2);
   int i, j, idx, row_idx, col_idx;
   idx = 0;
   for (i = 0; i < n; i++) {
@@ -141,7 +143,7 @@ Eigen::SparseMatrix<double> create_duplication(int n) {
         col_idx = n * j + i - j * (j + 1) / 2;
       }
       if (row_idx == col_idx) {
-        duplication.insert(idx, col_idx) = 1;
+        duplication(idx, col_idx) = 1.0;
       }
       idx += 1;
     }

@@ -130,3 +130,24 @@ void compute_none_path_cpp(
   fit_index[0] = optimizer.extract_fit_index();
 }
 
+
+// test optimization
+// [[Rcpp::export]]
+Rcpp::List test_optimization_cpp(
+    Rcpp::List reduced_data,
+    Rcpp::List reduced_model,
+    Rcpp::List control,
+    Rcpp::List supplied_result,
+    Rcpp::List fitted_result) {
+  int i;
+  lslxOptimizer optimizer(reduced_data,
+                          reduced_model,
+                          control,
+                          supplied_result);
+  optimizer.set_regularizer(
+    Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 
+    0.1, 0.0, 
+    INFINITY, INFINITY);
+  optimizer.complete_estimation();
+  return Rcpp::wrap(optimizer.beta);
+}
