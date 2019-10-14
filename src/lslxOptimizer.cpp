@@ -100,6 +100,7 @@ lslxOptimizer::lslxOptimizer(Rcpp::List reduced_data,
     idx_sigma = Rcpp::as<IntegerVector>(reduced_model["idx_sigma"]) - 1;
     idx_diag = Rcpp::as<IntegerVector>(reduced_model["idx_diag"]) - 1;
     idx_nondiag = Rcpp::as<IntegerVector>(reduced_model["idx_nondiag"]) - 1;
+    idx_diag_psi = Rcpp::as<IntegerVector>(reduced_model["idx_diag_psi"]) - 1;
   }
   idx_vech = create_idx_vech(n_response, true);
   idx_tvech = create_idx_tvech(n_response, true);
@@ -694,19 +695,23 @@ void lslxOptimizer::update_model_jacobian() {
                   0, n_theta_sum + n_theta_j,
                   n_moment_1, n_theta_jk) = 
                     slice_col(psi_derivative_i, theta_left_idx_jk);
-                psi_derivative_i = (elimination_y * 
-                  (kroneckerProduct(
+                
+                psi_derivative_i = 
+                  slice_col(kroneckerProduct(
                       ((sigma_i).array().colwise() * 
                         psi_vec_i.array()).matrix(),
-                        identity_y) + 
-                          kroneckerProduct(
-                            identity_y,
-                            ((sigma_i).array().colwise() * 
-                              psi_vec_i.array()).matrix())) * duplication_y);
+                        identity_y),
+                        idx_diag_psi) + 
+                          slice_col(kroneckerProduct(
+                              identity_y,
+                              ((sigma_i).array().colwise() * 
+                                psi_vec_i.array()).matrix()), 
+                                idx_diag_psi);
                 model_jacobian_i.block(
                   n_moment_1, n_theta_sum + n_theta_j,
                   n_moment_2, n_theta_jk) = 
-                    slice_both(psi_derivative_i,
+                    slice_both(slice_row(psi_derivative_i, 
+                                         idx_vech),
                                idx_sigma,
                                theta_flat_idx_jk);
                 break;

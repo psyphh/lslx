@@ -582,6 +582,8 @@ lslxFitting$set("private",
                       setdiff(matrix(1:(length(model$name_eta) * length(model$name_eta)), 
                                      length(model$name_eta), length(model$name_eta)),
                               self$reduced_model$idx_diag)
+                    self$reduced_model$idx_diag_psi <- 
+                      1L + ((1:self$reduced_model$n_response) - 1L) * (self$reduced_model$n_response + 1L)
                   }
                   
                   self$reduced_model$theta_flat_idx <-
@@ -609,13 +611,7 @@ lslxFitting$set("private",
                                           (self$reduced_model$theta_right_idx - 1L) +
                                           self$reduced_model$theta_left_idx
                                       ),
-                                      as.integer(
-                                        self$reduced_model$n_response *
-                                          (self$reduced_model$theta_right_idx - 1L) +
-                                          self$reduced_model$theta_left_idx -
-                                          self$reduced_model$theta_right_idx *
-                                          (self$reduced_model$theta_right_idx - 1L) / 2L
-                                      ))
+                                      as.integer(self$reduced_model$theta_left_idx))
                              )
                            ))
                   self$reduced_model$theta_tflat_idx <-
@@ -643,13 +639,7 @@ lslxFitting$set("private",
                                           (self$reduced_model$theta_left_idx - 1L) +
                                           self$reduced_model$theta_right_idx
                                       ),
-                                      as.integer(
-                                        self$reduced_model$n_response *
-                                          (self$reduced_model$theta_right_idx - 1L) +
-                                          self$reduced_model$theta_left_idx -
-                                          self$reduced_model$theta_right_idx *
-                                          (self$reduced_model$theta_right_idx - 1L) / 2L
-                                      ))
+                                      as.integer(self$reduced_model$theta_right_idx))
                              )
                            ))
                   

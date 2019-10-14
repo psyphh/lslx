@@ -629,7 +629,8 @@ lslxModel$set("private",
                                  } else {
                                    if ((idx_left_bracket == -1) &
                                        (idx_right_bracket == -1)) {
-                                     prefix_i_split <- c(prefix_i_split, prefix_i)
+                                     prefix_i_split <- c(prefix_i_split, strsplit(prefix_i, ",")[[1]])
+                                     prefix_i <- ""
                                    } else {
                                      if ((idx_left_bracket < idx_comma) & 
                                          (idx_right_bracket > idx_comma)) {
@@ -670,9 +671,11 @@ lslxModel$set("private",
                                     prefix_i_split,
                                     ifelse(is.na(prefix_i_split),
                                            prefix_i_split,
-                                           ifelse(suppressWarnings(!is.na(as.numeric(prefix_i_split))),
-                                                  paste0("fix", "(",  prefix_i_split, ")"),
-                                                  paste0("lab", "(",  prefix_i_split, ")"))))
+                                           ifelse(prefix_i_split == "NA",
+                                                  NA,
+                                                  ifelse(suppressWarnings(!is.na(as.numeric(prefix_i_split))),
+                                                         paste0("fix", "(",  prefix_i_split, ")"),
+                                                         paste0("lab", "(",  prefix_i_split, ")")))))
                            return(prefix_i_split)
                          })
                 if (anyNA(self$reference_group)) {

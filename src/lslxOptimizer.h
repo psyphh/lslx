@@ -33,7 +33,7 @@ public:
   
   int n_response, n_factor, n_eta, n_moment, n_moment_1, n_moment_2, n_group, n_theta, n_threshold;
   int idx_reference;
-  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu, idx_diag, idx_nondiag; 
+  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu, idx_diag, idx_diag_psi, idx_nondiag; 
   Rcpp::IntegerVector idx_vech, idx_tvech, idx_vech_match, idx_nd_vech, idx_nd_tvech;
   
   Rcpp::CharacterVector theta_name;
