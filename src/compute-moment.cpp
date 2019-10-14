@@ -93,6 +93,8 @@ void compute_saturated_moment_acov_response_cpp(
   Eigen::MatrixXd score_ij, score_ij_w;
   Eigen::MatrixXd saturated_moment_acov_i;
   Rcpp::IntegerVector m_idx_ij, m2_idx_ij;
+  Rcpp::IntegerVector idx_vech_i, idx_tvech_i, idx_vech_match_i;
+  Rcpp::IntegerVector idx_vech_ij, idx_tvech_ij, idx_vech_match_ij;
   int n_response_ij, n_moment_ij, sample_size_ij;
   Eigen::MatrixXd duplication_ij;
   
@@ -112,6 +114,10 @@ void compute_saturated_moment_acov_response_cpp(
     hessian_sum_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
     
     duplication_i = create_duplication(n_response_i);
+    idx_vech_i = create_idx_vech(n_response_i, true);
+    idx_tvech_i = create_idx_tvech(n_response_i, true);
+    idx_vech_match_i = find_idx_match(idx_vech_i, idx_tvech_i);
+    
     if ((y_obs_i.size() == 1) & ((Rcpp::as< Rcpp::IntegerVector >(m_idx_i[0])).size() == n_response_i)) {
       y_obs_ij = Rcpp::as<Eigen::MatrixXd>(y_obs_i[0]);
       w_ij = Rcpp::as<Eigen::VectorXd>(w_i[0]);
@@ -133,6 +139,9 @@ void compute_saturated_moment_acov_response_cpp(
       }
       saturated_cov_ij_inv = saturated_cov_ij.inverse();
       duplication_ij = create_duplication(n_response_ij);
+      idx_vech_ij = create_idx_vech(n_response_ij, true);
+      idx_tvech_ij = create_idx_tvech(n_response_ij, true);
+      idx_vech_match_ij = find_idx_match(idx_vech_ij, idx_tvech_ij);
       
       score_ij.resize(sample_size_ij, n_moment_i);
       score_ij.leftCols(n_response_i) = yc_obs_ij;
@@ -164,14 +173,19 @@ void compute_saturated_moment_acov_response_cpp(
           yc2c_obs_ij.row(k) = (yc2c_obs_ijk - saturated_cov_ij_vech).transpose();
         }
         saturated_cov_ij_inv = saturated_cov_ij.inverse();
+        
         duplication_ij = create_duplication(n_response_ij);
+        idx_vech_ij = create_idx_vech(n_response_ij, true);
+        idx_tvech_ij = create_idx_tvech(n_response_ij, true);
+        idx_vech_match_ij = find_idx_match(idx_vech_ij, idx_tvech_ij);
         
         score_ij.resize(sample_size_ij, n_moment_i);
         score_ij.leftCols(n_response_i) = 
           expand_col((yc_obs_ij * saturated_cov_ij_inv), m_idx_ij, n_response_i);
         score_ij.rightCols((n_moment_i - n_response_i)) = 
-          expand_col((0.5 * yc2c_obs_ij * duplication_ij.transpose() *
-          Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv) * duplication_ij), 
+          expand_col((0.5 * yc2c_obs_ij * deduplify_both(
+              Eigen::kroneckerProduct(saturated_cov_ij_inv, saturated_cov_ij_inv), 
+              idx_vech_ij, idx_tvech_ij, idx_vech_match_ij)), 
           m2_idx_ij, (n_moment_i - n_response_i));
         
         score_ij_w = (score_ij.array().colwise() * w_ij.array()).matrix();
@@ -188,17 +202,19 @@ void compute_saturated_moment_acov_response_cpp(
         hessian_sum_i.block(n_response_i, n_response_i, 
                             (n_moment_i - n_response_i), 
                             (n_moment_i - n_response_i)) += 
-                              duplication_i.transpose() * 
-                              (Eigen::kroneckerProduct(saturated_cov_ij_inv,
-                                                       (saturated_cov_ij_inv * 
-                                                         (yc_obs_ij_w.transpose() * yc_obs_ij) * 
-                                                         saturated_cov_ij_inv - 0.5 * w_ij.sum() * 
-                                                         saturated_cov_ij_inv))) * duplication_i;
+                              deduplify_both(
+                                (Eigen::kroneckerProduct(saturated_cov_ij_inv,
+                                                         (saturated_cov_ij_inv * 
+                                                           (yc_obs_ij_w.transpose() * yc_obs_ij) * 
+                                                           saturated_cov_ij_inv - 0.5 * w_ij.sum() * 
+                                                           saturated_cov_ij_inv))), 
+                                                           idx_vech_i, idx_tvech_i, idx_vech_match_i);
         hessian_sum_i.block(0, n_response_i, 
                             n_response_i, 
                             (n_moment_i - n_response_i)) += 
-                              (Eigen::kroneckerProduct(saturated_cov_ij_inv, 
-                                                       yc_obs_ij_w.colwise().sum() * saturated_cov_ij_inv)) * duplication_i;
+                              deduplify_right((Eigen::kroneckerProduct(saturated_cov_ij_inv, 
+                                                                       yc_obs_ij_w.colwise().sum() * saturated_cov_ij_inv)),
+                                                                       idx_vech_i, idx_tvech_i, idx_vech_match_i);
         hessian_sum_i.block(n_response_i, 0, 
                             (n_moment_i - n_response_i), 
                             n_response_i) = 
@@ -222,6 +238,7 @@ void compute_saturated_moment_acov_moment_cpp(
     Rcpp::List saturated_moment_acov) {
   Eigen::MatrixXd saturated_cov_i_inv, saturated_moment_acov_i;
   Eigen::MatrixXd duplication_i;
+  Rcpp::IntegerVector idx_vech_i, idx_tvech_i, idx_vech_match_i;
   double sample_proportion_i;
   int n_response_i, n_moment_i;
   int i;
@@ -232,13 +249,15 @@ void compute_saturated_moment_acov_moment_cpp(
     n_response_i = saturated_cov_i.cols();
     n_moment_i = n_response_i * (n_response_i + 3) / 2;
     duplication_i = create_duplication(n_response_i);
+    idx_vech_i = create_idx_vech(n_response_i, true);
+    idx_tvech_i = create_idx_tvech(n_response_i, true);
+    idx_vech_match_i = find_idx_match(idx_vech_i, idx_tvech_i);
     saturated_moment_acov_i = Eigen::MatrixXd::Zero(n_moment_i, n_moment_i);
     saturated_moment_acov_i.block(0, 0, n_response_i, n_response_i) = saturated_cov_i_inv;
     saturated_moment_acov_i.block(n_response_i, n_response_i,
                                   n_moment_i - n_response_i, n_moment_i - n_response_i) =
-                                    0.5 * duplication_i.transpose() * 
-                                    Eigen::kroneckerProduct(saturated_cov_i_inv, saturated_cov_i_inv) *
-                                    duplication_i;
+                                    0.5 * deduplify_both(Eigen::kroneckerProduct(saturated_cov_i_inv, saturated_cov_i_inv), 
+                                                         idx_vech_i, idx_tvech_i, idx_vech_match_i);
     saturated_moment_acov_i = saturated_moment_acov_i.inverse() / 
       (sample_proportion_i *double(n_observation));
     saturated_moment_acov[i] = saturated_moment_acov_i;

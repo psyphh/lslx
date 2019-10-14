@@ -148,6 +148,10 @@ Rcpp::List test_optimization_cpp(
     Rcpp::as< Rcpp::CharacterVector >(control["regularizer_type"]), 
     0.1, 0.0, 
     INFINITY, INFINITY);
-  optimizer.complete_estimation();
-  return Rcpp::wrap(optimizer.beta);
+  optimizer.update_coefficient_matrix();
+  optimizer.update_implied_moment();
+  optimizer.update_loss_value();
+  optimizer.update_residual_weight();
+  optimizer.update_model_jacobian();
+  return Rcpp::wrap(optimizer.model_jacobian);
 }

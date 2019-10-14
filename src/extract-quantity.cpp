@@ -103,30 +103,7 @@ Rcpp::NumericMatrix compute_model_jacobian_cpp(
   return Rcpp::wrap(model_jacobian);
 }
 
-// compute bfgs hessian
-// [[Rcpp::export]]
-Rcpp::NumericMatrix compute_bfgs_hessian_cpp(
-    Rcpp::NumericVector theta_value,
-    Rcpp::List reduced_data,
-    Rcpp::List reduced_model,
-    Rcpp::List control,
-    Rcpp::List supplied_result) {
-  Eigen::MatrixXd bfgs_hessian;
-  lslxOptimizer optimizer(reduced_data,
-                          reduced_model,
-                          control,
-                          supplied_result);
-  optimizer.set_theta_value(theta_value);
-  optimizer.update_coefficient_matrix();
-  optimizer.update_implied_moment();
-  
-  optimizer.update_residual_weight();
-  optimizer.update_model_jacobian();
-  optimizer.update_loss_expected_hessian();
-  optimizer.update_loss_bfgs_hessian();
-  bfgs_hessian = optimizer.loss_bfgs_hessian;
-  return Rcpp::wrap(bfgs_hessian);
-}
+
 
 // compute expected fisher
 // [[Rcpp::export]]

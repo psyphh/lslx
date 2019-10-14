@@ -625,6 +625,7 @@ lslxModel$set("private",
                                  idx_comma <- regexpr(",", prefix_i)[1]
                                  if (idx_comma == -1) {
                                    prefix_i_split <- c(prefix_i_split, prefix_i)
+                                   prefix_i <- ""
                                  } else {
                                    if ((idx_left_bracket == -1) &
                                        (idx_right_bracket == -1)) {

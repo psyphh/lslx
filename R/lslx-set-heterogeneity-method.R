@@ -51,9 +51,9 @@ lslx$set("private",
              stop(
                "No valid relation ",
                do.call(paste, as.list(block[!(block %in% unique(private$model$specification$block))])),
-               " under group ",
+               "under group ",
                do.call(paste, as.list(group)),
-               " is found. Please check the settings."
+               "is found. Please check the settings."
              )
            } else {
              name <- paste0(relation, "/", group)

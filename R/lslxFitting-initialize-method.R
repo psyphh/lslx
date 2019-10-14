@@ -84,8 +84,8 @@ lslxFitting$set("private",
                   if (!(self$control$loss %in% c("default", "ml", "uls", "dwls", "wls"))) {
                     stop("Argument 'default' can be only 'default', 'ml', 'uls', 'dwls', or 'wls'.")
                   }
-                  if (!(self$control$algorithm %in% c("default", "gd", "bfgs", "fisher"))) {
-                    stop("Argument 'algorithm' can be only 'default', 'gd', 'bfgs', or 'fisher'.")
+                  if (!(self$control$algorithm %in% c("default", "dynamic", "gd", "bfgs", "fisher"))) {
+                    stop("Argument 'algorithm' can be only 'default', 'dynamic', 'gd', 'bfgs', or 'fisher'.")
                   }
                   if (!(self$control$missing_method %in% c("default", "two_stage", "listwise_deletion"))) {
                     stop(
@@ -346,7 +346,7 @@ lslxFitting$set("private",
                     }
                   }
                   if (self$control$algorithm == "default") {
-                    self$control$algorithm <- "fisher"
+                    self$control$algorithm <- "dynamic"
                   }
                   if (self$control$missing_method == "default") {
                     if (self$control$continuous) {
@@ -466,6 +466,7 @@ lslxFitting$set("private",
                         )
                       ),
                       theta_flat_idx = NA_integer_,
+                      theta_tflat_idx = NA_integer_,
                       theta_group_idx = ifelse(
                         rep(
                           is.null(model$reference_group),
@@ -606,9 +607,7 @@ lslxFitting$set("private",
                                       as.integer(
                                         self$reduced_model$n_eta *
                                           (self$reduced_model$theta_right_idx - 1L) +
-                                          self$reduced_model$theta_left_idx -
-                                          self$reduced_model$theta_right_idx *
-                                          (self$reduced_model$theta_right_idx - 1L) / 2L
+                                          self$reduced_model$theta_left_idx
                                       ),
                                       as.integer(
                                         self$reduced_model$n_response *
@@ -619,10 +618,66 @@ lslxFitting$set("private",
                                       ))
                              )
                            ))
+                  self$reduced_model$theta_tflat_idx <-
+                    ifelse(self$reduced_model$theta_matrix_idx == 0,
+                           self$reduced_model$threshold_flat_idx[
+                             cbind(ifelse(self$reduced_model$theta_left_idx <= 
+                                            length(model$name_response),
+                                          self$reduced_model$theta_left_idx,
+                                          NA),
+                                   ifelse(self$reduced_model$theta_right_idx <=
+                                            length(model$name_threshold),
+                                          self$reduced_model$theta_right_idx,
+                                          NA))],
+                           ifelse(
+                             self$reduced_model$theta_matrix_idx == 1,
+                             self$reduced_model$theta_left_idx,
+                             ifelse(
+                               self$reduced_model$theta_matrix_idx == 2,
+                               self$reduced_model$n_eta *
+                                 (self$reduced_model$theta_left_idx - 1L) +
+                                 self$reduced_model$theta_right_idx,
+                               ifelse(self$reduced_model$theta_matrix_idx == 3,
+                                      as.integer(
+                                        self$reduced_model$n_eta *
+                                          (self$reduced_model$theta_left_idx - 1L) +
+                                          self$reduced_model$theta_right_idx
+                                      ),
+                                      as.integer(
+                                        self$reduced_model$n_response *
+                                          (self$reduced_model$theta_right_idx - 1L) +
+                                          self$reduced_model$theta_left_idx -
+                                          self$reduced_model$theta_right_idx *
+                                          (self$reduced_model$theta_right_idx - 1L) / 2L
+                                      ))
+                             )
+                           ))
+                  
                   self$reduced_model$n_theta_is_free <-
                     sum(self$reduced_model$theta_is_free)
                   self$reduced_model$n_theta_is_pen <-
                     sum(self$reduced_model$theta_is_pen)
+                  
+                  idx_row <- matrix(1:self$reduced_model$n_eta, 
+                                self$reduced_model$n_eta, 
+                                self$reduced_model$n_eta)
+                  idx_col <- matrix(1:self$reduced_model$n_eta, 
+                                    self$reduced_model$n_eta, 
+                                    self$reduced_model$n_eta, 
+                                    byrow = TRUE)
+                  idx_matrix <- matrix(1:(self$reduced_model$n_eta^2), 
+                                self$reduced_model$n_eta, 
+                                self$reduced_model$n_eta, byrow = TRUE)
+                  self$reduced_model$idx_vech <- 
+                    matrix(1:(self$reduced_model$n_response^2), 
+                           self$reduced_model$n_response,
+                           self$reduced_model$n_response)[
+                             lower.tri(matrix(0, 
+                                              self$reduced_model$n_response, 
+                                              self$reduced_model$n_response), 
+                                       diag = TRUE)]
+                  self$reduced_model$idx_nd_vech <- which(idx_row > idx_col)
+                  self$reduced_model$idx_nd_tvech <- idx_matrix[idx_row > idx_col]
                 })
 
 ## \code{$initialize_reduced_data()} initializes a reduced data. ##

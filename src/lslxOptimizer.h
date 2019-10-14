@@ -1,6 +1,7 @@
 // Cpp class lslxOptimizer for minimizing PL criterion
 // written by Po-Hsien Huang psyphh@gmail.com
 
+#include <iostream>
 #include <RcppEigen.h>
 #include <limits>
 #include <cmath>
@@ -15,11 +16,11 @@ using namespace Eigen;
 class lslxOptimizer {
 public:
   std::string loss, algorithm, regularizer_type, searcher_type;
-  int iter_in_max, iter_out_max, iter_other_max, iter_armijo_max;
+  int iter_in_max, iter_out_max, iter_other_max, iter_armijo_max, warm_out;
   double tol_in, tol_out, tol_other;
-  double step_size, armijo;
+  double step_size, armijo, momentum;
   double ridge_cov, ridge_hessian;
-  bool warm_start, positive_variance, enforce_cd, random_update;
+  bool warm_start, positive_variance, armijo_rule, enforce_cd, random_update;
   double minimum_variance;
   bool response, continuous, regularizer, searcher;
 
@@ -32,13 +33,14 @@ public:
   
   int n_response, n_factor, n_eta, n_moment, n_moment_1, n_moment_2, n_group, n_theta, n_threshold;
   int idx_reference;
-  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu, idx_diag, idx_nondiag;
+  Rcpp::IntegerVector idx_ordered, idx_numeric, idx_sigma, idx_gamma, idx_mu, idx_diag, idx_nondiag; 
+  Rcpp::IntegerVector idx_vech, idx_tvech, idx_vech_match, idx_nd_vech, idx_nd_tvech;
   
   Rcpp::CharacterVector theta_name;
   Rcpp::LogicalVector theta_is_free, theta_is_pen, theta_is_diag;
   Rcpp::IntegerVector theta_matrix_idx, theta_group_idx;
-  Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx;
-  Rcpp::NumericVector theta_start, theta_value, theta_direction;
+  Rcpp::IntegerVector theta_left_idx, theta_right_idx, theta_flat_idx, theta_tflat_idx;
+  Rcpp::NumericVector theta_start, theta_value, theta_direction, theta_direction_old;
   Rcpp::LogicalVector theta_is_est, theta_is_search; 
   Rcpp::IntegerVector theta_is_est_idx, theta_is_search_idx, theta_set;
   Rcpp::CharacterVector theta_penalty;
@@ -72,7 +74,7 @@ public:
   double regularizer_value;
   Eigen::MatrixXd regularizer_gradient;
   
-  double objective_value;
+  double objective_value, objective_gradient_average;
   Eigen::MatrixXd objective_gradient;
   
   double objective_gradient_abs_max, objective_hessian_convexity;

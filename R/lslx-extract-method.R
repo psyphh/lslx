@@ -982,54 +982,6 @@ lslx$set("public",
            return(observed_information)
          })
 
-## \code{$extract_bfgs_hessian()} returns a \code{matrix} of the BFGS Hessian matrix. ##
-lslx$set("public",
-         "extract_bfgs_hessian",
-         function(selector,
-                  lambda,
-                  delta,
-                  step,
-                  type = "default",
-                  include_faulty = FALSE) {
-           penalty_level <-
-             self$extract_penalty_level(
-               selector = selector,
-               lambda = lambda,
-               delta = delta,
-               step = step,
-               include_faulty = include_faulty
-             )
-           coefficient <-
-             private$fitting$fitted_result$coefficient[[penalty_level]]
-           bfgs_hessian <-
-             compute_bfgs_hessian_cpp(
-               theta_value = coefficient,
-               reduced_data = private$fitting$reduced_data,
-               reduced_model = private$fitting$reduced_model,
-               control = private$fitting$control,
-               supplied_result = private$fitting$supplied_result
-             )
-           colnames(bfgs_hessian) <-
-             rownames(private$model$specification)
-           rownames(bfgs_hessian) <-
-             rownames(private$model$specification)
-           coefficient_indicator <-
-             self$extract_coefficient_indicator(
-               selector = selector,
-               lambda = lambda,
-               delta = delta,
-               step = step,
-               type = type,
-               include_faulty = include_faulty
-             )
-           if (!(all(coefficient_indicator))) {
-             bfgs_hessian <- bfgs_hessian[coefficient_indicator,
-                                          coefficient_indicator,
-                                          drop = FALSE]
-           }
-           return(bfgs_hessian)
-         })
-
 ## \code{$extract_score_acov()} returns a \code{matrix} of the asymptotic covariance of scores. ##
 lslx$set("public",
          "extract_score_acov",
