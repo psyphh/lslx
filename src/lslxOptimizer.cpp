@@ -1142,23 +1142,21 @@ void lslxOptimizer::update_theta_direction() {
   int i, j, k;
   if (enforce_cd) {
     g = loss_gradient;
-    if (algorithm == "gd" | ((algorithm == "dynamic") & (iter_out <= warm_out))) {
+    if ((algorithm == "gd") | ((algorithm == "dynamic") & (iter_out <= warm_out))) {
       h = identity_theta;
     } else if (algorithm == "bfgs") {
       h = loss_bfgs_hessian;
-    } else if (algorithm == "fisher" | ((algorithm == "dynamic") & (iter_out > warm_out))) {
+    } else if ((algorithm == "fisher") | ((algorithm == "dynamic") & (iter_out > warm_out))) {
       h = loss_expected_hessian;
     } else {}
     for (i = 0; i < n_theta; i++) {
       h(i, i) = h(i, i) + ridge_hessian;
     }
     for (i = 0; i < iter_in_max; i++) {
-      if (random_update) {
-        std::random_shuffle(theta_number.begin(), theta_number.end());
-      }
+      theta_number = Rcpp::sample(theta_number, theta_number.size(), false);
       Eigen::VectorXd d = Rcpp::as<Eigen::VectorXd> (theta_direction);
       Eigen::MatrixXd hd = (h * d);
-      if (algorithm == "gd"| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
+      if ((algorithm == "gd")| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
         hd = d;
       } else {
         hd = (h * d);
@@ -1253,17 +1251,17 @@ void lslxOptimizer::update_theta_direction() {
     }
   } else {
     g = loss_gradient;
-    if (algorithm == "gd"| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
+    if ((algorithm == "gd")| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
       h = identity_theta;
     } else if (algorithm == "bfgs") {
       h = loss_bfgs_hessian_inv;
-    } else if (algorithm == "fisher"| ((algorithm == "dynamic") & (iter_out > warm_out))) {
+    } else if ((algorithm == "fisher")| ((algorithm == "dynamic") & (iter_out > warm_out))) {
       h = expand_both(slice_both(
         loss_expected_hessian, theta_is_est_idx, theta_is_est_idx).inverse(),
         theta_is_est_idx, theta_is_est_idx,
         n_theta, n_theta);
     } else {}
-    if (algorithm == "gd"| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
+    if ((algorithm == "gd")| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
       theta_direction = - g;
     } else {
       theta_direction = - h * g;
@@ -1418,12 +1416,12 @@ void lslxOptimizer::update_coefficient() {
       update_theta_direction();
       update_theta_value();
       if (loss == "ml") {
-        if (algorithm == "gd"| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
+        if ((algorithm == "gd")| ((algorithm == "dynamic") & (iter_out <= warm_out))) {
           update_loss_gradient_direct();
         } else if (algorithm == "bfgs") {
           update_loss_gradient_direct();
           update_loss_bfgs_hessian();
-        } else if (algorithm == "fisher"| ((algorithm == "dynamic") & (iter_out > warm_out))) {
+        } else if ((algorithm == "fisher")| ((algorithm == "dynamic") & (iter_out > warm_out))) {
           update_residual_weight();
           update_model_jacobian();
           update_loss_gradient_direct();
@@ -1465,7 +1463,7 @@ void lslxOptimizer::update_numerical_condition() {
     loss_hessian = identity_theta;
   } else if (algorithm == "bfgs") {
     loss_hessian = loss_bfgs_hessian;
-  } else if (algorithm == "fisher"| (algorithm == "dynamic")) {
+  } else if ((algorithm == "fisher") | (algorithm == "dynamic")) {
     loss_hessian = loss_expected_hessian;    
   } else{}
   int i;

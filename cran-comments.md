@@ -1,6 +1,5 @@
-## lslx ver.0.6.8
-lslx ver.0.6.7 has a serious bug.
-That is why we submit ver.0.6.8 so soon.
+## lslx ver.0.6.9
+Speed up!!!
 
 ## Test environments
 * x86_64-apple-darwin15.6.0 (64-bit), R 3.6.0
@@ -10,4 +9,5 @@ That is why we submit ver.0.6.8 so soon.
 no ERRORs, WARNINGs or NOTEs
 
 ## devtools::check_win_devel(args = c('--compact-vignettes=both')) results
+Status: OK
 no ERRORs, WARNINGs or NOTEs
