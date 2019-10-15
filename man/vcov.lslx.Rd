@@ -22,5 +22,5 @@ If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate 
 \item{...}{Other arguments. For details, please see the \code{$extracted_coefficient_acov()} method in \code{lslx}.}
 }
 \description{
-\code{vcov.lslx()} is an \code{S3} interface for the \code{$extracted_coefficient_acov()} method to extract covariance matrix of parameter estimate from a \code{lslx} object.
+\code{vcov.lslx()} is an \code{S3} interface for extracting covariance matrix of parameter estimate from a \code{lslx} object.
 }

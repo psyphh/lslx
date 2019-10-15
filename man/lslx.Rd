@@ -657,16 +657,16 @@ Arguments in set-related methods may rely on the naming rule of coefficent name 
 \section{Fit-Related Methods}{
 
 
-\preformatted{$fit(penalty_method = "mcp", lambda_grid = "default", delta_grid = "default",
+\preformatted{$fit(penalty_method = "lasso", lambda_grid = "default", delta_grid = "default",
   step_grid = "default", loss = "default", algorithm = "default", 
   missing_method = "default", start_method = "default", 
   lambda_direction = "default", lambda_length = 50L, delta_length = 3L,
   threshold_value = 0.3, iter_out_max = 100L, iter_in_max = 50L, 
   iter_other_max = 500L, iter_armijo_max = 100L, tol_out = 1e-3, 
-  tol_in = 1e-3, tol_other = 1e-7, step_size = 0.5, armijo = 1e-5, 
-  ridge_cov = 0, ridge_hessian = 1e-4, warm_start = TRUE, 
+  tol_in = 1e-3, tol_other = 1e-7, step_size = 0.5, momentum = 0, 
+  armijo = 1e-5, ridge_cov = 0, ridge_hessian = 1e-4, warm_start = TRUE, 
   positive_variance = TRUE, minimum_variance = 1e-4, enforce_cd = FALSE, 
-  weight_matrix = NULL, verbose = TRUE)
+  random_update = TRUE, weight_matrix = NULL, verbose = TRUE)
 $fit_none(...)
 $fit_lasso(lambda_grid = "default", ...)
 $fit_ridge(lambda_grid = "default", ...)
@@ -696,8 +696,8 @@ If no penalty is considered, we can set \code{penalty_method} as \code{"none"}.}
   If the argument is set as \code{"default"}, then (1) \code{"ml"} will be implemented for all continuous response variables; 
   (2) \code{"dwls"} will be implemented for ordinal or mixed types response variables.}
 \item{\code{algorithm}}{A \code{character} to determine the method of optimization.
-  The current version supports \code{"gd"} (gradient descent), \code{"bfgs"} (Broyden-Fletcher-Goldfarb-Shanno), and \code{"fisher"} (Fisher scoring).
-  If the argument is set as \code{"default"}, then \code{"fisher"} will be implemented.}
+  The current version supports \code{"gd"} (gradient descent), \code{"bfgs"} (Broyden-Fletcher-Goldfarb-Shanno), \code{"fisher"} (Fisher scoring), and \code{"dynamic"} (an adaptive algorithm).
+  If the argument is set as \code{"default"}, then \code{"dynamic"} will be implemented.}
 \item{\code{missing_method}}{A \code{character} to determine the method for handling missing data (or \code{NA}).
   The current version supports \code{"two_stage"} and \code{"listwise_deletion"}.
   If the argument is set as \code{"default"} and a raw data set is available, the \code{"two_stage"} will be implemented.
@@ -709,7 +709,7 @@ If no penalty is considered, we can set \code{penalty_method} as \code{"none"}.}
 \item{\code{lambda_direction}}{A \code{character} to determine the "direction" of \code{lambda_grid}.
   \code{"decrease"} sorts \code{lambda_grid} from large to small. 
   On the contrary, \code{"increase"} sorts \code{lambda_grid} from small to large. 
-  If the argument is set as \code{"default"}, \code{"increase"} will be used when the smallest element of \code{lambda_grid} is larger tha zero;
+  If the argument is set as \code{"default"}, \code{"increase"} will be used when the smallest element of \code{lambda_grid} is larger than zero;
   otherwise, \code{"decrease"} is assumed.}
 \item{\code{lambda_length}}{A \code{numeric} to specify the length of automatically generated \code{lambda_grid} under \code{lambda_grid = "default"}.}
 \item{\code{delta_length}}{A \code{numeric} to specify the length of automatically generated \code{delta_grid} under \code{delta_grid = "default"}.}
@@ -722,13 +722,16 @@ If no penalty is considered, we can set \code{penalty_method} as \code{"none"}.}
 \item{\code{tol_in}}{A small positive \code{numeric} to specify the tolerance (convergence criterion) for inner loop of the modified \code{glmnet} algorithm.}
 \item{\code{tol_other}}{A small positive \code{numeric} to specify the tolerance (convergence criterion) for other loop.}
 \item{\code{step_size}}{A positive \code{numeric} smaller than one to specify the step-size.}
+\item{\code{momentum}}{A \code{numeric} between 0 and 1 for momentum parameter.}
 \item{\code{armijo}}{A small positive \code{numeric} for the constant in Armijo rule.}
 \item{\code{ridge_cov}}{A small positive \code{numeric} for the ridge of sample covariance matrix.}
 \item{\code{ridge_hessian}}{A small positive \code{numeric} for the ridge of approximated hessian in optimization.}
+\item{\code{ridge_weight}}{A small positive \code{numeric} for the ridge of weight matrix in weighted least squares.}
 \item{\code{warm_start}}{A \code{logical} to specify whether the warm start approach should be used.}
 \item{\code{positive_variance}}{A \code{logical} to specify whether the variance estimate should be constrained to be larger than \code{minimum_variance}.}
 \item{\code{minimum_variance}}{A \code{numeric} to specify the minimum value of variance if \code{positive_variance = TRUE}.}
 \item{\code{enforce_cd}}{A \code{logic} to specify whether coordinate descent should be used when no penalty function is used. Its default value is TRUE.}
+\item{\code{random_update}}{A \code{logic} to specify whether coordinate descent should be conducted in a random order. Its default value is TRUE.}
 \item{\code{weight_matrix}}{A \code{list} with length equaling to the number of groups to specify a user-defined weight matrix for least squares loss.}
 \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 \item{\code{...}}{Other passing arguments for calling \code{$fit()}.}
@@ -766,10 +769,10 @@ It is a user convinient wrapper of \code{$fit()} with \code{penalty_method = "ba
 
 \section{Summarize Method}{
 
-\preformatted{$summarize(selector, lambda, delta, step, 
-  standard_error = "default", debias = "default", inference = "default", 
-  alpha_level = .05, include_faulty = FALSE, 
-  style = "default", mode = "default", digit = 3, interval = TRUE, output)}
+\preformatted{$summarize(selector, lambda, delta, step, standard_error = "default", 
+  debias = "default", inference = "default", alpha_level = .05, 
+  include_faulty = FALSE, style = "default", mode = "default", digit = 3, 
+  interval = TRUE, output)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -869,8 +872,10 @@ For details of standard error formula for coefficients, see the section of \emph
 
 \section{Plot-Related Methods}{
 
-\preformatted{$plot_numerical_condition(condition, x_scale = "default", mode = "default")
-$plot_information_criterion(criterion, x_scale = "default", mode = "default")
+\preformatted{$plot_numerical_condition(condition, x_scale = "default", 
+  mode = "default")
+$plot_information_criterion(criterion, x_scale = "default", 
+  mode = "default")
 $plot_fit_index(index, x_scale = "default", mode = "default")
 $plot_coefficient(block, left, right, both, x_scale = "default", 
   mode = "default")}
@@ -943,10 +948,13 @@ $extract_saturated_cov()
 $extract_saturated_mean()
 $extract_saturated_moment_acov()
 
-$extract_penalty_level(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_penalty_level(selector, lambda, delta, step, 
+  include_faulty = FALSE)
 
-$extract_numerical_condition(selector, lambda, delta, step, include_faulty = FALSE)
-$extract_information_criterion(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_numerical_condition(selector, lambda, delta, step, 
+  include_faulty = FALSE)
+$extract_information_criterion(selector, lambda, delta, step, 
+  include_faulty = FALSE)
 $extract_fit_index(selector, lambda, delta, step, include_faulty = FALSE)
 $extract_cv_error(selector, lambda, delta, step, include_faulty = FALSE)
 
@@ -955,35 +963,39 @@ $extract_coefficient(selector, lambda, delta, step, type = "default",
 $extract_debiased_coefficient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
 
-$extract_implied_cov(selector, lambda, delta, step, include_faulty = FALSE)
-$extract_implied_mean(selector, lambda, delta, step, include_faulty = FALSE)
-$extract_residual_cov(selector, lambda, delta, step, include_faulty = FALSE)
-$extract_residual_mean(selector, lambda, delta, step, include_faulty = FALSE)
+$extract_implied_cov(selector, lambda, delta, step, 
+  include_faulty = FALSE)
+$extract_implied_mean(selector, lambda, delta, step, 
+  include_faulty = FALSE)
+$extract_residual_cov(selector, lambda, delta, step, 
+  include_faulty = FALSE)
+$extract_residual_mean(selector, lambda, delta, step, 
+  include_faulty = FALSE)
 
 $extract_coefficient_matrix(selector, lambda, delta, step, block, 
   include_faulty = FALSE)
 
-$extract_moment_jacobian(selector, lambda, delta, step, type = "default", 
-  include_faulty = FALSE)
+$extract_moment_jacobian(selector, lambda, delta, step, 
+  type = "default", include_faulty = FALSE)
 
-$extract_expected_information(selector, lambda, delta, step, type = "default", 
-  include_faulty = FALSE)
-$extract_observed_information(selector, lambda, delta, step, type = "default", 
-  include_faulty = FALSE)
+$extract_expected_information(selector, lambda, delta, step, 
+  type = "default", include_faulty = FALSE)
+$extract_observed_information(selector, lambda, delta, step, 
+  type = "default", include_faulty = FALSE)
 
 $extract_bfgs_hessian(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
 $extract_score_acov(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_coefficient_acov(selector, lambda, delta, step, standard_error = "default",
-  type = "default", include_faulty = FALSE)
+$extract_coefficient_acov(selector, lambda, delta, step, 
+  standard_error = "default", type = "default", include_faulty = FALSE)
 
 $extract_loss_gradient(selector, lambda, delta, step, type = "default", 
   include_faulty = FALSE)
-$extract_regularizer_gradient(selector, lambda, delta, step, type = "default", 
-  include_faulty = FALSE)
-$extract_objective_gradient(selector, lambda, delta, step, type = "default", 
-  include_faulty = FALSE)}
+$extract_regularizer_gradient(selector, lambda, delta, step, 
+  type = "default", include_faulty = FALSE)
+$extract_objective_gradient(selector, lambda, delta, step, 
+  type = "default", include_faulty = FALSE)}
 \describe{
 \item{\bold{Arguments}}{
 
@@ -1073,6 +1085,7 @@ For details of standard error formula, see the section of \emph{Coefficient Eval
 }
 
 \examples{
+\donttest{
 ## EXAMPLE: Regression Analysis with Lasso Penalty ##
 # run `vignette("regression-analysis")` to see the vignette
 # generate data for regression analysis
@@ -1092,7 +1105,7 @@ lslx_reg <- lslx$new(model = model_reg,
 
 # fit specified model to data with lasso under specified penalty levels
 lslx_reg$fit(penalty_method = "lasso",
-             lambda_grid = seq(.00, .30, .01))
+             lambda_grid = seq(.00, .30, .02))
 
 # summarize fitting result under penalty level selected by 'aic'
 lslx_reg$summarize(selector = "aic")
@@ -1107,9 +1120,9 @@ model_fa <- "visual  :=> x1 + x2 + x3
              visual  :~> x4 + x5 + x6 + x7 + x8 + x9
              textual :~> x1 + x2 + x3 + x7 + x8 + x9
              speed   :~> x1 + x2 + x3 + x4 + x5 + x6
-             visual  <=> fix(1) * visual
-             textual <=> fix(1) * textual
-             speed   <=> fix(1) * speed"
+             visual  <=> 1 * visual
+             textual <=> 1 * textual
+             speed   <=> 1 * speed"
           
 # initialize lslx object via specified model and raw data
 lslx_fa <- lslx$new(model = model_fa,
@@ -1214,6 +1227,8 @@ lslx_mgfa$fit_mcp(lambda_length = 25)
 
 # summarize fitting result under penalty level selected by 'hbic'
 lslx_mgfa$summarize(selector = "hbic")
+}
+
 
 }
 \references{

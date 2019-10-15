@@ -18,5 +18,5 @@
 \item{...}{Other arguments. For details, please see the \code{$extracted_coefficient()} method in \code{lslx}.}
 }
 \description{
-\code{coef.lslx()} is an \code{S3} interface for the \code{$extracted_coefficient()} method to extract parameter estimate from a \code{lslx} object.
+\code{coef.lslx()} is an \code{S3} interface for extracting parameter estimate from a \code{lslx} object.
 }

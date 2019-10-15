@@ -22,5 +22,5 @@ If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate 
 \item{...}{Other arguments. For details, please see the \code{$extracted_residual_mean()} and the \code{$extracted_residual_cov()} methods in \code{lslx}.}
 }
 \description{
-\code{residuals.lslx()} is an \code{S3} interface for the \code{$extracted_residual_mean()} and \code{$extracted_residual_cov()} methods to extract residuals from a \code{lslx} object.
+\code{residuals.lslx()} is an \code{S3} interface for extracting residuals from a \code{lslx} object.
 }

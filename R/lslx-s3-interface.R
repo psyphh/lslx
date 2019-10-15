@@ -65,7 +65,7 @@ print.lslx <- function(x, ...) {
 
 #' S3 method to summarize \code{lslx} fitting results
 #' 
-#' \code{summary.lslx()} is an \code{S3} interface for the \code{$summarize()} method to summarize \code{lslx} fitting results. 
+#' \code{summary.lslx()} is an \code{S3} interface for summarizing \code{lslx} fitting results. 
 #' 
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
@@ -86,7 +86,7 @@ summary.lslx <- function(object,
 
 #' S3 method to extract parameter estimate from \code{lslx}
 #' 
-#' \code{coef.lslx()} is an \code{S3} interface for the \code{$extracted_coefficient()} method to extract parameter estimate from a \code{lslx} object. 
+#' \code{coef.lslx()} is an \code{S3} interface for extracting parameter estimate from a \code{lslx} object. 
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
@@ -107,7 +107,7 @@ coef.lslx <- function(object,
 
 #' S3 method to extract covariance matrix of estimates from \code{lslx}
 #' 
-#' \code{vcov.lslx()} is an \code{S3} interface for the \code{$extracted_coefficient_acov()} method to extract covariance matrix of parameter estimate from a \code{lslx} object.
+#' \code{vcov.lslx()} is an \code{S3} interface for extracting covariance matrix of parameter estimate from a \code{lslx} object.
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
@@ -133,7 +133,7 @@ vcov.lslx <- function(object,
 
 #' S3 method to extract model-implied moments from \code{lslx}
 #' 
-#' \code{fitted.lslx()} is an \code{S3} interface for the \code{$extracted_implied_mean()} and \code{$extracted_implied_cov()} methods to extract model-implied moments from a \code{lslx} object.
+#' \code{fitted.lslx()} is an \code{S3} interface for extracting model-implied moments from a \code{lslx} object.
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.
@@ -167,7 +167,7 @@ fitted.lslx <- function(object,
 
 #' S3 method to extract residual moments from \code{lslx}
 #' 
-#' \code{residuals.lslx()} is an \code{S3} interface for the \code{$extracted_residual_mean()} and \code{$extracted_residual_cov()} methods to extract residuals from a \code{lslx} object.
+#' \code{residuals.lslx()} is an \code{S3} interface for extracting residuals from a \code{lslx} object.
 #'
 #' @param object A fitted \code{lslx} object. 
 #' @param selector A \code{character} to specify a selector for determining an optimal penalty level.

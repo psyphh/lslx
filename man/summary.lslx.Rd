@@ -18,5 +18,5 @@
 \item{...}{Other arguments. For details, please see the \code{$summarize()} method in \code{lslx}.}
 }
 \description{
-\code{summary.lslx()} is an \code{S3} interface for the \code{$summarize()} method to summarize \code{lslx} fitting results.
+\code{summary.lslx()} is an \code{S3} interface for summarizing \code{lslx} fitting results.
 }

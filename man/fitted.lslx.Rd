@@ -22,5 +22,5 @@ If the specified \code{delta} is not in \code{delta_grid}, a nearest legitimate 
 \item{...}{Other arguments. For details, please see the \code{$extracted_implied_mean()} and the \code{$extracted_implied_cov()} methods in \code{lslx}.}
 }
 \description{
-\code{fitted.lslx()} is an \code{S3} interface for the \code{$extracted_implied_mean()} and \code{$extracted_implied_cov()} methods to extract model-implied moments from a \code{lslx} object.
+\code{fitted.lslx()} is an \code{S3} interface for extracting model-implied moments from a \code{lslx} object.
 }
