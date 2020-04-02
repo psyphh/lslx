@@ -5,7 +5,10 @@
 \title{S3 interface for semi-confirmatory SEM via PL}
 \usage{
 plsem(model, data, penalty_method = "mcp", lambda_grid = "default",
-  delta_grid = "default", ...)
+  delta_grid = "default", numeric_variable, ordered_variable,
+  weight_variable, auxiliary_variable, group_variable, reference_group,
+  sample_cov, sample_mean, sample_size, sample_moment_acov,
+  verbose = TRUE, ...)
 }
 \arguments{
 \item{model}{A \code{character} with length one to represent the model specification.}
@@ -21,6 +24,29 @@ If it is set as \code{"default"}, its value will be generated automatically base
 
 \item{delta_grid}{A non-negative \code{numeric} to specify the convexity level for \code{"mcp"}.
 If it is set as \code{"default"}, its value will be generated automatically based on the variable scales.}
+
+\item{numeric_variable}{A \code{character} to specify which response variables should be transfromed into \code{numeric}.}
+
+\item{ordered_variable}{A \code{character} to specify which response variables should be transfromed into \code{ordered}.}
+
+\item{weight_variable}{A \code{character} with length one to specify what variable is used for sampling weight.}
+
+\item{auxiliary_variable}{A \code{character} to specify what variable(s) is used as auxiliary variable(s) for estimating saturated moments when missing data presents and two-step method is implemented. 
+Auxiliary variable(s) must be numeric. If any categorical auxiliary is considered, please transform it into dummy variables before initialization.}
+
+\item{group_variable}{A \code{character} with length one to specify what variable is used for labeling group.}
+
+\item{reference_group}{A \code{character} with length one to specify which group is set as reference.}
+
+\item{sample_cov}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrixs. It must have row and column names that match the variable names specified in \code{model}.}
+
+\item{sample_mean}{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
+
+\item{sample_size}{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
+
+\item{sample_moment_acov}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent asymptotic covariance for moments.}
+
+\item{verbose}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 
 \item{...}{Other arguments. For details, please see the documentation of \code{lslx}.}
 }

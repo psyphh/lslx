@@ -549,6 +549,7 @@
 #' \item{\code{sample_cov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent sample covariance matrixs. It must have row and column names that match the variable names specified in \code{model}.}
 #' \item{\code{sample_mean}}{A \code{numeric} (single group case) or a \code{list} of \code{numeric} (multi-group case) to represent sample mean vectors.}
 #' \item{\code{sample_size}}{A \code{numeric} (single group case) with length one or a \code{list} of \code{numeric} (multi-group case) to represent the sample sizes.}
+#' \item{\code{sample_moment_acov}}{A numeric \code{matrix} (single group case) or a \code{list} of numeric \code{matrix} (multi-group case) to represent asymptotic covariance for moments.}
 #' \item{\code{verbose}}{A \code{logical} to specify whether messages made by \code{lslx} should be printed.}
 #' }
 #' \bold{Details}

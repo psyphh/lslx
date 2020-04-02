@@ -1038,6 +1038,7 @@ lslx$set("public",
                   delta,
                   step,
                   standard_error = "default",
+                  ridge_penalty = "default",
                   type = "default",
                   include_faulty = FALSE) {
            if (!(
@@ -1059,6 +1060,21 @@ lslx$set("public",
                standard_error <- "observed_information"
              }
            }
+           if (ridge_penalty == "default") {
+             if (private$fitting$control$penalty_method %in% c("ridge", "elastic_net")) {
+               ridge_penalty <- TRUE
+             } else {
+               ridge_penalty <- FALSE
+             }
+           }
+           penalty_level <-
+             self$extract_penalty_level(
+               selector = selector,
+               lambda = lambda,
+               delta = delta,
+               step = step,
+               include_faulty = include_faulty
+             )
            coefficient <-
              self$extract_coefficient(
                selector = selector,
@@ -1095,6 +1111,34 @@ lslx$set("public",
                  step = step,
                  include_faulty = include_faulty
                )
+             if (ridge_penalty) {
+               penalty_level_split <- strsplit(penalty_level, ",|\\(|\\)")
+               lambda_1st <- as.numeric(penalty_level_split[[1]][2])
+               lambda_2nd <- as.numeric(penalty_level_split[[1]][3])
+               delta_1st <- as.numeric(penalty_level_split[[1]][6])
+               delta_2nd <- as.numeric(penalty_level_split[[1]][7])
+               
+               if (private$fitting$control$penalty_method == "ridge") {
+                 observed_information <- 
+                   observed_information + 
+                   diag(private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 1) * lambda_1st +
+                          private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 2) * lambda_2nd) 
+               } else if (private$fitting$control$penalty_method == "elastic_net") {
+                 observed_information <- 
+                   observed_information + 
+                   diag(private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 1) * lambda_1st *  (1 - delta_1st) +
+                          private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 2) * lambda_2nd * (1 - delta_2nd)) 
+               } else if (private$fitting$control$penalty_method == "mcp") {
+                 observed_information <- 
+                   observed_information - 
+                   diag(private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_1st * delta_1st)) * 
+                          (private$fitting$reduced_model$theta_set == 1) * (.5 / delta_1st) +
+                          private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_2nd * delta_2nd)) * 
+                          (private$fitting$reduced_model$theta_set == 2) * (.5 / delta_2nd)) 
+               } else {}
+             }
              observed_information_pinv <-
                solve(observed_information[is_effective, is_effective])
              coefficient_acov[is_effective, is_effective] <-
@@ -1110,6 +1154,33 @@ lslx$set("public",
                  step = step,
                  include_faulty = include_faulty
                )
+             if (ridge_penalty) {
+               penalty_level_split <- strsplit(penalty_level, ",|\\(|\\)")
+               lambda_1st <- as.numeric(penalty_level_split[[1]][2])
+               lambda_2nd <- as.numeric(penalty_level_split[[1]][3])
+               delta_1st <- as.numeric(penalty_level_split[[1]][6])
+               delta_2nd <- as.numeric(penalty_level_split[[1]][7])
+               if (private$fitting$control$penalty_method == "ridge") {
+                 expected_information <- 
+                   expected_information + 
+                   diag(private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 1) * lambda_1st +
+                          private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 2) * lambda_2nd) 
+               } else if (private$fitting$control$penalty_method == "elastic_net") {
+                 expected_information <- 
+                   expected_information + 
+                   diag(private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 1) * lambda_1st *  (1 - delta_1st) +
+                          private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 2) * lambda_2nd * (1 - delta_2nd)) 
+               } else if (private$fitting$control$penalty_method == "mcp") {
+                 expected_information <- 
+                   expected_information - 
+                   diag(private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_1st * delta_1st)) * 
+                          (private$fitting$reduced_model$theta_set == 1) * (.5 / delta_1st) +
+                          private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_2nd * delta_2nd)) * 
+                          (private$fitting$reduced_model$theta_set == 2) * (.5 / delta_2nd)) 
+               } else {}
+             }
              coefficient_acov[is_effective, is_effective] <-
                solve(expected_information[is_effective, is_effective]) /
                private$fitting$reduced_data$n_observation
@@ -1122,6 +1193,34 @@ lslx$set("public",
                  step = step,
                  include_faulty = include_faulty
                )
+             if (ridge_penalty) {
+               penalty_level_split <- strsplit(penalty_level, ",|\\(|\\)")
+               lambda_1st <- as.numeric(penalty_level_split[[1]][2])
+               lambda_2nd <- as.numeric(penalty_level_split[[1]][3])
+               delta_1st <- as.numeric(penalty_level_split[[1]][6])
+               delta_2nd <- as.numeric(penalty_level_split[[1]][7])
+               
+               if (private$fitting$control$penalty_method == "ridge") {
+                 observed_information <- 
+                   observed_information + 
+                   diag(private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 1) * lambda_1st +
+                          private$fitting$reduced_model$theta_weight * (private$fitting$reduced_model$theta_set == 2) * lambda_2nd) 
+               } else if (private$fitting$control$penalty_method == "elastic_net") {
+                 observed_information <- 
+                   observed_information + 
+                   diag(private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 1) * lambda_1st *  (1 - delta_1st) +
+                          private$fitting$reduced_model$theta_weight * 
+                          (private$fitting$reduced_model$theta_set == 2) * lambda_2nd * (1 - delta_2nd)) 
+               } else if (private$fitting$control$penalty_method == "mcp") {
+                 observed_information <- 
+                   observed_information - 
+                   diag(private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_1st * delta_1st)) * 
+                          (private$fitting$reduced_model$theta_set == 1) * (.5 / delta_1st) +
+                          private$fitting$reduced_model$theta_weight * (abs(coefficient) <= (lambda_2nd * delta_2nd)) * 
+                          (private$fitting$reduced_model$theta_set == 2) * (.5 / delta_2nd)) 
+               } else {}
+             }
              coefficient_acov[is_effective, is_effective] <-
                solve(observed_information[is_effective, is_effective]) /
                private$fitting$reduced_data$n_observation

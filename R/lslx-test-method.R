@@ -199,6 +199,7 @@ lslx$set("public",
                   delta,
                   step,
                   standard_error = "default",
+                  ridge_penalty = "default",
                   debias = "default",
                   inference = "default",
                   alpha_level = .05,
@@ -232,6 +233,13 @@ lslx$set("public",
                standard_error <- "sandwich"
              } else {
                standard_error <- "observed_information"
+             }
+           }
+           if (ridge_penalty == "default") {
+             if (private$fitting$control$penalty_method %in% c("ridge", "elastic_net")) {
+               ridge_penalty <- TRUE
+             } else {
+               ridge_penalty <- FALSE
              }
            }
            if (inference == "default") {
@@ -279,6 +287,7 @@ lslx$set("public",
                delta = delta,
                step = step,
                standard_error = standard_error,
+               ridge_penalty = ridge_penalty,
                include_faulty = include_faulty
              )
            if (debias == "none") {
