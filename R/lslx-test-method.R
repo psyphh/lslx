@@ -79,9 +79,9 @@ lslx$set("public",
                           include_faulty = include_faulty)
            rmsea_test <-
              data.frame(
-               estimate = c(NA, NA),
-               lower = c(NA, NA),
-               upper = c(NA, NA),
+               estimate = c(NaN, NaN),
+               lower = c(NaN, NaN),
+               upper = c(NaN, NaN),
                row.names = c("unadjusted", "mean-adjusted")
              )
            for (row_name_i in row.names(rmsea_test)) {
@@ -91,14 +91,14 @@ lslx$set("public",
                  lr_test[row_name_i, "statistic"]
                lr_df <- lr_test[row_name_i, "df"]
                if (is.na(lr_statistic) | is.na(lr_df)) {
-                 rmsea_test[row_name_i, "estimate"] <- NA
-                 rmsea_test[row_name_i, "lower"] <- NA
-                 rmsea_test[row_name_i, "upper"] <- NA
+                 rmsea_test[row_name_i, "estimate"] <- NaN
+                 rmsea_test[row_name_i, "lower"] <- NaN
+                 rmsea_test[row_name_i, "upper"] <- NaN
                } else if ((lr_df == 0) &
                           (lr_statistic > sqrt(.Machine$double.eps))) {
-                 rmsea_test[row_name_i, "estimate"] <- NA
-                 rmsea_test[row_name_i, "lower"] <- NA
-                 rmsea_test[row_name_i, "upper"] <- NA
+                 rmsea_test[row_name_i, "estimate"] <- NaN
+                 rmsea_test[row_name_i, "lower"] <- NaN
+                 rmsea_test[row_name_i, "upper"] <- NaN
                } else if (lr_statistic < sqrt(.Machine$double.eps)) {
                  rmsea_test[row_name_i, "estimate"] <- 0
                  rmsea_test[row_name_i, "lower"] <- 0
