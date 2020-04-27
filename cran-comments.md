@@ -12,5 +12,4 @@ More correct standard errors for ridge estimator
 no ERRORs, WARNINGs or NOTEs
 
 ## devtools::check_win_devel(args = c('--compact-vignettes=both')) results
-Status: OK
-no ERRORs, WARNINGs or NOTEs
+Failed FTP upload: 550
