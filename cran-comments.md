@@ -1,4 +1,4 @@
-"The DOI in the CITATION is for a new JSS publication that will be registered after publication on CRAN."
+The DOI in the CITATION is for a new JSS publication that will be registered after publication on CRAN.
 
 ## lslx ver.0.6.10
 One side p-value => Two side p-value
