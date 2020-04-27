@@ -593,7 +593,7 @@ lslx$set("public",
                      "estimate",
                      "std.error",
                      "z-value",
-                     "p-value",
+                     "P(>|z|)",
                      "lower",
                      "upper",
                      "block_label"

@@ -48,7 +48,7 @@
 #' The exploratory part is composed by a set of penalized parameters describing relationships that cannot be clearly determined by available substantive theory.
 #' By implementing a sparsity-inducing penalty and choosing an optimal penalty level, the relationships in the exploratory part can be efficiently identified by the sparsity pattern of these penalized parameters.
 #' After Version 0.6.7, \pkg{lslx} also supports penalized least squares for SEM with ordianl data under delta parameterization. 
-#' The technical details of \pkg{lslx} can be found in its JSS paper (Huang, 2019a) or Vignette for Package lslx (https://cran.r-project.org/web/packages/lslx/vignettes/vignette-lslx.pdf).
+#' The technical details of \pkg{lslx} can be found in its JSS paper (Huang, 2020) <doi:10.18637/jss.v093.i07> or Vignette for Package lslx (https://cran.r-project.org/web/packages/lslx/vignettes/vignette-lslx.pdf).
 #'
 #' The main function \code{lslx} generates an object of \code{lslx} R6 class.
 #' R6 class is established via package \pkg{R6} (Chang, 2017) that facilitates encapsulation object-oriented programming in \pkg{R} system.
@@ -524,7 +524,7 @@
 #' Because the sandwich formula is generally valid compared to the approaches based on Fisher information, \pkg{lslx} uses the sandwich formula as default whenever raw data is available.
 #' Note that sandwich covariance matrix in \pkg{lslx} is calculated based on Equation (14) in Yuan and Hayashi (2006) but not Equation (2.12a) in Browne (1984) to accommodate the potential model misspecification.
 #' Again, the significance tests may not be valid after penalty level selection.
-#' After version 0.6.4, several post-selection mehtods are available (Huang, 2019b), inlcuding PoSI method with Scheffe constant (Berk, Brown, Buja, Zhang, & Zhao, 2013) and Polyhedral method (Lee, Sun, Sun, & Taylor, 2016).
+#' After version 0.6.4, several post-selection mehtods are available (Huang, in press), inlcuding PoSI method with Scheffe constant (Berk, Brown, Buja, Zhang, & Zhao, 2013) and Polyhedral method (Lee, Sun, Sun, & Taylor, 2016).
 #'
 #'
 #' @section Initialize Method:
@@ -1096,9 +1096,9 @@
 #' 
 #' Huang, P. H. (2018). A Penalized Likelihood Method for Multi-Group Structural Equation Modeling. British Journal of Mathematical and Statistical Psychology, 71(3),  499-522.
 #' 
-#' Huang, P. H. (2019a). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software.
+#' Huang, P. H. (2020). lslx: Semi-Confirmatory Structural Equation Modeling via Penalized Likelihood. Journal of Statistical Software. 93(7), 1-37.
 #' 
-#' Huang, P. H. (2019b). Post-selection inference in Structural Equation Modeling. Multivariate Behavioral Research.
+#' Huang, P. H. (in press). Post-selection inference in Structural Equation Modeling. Multivariate Behavioral Research.
 #'
 #' Huang, P. H., Chen, H., & Weng, L. J. (2017). A Penalized Likelihood Method for Structural Equation Modeling. Psychometrika, 82(2), 329–354.
 #'

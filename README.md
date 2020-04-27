@@ -3,4 +3,4 @@
 
 **lslx** can be also seen as a package for conducting usual SEM with several state-of-art inference methods, including sandwich standard error formula, mean-adjusted likelihood ratio test, and two-stage method with auxiliary variables for missing data. **lslx** also supports multi-group analysis for evaluating group heterogeneity and penalized least squares for SEM with ordianl data under delta parameterization. For now, the major limitations of **lslx** are that (1) it cannot impose linear or non-linear constraints for coefficients; (2) it cannot make valid inference under clustered or dependent data.
 
-To learn more about **lslx**, please see the [wiki](https://github.com/psyphh/lslx/wiki).
+To learn more about **lslx**, please see [wiki](https://github.com/psyphh/lslx/wiki) and <doi:10.18637/jss.v093.i07>.

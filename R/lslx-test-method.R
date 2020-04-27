@@ -311,7 +311,7 @@ lslx$set("public",
              standard_error
            if (inference == "naive") {
              coefficient_test$p_value <-
-               pnorm(-abs(coefficient_test$z_value))
+               2 * pnorm(-abs(coefficient_test$z_value))
              coefficient_test$lower <-
                coefficient_test$estimate + qnorm(alpha_level / 2) * coefficient_test$standard_error
              coefficient_test$upper <-
@@ -381,7 +381,7 @@ lslx$set("public",
                coefficient_test$p_value <-
                  ifelse(private$fitting$reduced_model$theta_is_pen,
                         1 - pchisq((coefficient_test$z_value)^2, df = df_scheffe),
-                        pnorm(-abs(coefficient_test$z_value)))
+                        2 * pnorm(-abs(coefficient_test$z_value)))
                coefficient_test$lower <-
                  ifelse(private$fitting$reduced_model$theta_is_pen,
                         coefficient_test$estimate - c_scheffe * coefficient_test$standard_error,

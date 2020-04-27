@@ -43,13 +43,13 @@ compute_tnorm_p_value <- function(theta, mu, sigma, left, right) {
     p_value <- NA_real_
   } else {
     if ((left == -Inf) & (right == Inf)) {
-      p_value <- stats::pnorm(- abs((theta - mu) / sigma))
+      p_value <- 2 * stats::pnorm(- abs((theta - mu) / sigma))
     } else {
       if (theta != 0) {
         if (theta > 0) {
-          p_value <- compute_tnorm_prob(-theta, -mu, sigma, -right, -left)
+          p_value <- 2 * compute_tnorm_prob(-theta, -mu, sigma, -right, -left)
         } else {
-          p_value <- compute_tnorm_prob(theta, mu, sigma, left, right)
+          p_value <- 2 * compute_tnorm_prob(theta, mu, sigma, left, right)
         }
       } else {
         p_value <- NA_real_
