@@ -1660,36 +1660,38 @@ void lslxOptimizer::complete_searching() {
     Rcpp::LogicalVector theta_is_est_zero = Rcpp::clone(theta_is_est);
     Rcpp::NumericVector theta_value_zero = Rcpp::clone(theta_value);
     Rcpp::NumericVector loss_value_all(theta_is_search_idx.size());
-    int i;
+    int i, j;
     if (theta_is_search_idx.size() > 0) {
       for (i = 0; i < theta_is_search_idx.size(); i++) {
+        iter_out = -1;
         theta_start = Rcpp::clone(theta_value_zero);
         theta_value = Rcpp::clone(theta_value_zero);
         theta_is_est = Rcpp::clone(theta_is_est_zero);
         if (searcher_type == "forward") {
-          theta_is_est[theta_is_search_idx[i]] = 1;
+          theta_is_est[theta_is_search_idx[i]] = true;
           update_coefficient();
         } else if (searcher_type == "backward") {
-          theta_is_est[theta_is_search_idx[i]] = 0;
-          theta_start[theta_is_search_idx[i]] = 0;
-          theta_value[theta_is_search_idx[i]] = 0;
+          theta_is_est[theta_is_search_idx[i]] = false;
+          theta_start[theta_is_search_idx[i]] = false;
+          theta_value[theta_is_search_idx[i]] = false;
           update_coefficient();
         } else {}
         loss_value_all[i] = loss_value;
       }
-      i = Rcpp::which_min(loss_value_all);
+      j = Rcpp::which_min(loss_value_all);
       theta_start = Rcpp::clone(theta_value_zero);
       theta_value = Rcpp::clone(theta_value_zero);
       theta_is_est = Rcpp::clone(theta_is_est_zero);
       if (searcher_type == "forward") {
-        theta_is_est[theta_is_search_idx[i]] = 1;
+        theta_is_est[theta_is_search_idx[j]] = true;
       } else if (searcher_type == "backward") {
-        theta_is_est[theta_is_search_idx[i]] = 0;
-        theta_start[theta_is_search_idx[i]] = 0;
-        theta_value[theta_is_search_idx[i]] = 0;
+        theta_is_est[theta_is_search_idx[j]] = false;
+        theta_start[theta_is_search_idx[j]] = false;
+        theta_value[theta_is_search_idx[j]] = false;
       } else {}
+      iter_out = -1;
       theta_is_est_idx = which(theta_is_est);
-      theta_is_search[theta_is_search_idx[i]] = 0;
+      theta_is_search[theta_is_search_idx[j]] = false;
       theta_is_search_idx = which(theta_is_search);    
       complete_estimation();
       step = step + 1;
