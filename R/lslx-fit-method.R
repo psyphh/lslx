@@ -112,8 +112,8 @@ lslx$set("public",
                }
              )
            if (all(!private$fitting$fitted_result$is_finite)) {
-             cat("ERROR: Optimization result is not finite under EVERY specified penalty level.\n",
-                  "Please check model identifiability or specify better starting values.\n")
+             warning("ERROR: Optimization result is not finite under ANY specified penalty level.\n",
+                     "Please check model identifiability or specify better starting values.\n")
              private$fitting$fitted_result$is_convergent <-
                sapply(
                  X = private$fitting$fitted_result$numerical_condition,
@@ -278,26 +278,24 @@ lslx$set("public",
            
            if (verbose) {
              if (all(private$fitting$fitted_result$is_convergent)) {
-               cat("CONGRATS: Algorithm converges under EVERY specified penalty level.\n")
-               cat("  Specified Tolerance for Convergence:",
-                   private$fitting$control$tol_out,
-                   "\n")
-               cat("  Specified Maximal Number of Iterations:",
-                   private$fitting$control$iter_out_max,
-                   "\n")
+               message("CONGRATS: Algorithm converges under EVERY specified penalty level.\n",
+                       "  Specified Tolerance for Convergence: ",
+                       private$fitting$control$tol_out, "\n",
+                       "  Specified Maximal Number of Iterations: ",
+                       private$fitting$control$iter_out_max, "\n")
              } else if (all(!private$fitting$fitted_result$is_convergent)) {
-               cat("WARNING: Algorithm doesn't converge under EVERY penalty level.\n")
-               cat("Please try other optimization parameters or specify better starting values.\n")
+               warning("WARNING: Algorithm doesn't converge under ANY penalty level.\n",
+                       "Please try other optimization parameters or specify better starting values.\n")
              } else {
-               cat("WARNING: Algorithm doesn't converge under SOME penalty level.\n")
-               cat("Please try other optimization parameters or specify better starting values.\n")
+               warning("WARNING: Algorithm doesn't converge under SOME penalty level.\n",
+                       "Please try other optimization parameters or specify better starting values.\n")
              }
              if (all(!private$fitting$fitted_result$is_convex)) {
-               cat("WARNING: Approximated Hessian is not convex under EVERY convexity level.\n")
-               cat("Please try larger 'delta_grid' or set positive 'ridge_hessian'. \n")
+               warning("WARNING: Approximated Hessian is not convex under ANY convexity level.\n",
+                       "Please try larger 'delta_grid' or set positive 'ridge_hessian'. \n")
              } else if (!all(private$fitting$fitted_result$is_convex)) {
-               cat("WARNING: Approximated Hessian is not convex under SOME convexity level.\n")
-               cat("Please try larger 'delta_grid' or set larger 'ridge_hessian'. \n")
+               warning("WARNING: Approximated Hessian is not convex under SOME convexity level.\n",
+                       "Please try larger 'delta_grid' or set larger 'ridge_hessian'. \n")
              }
            }
          })
